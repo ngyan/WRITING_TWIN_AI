@@ -1,0 +1,17 @@
+[project]
+name = "writing-twin-phase0"
+version = "0.1.0"
+description = "Phase 0 validation prototype — Writing Twin AI"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.110",
+    "uvicorn[standard]",
+    "litellm>=1.40",
+    "upstash-redis>=1.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

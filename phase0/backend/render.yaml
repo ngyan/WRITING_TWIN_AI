@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: writing-twin-phase0-api
+    runtime: python
+    buildCommand: pip install uv && uv pip install --system -r pyproject.toml
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false

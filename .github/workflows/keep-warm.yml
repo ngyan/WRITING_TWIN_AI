@@ -1,0 +1,15 @@
+name: Keep Render warm
+
+on:
+  schedule:
+    # Every 14 minutes — prevents Render free tier from sleeping
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health endpoint
+        run: |
+          curl -sf "${{ secrets.RENDER_BACKEND_URL }}/health" || echo "Backend not yet deployed"
