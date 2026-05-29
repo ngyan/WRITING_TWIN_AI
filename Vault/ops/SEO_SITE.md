@@ -1,6 +1,6 @@
 # Writing Twin AI — SEO & Marketing Site
 
-> Strategy for `writingtwin.ai` — the landing/marketing site.
+> Strategy for `writingtwinai.com` — the landing/marketing site.
 > Tech: Next.js 14 App Router (SSG/ISR) deployed separately from the app.
 > **Last Updated:** 2026-05-30
 
@@ -9,7 +9,7 @@
 ## Site Structure
 
 ```
-writingtwin.ai/
+writingtwinai.com/
 ├── /                   → Landing page (waitlist + product demo)
 ├── /features           → Feature breakdown (DNA, Memory, Cultural, Extension)
 ├── /pricing            → Pricing comparison table (vs Grammarly, Compose AI)

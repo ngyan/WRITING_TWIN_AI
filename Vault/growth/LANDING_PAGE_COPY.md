@@ -1,6 +1,6 @@
 # Writing Twin AI — Landing Page Copy
 
-> Use this for `writingtwin.ai` (Next.js marketing site).
+> Use this for `writingtwinai.com` (Next.js marketing site).
 > Reference `USER_PERSONAS.md` for tone and pain points.
 > Reference `COMPETITOR_ANALYSIS.md` for positioning.
 > **Last Updated:** 2026-05-30
@@ -171,7 +171,7 @@ Writing Twin is launching soon. Join the waitlist for early access, a 60-day fre
 > **Writing Twin AI** — *Write Like Yourself. Everywhere.*
 > [Pricing](#) · [Privacy Policy](#) · [Terms of Service](#) · [Changelog](#) · [Blog](#)
 > Made with 🔥 for non-native English professionals everywhere.
-> support@writingtwin.ai
+> support@writingtwinai.com
 
 ---
 
@@ -183,8 +183,8 @@ Writing Twin is launching soon. Join the waitlist for early access, a 60-day fre
 
 <meta property="og:title" content="Writing Twin AI — Write Like Yourself. Everywhere.">
 <meta property="og:description" content="Writing Twin learns your communication DNA and rewrites anything in your voice. Not like AI. Like you.">
-<meta property="og:image" content="https://writingtwin.ai/og-image.png">
-<meta property="og:url" content="https://writingtwin.ai">
+<meta property="og:image" content="https://writingtwinai.com/og-image.png">
+<meta property="og:url" content="https://writingtwinai.com">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Writing Twin AI — Your Voice. Everywhere.">

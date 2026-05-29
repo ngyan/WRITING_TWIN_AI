@@ -85,12 +85,12 @@ npm run dev
 
 1. Go to [vercel.com](https://vercel.com) → Import project
 2. Set root directory to `phase0/frontend`
-3. Add environment variable: `BACKEND_URL=https://your-render-app.onrender.com`
-4. Deploy → get your `writingtwin-demo.vercel.app` URL
+3. Add environment variable: `BACKEND_URL=https://api.writingtwinai.com`
+4. Deploy → get your `writingtwinai.com` URL
 
 ### 3. Update backend CORS
 
-Set `ALLOWED_ORIGIN=https://your-vercel-url.vercel.app` in Render env vars.
+Set `ALLOWED_ORIGIN=https://writingtwinai.com` in Render env vars.
 
 ---
 

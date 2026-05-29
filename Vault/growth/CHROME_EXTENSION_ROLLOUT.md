@@ -126,7 +126,7 @@ extension/
 ```
 Extension popup → "Sign in with Google"
     ↓ chrome.identity.launchWebAuthFlow
-    ↓ Google OAuth → redirect to writingtwin.ai/callback
+    ↓ Google OAuth → redirect to writingtwinai.com/callback
     ↓ Backend exchanges code for JWT
     ↓ JWT stored in chrome.storage.sync (encrypted at rest by Chrome)
     ↓ Background service worker attaches JWT to all API calls
@@ -157,7 +157,7 @@ When limit hit → API returns `402 Payment Required` → Extension shows upgrad
 - [ ] Extension packaged: `zip -r writing-twin-v0.1.0.zip extension/`
 - [ ] Screenshots ready (5 × 1280×800 PNG)
 - [ ] Store description (< 132 char short, full description)
-- [ ] Support email set: `support@writingtwin.ai`
+- [ ] Support email set: `support@writingtwinai.com`
 - [ ] Review submitted (allow 2–7 days for first-time developer review)
 
 **Sensitive permissions that require justification:**

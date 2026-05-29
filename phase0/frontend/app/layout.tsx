@@ -13,9 +13,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Writing Twin — Does AI output sound like you?",
+  title: "Writing Twin AI — Write Emails That Sound Like You, Not Like AI",
   description:
-    "Paste your writing samples and a draft message. See if personalized AI output sounds more like you than generic AI. Takes 2 minutes.",
+    "AI that learns your writing voice and rewrites text to sound exactly like you. Works in Gmail, LinkedIn, and Slack. Free to try — takes 2 minutes.",
+  metadataBase: new URL("https://writingtwinai.com"),
+  alternates: {
+    canonical: "https://writingtwinai.com",
+  },
+  openGraph: {
+    title: "Writing Twin AI — Write Like Yourself. Everywhere.",
+    description:
+      "Writing Twin learns your communication style and rewrites anything in your voice. Not like AI. Like you.",
+    url: "https://writingtwinai.com",
+    siteName: "Writing Twin AI",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Writing Twin AI — Your Voice. Everywhere.",
+    description:
+      "AI email rewriter that sounds like you, not like ChatGPT. Works in Gmail, LinkedIn, Slack.",
+  },
 };
 
 export default function RootLayout({

@@ -89,7 +89,7 @@
 - [ ] `.env` secrets set on VPS (never in git)
 - [ ] NGINX config live (`/etc/nginx/sites-available/writingtwin`)
 - [ ] SSL cert via Let's Encrypt (`certbot --nginx`)
-- [ ] Health check passing: `curl https://api.writingtwin.ai/v1/health`
+- [ ] Health check passing: `curl https://api.writingtwinai.com/v1/health`
 - [ ] Sentry error tracking live
 - [ ] PostHog analytics live
 
@@ -101,7 +101,7 @@
 - [ ] Extension ID registered in backend CORS
 
 ### Marketing
-- [ ] Landing page live at `writingtwin.ai`
+- [ ] Landing page live at `writingtwinai.com`
 - [ ] Waitlist form connected (email capture)
 - [ ] SEO meta tags (`og:title`, `og:description`, `robots.txt`, `sitemap.xml`)
 - [ ] Google Analytics / PostHog on landing page
@@ -111,7 +111,7 @@
 - [ ] Stripe product IDs set in `.env`
 - [ ] Free → Pro upgrade flow tested end-to-end
 - [ ] Privacy policy + Terms of Service published
-- [ ] Support email configured (`support@writingtwin.ai`)
+- [ ] Support email configured (`support@writingtwinai.com`)
 
 ---
 

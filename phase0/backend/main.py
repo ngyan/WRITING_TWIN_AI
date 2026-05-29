@@ -20,6 +20,13 @@ UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
 
+CORS_ORIGINS = [
+    ALLOWED_ORIGIN,
+    "https://writingtwinai.com",
+    "https://www.writingtwinai.com",
+    "http://localhost:3000",
+]
+
 litellm.api_key = GEMINI_API_KEY
 
 # Lazy Upstash client
@@ -38,7 +45,7 @@ app = FastAPI(title="Writing Twin Phase 0", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN, "http://localhost:3000"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

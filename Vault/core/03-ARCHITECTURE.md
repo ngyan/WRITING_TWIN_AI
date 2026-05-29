@@ -203,7 +203,7 @@ Stub now, expand in Sprint 9. Reserve table name `team_workspaces`.
 ## 🔌 API Contracts (FastAPI Routers)
 
 ### Base URL
-`POST https://api.writingtwin.ai/v1/...`
+`POST https://api.writingtwinai.com/v1/...`
 
 ### Auth Endpoints
 ```
