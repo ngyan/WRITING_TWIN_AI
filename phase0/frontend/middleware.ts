@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Rate limit: 5 generate requests per IP per 24 hours.
-// Stored in Vercel Edge KV (in-memory per region edge node — acceptable for Phase 0).
+// Rate limit: 50 generate requests per IP per 24 hours.
+// In-memory — resets on container restart. Acceptable for Phase 0 validation.
 // For production, replace with Upstash Redis via @upstash/ratelimit.
 
-const RATE_LIMIT = 5;
+const RATE_LIMIT = 50;
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
 // In-memory store — resets on cold start, which is acceptable for Phase 0.
