@@ -90,7 +90,7 @@ def _build_samples_block(samples: list[str]) -> str:
 
 async def _rewrite_generic(draft: str) -> str:
     response = await litellm.acompletion(
-        model="gemini/gemini-1.5-flash",
+        model="gemini/gemini-2.0-flash",
         messages=[
             {
                 "role": "system",
@@ -111,7 +111,7 @@ async def _rewrite_generic(draft: str) -> str:
 async def _rewrite_personalized(samples: list[str], draft: str) -> str:
     samples_block = _build_samples_block(samples)
     response = await litellm.acompletion(
-        model="gemini/gemini-1.5-flash",
+        model="gemini/gemini-2.0-flash",
         messages=[
             {
                 "role": "system",
