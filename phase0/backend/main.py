@@ -82,6 +82,18 @@ class FeedbackResponse(BaseModel):
 
 # --- Helpers ---
 
+def _extract_text(content) -> str:
+    """LiteLLM with Claude can return content as a list of blocks or a plain string."""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        return " ".join(
+            block.get("text", "") if isinstance(block, dict) else str(block)
+            for block in content
+        ).strip()
+    return str(content).strip()
+
+
 def _build_samples_block(samples: list[str]) -> str:
     """Truncate each sample to 500 tokens (~400 words), combine."""
     MAX_CHARS = 1800  # ~500 tokens at 3.6 chars/token
@@ -97,8 +109,9 @@ async def _rewrite_generic(draft: str) -> str:
                 "role": "system",
                 "content": (
                     "You are a professional writing assistant. "
-                    "Rewrite the following text to be clearer, more professional, "
-                    "and easier to read. Keep it concise."
+                    "Rewrite the following text to be clearer, more professional, and easier to read. "
+                    "Keep it concise. Output only the rewritten text — no explanations, "
+                    "no bullet points, no markdown formatting, no headers."
                 ),
             },
             {"role": "user", "content": draft},
@@ -106,7 +119,7 @@ async def _rewrite_generic(draft: str) -> str:
         max_tokens=600,
         temperature=0.4,
     )
-    return response.choices[0].message.content.strip()
+    return _extract_text(response.choices[0].message.content)
 
 
 async def _rewrite_personalized(samples: list[str], draft: str) -> str:
@@ -122,7 +135,8 @@ async def _rewrite_personalized(samples: list[str], draft: str) -> str:
                     f"{samples_block}\n\n"
                     "Rewrite the following text to match their exact vocabulary, sentence rhythm, "
                     "tone, and phrasing. Do not make it more formal. Do not add corporate language. "
-                    "Do not make it longer. Make it sound exactly like them."
+                    "Do not make it longer. Make it sound exactly like them. "
+                    "Output only the rewritten text — no explanations, no markdown, no headers."
                 ),
             },
             {"role": "user", "content": draft},
@@ -130,7 +144,7 @@ async def _rewrite_personalized(samples: list[str], draft: str) -> str:
         max_tokens=600,
         temperature=0.3,
     )
-    return response.choices[0].message.content.strip()
+    return _extract_text(response.choices[0].message.content)
 
 
 def _random_option_order(session_id: str) -> list[str]:

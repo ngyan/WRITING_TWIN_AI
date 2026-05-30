@@ -29,7 +29,11 @@ export async function rewrite(req: RewriteRequest): Promise<RewriteResponse> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Rewrite failed");
+    // FastAPI validation errors return detail as an array of objects
+    const detail = Array.isArray(err.detail)
+      ? err.detail.map((e: { msg?: string }) => e.msg ?? JSON.stringify(e)).join("; ")
+      : err.detail;
+    throw new Error(detail || "Rewrite failed");
   }
   return res.json();
 }
