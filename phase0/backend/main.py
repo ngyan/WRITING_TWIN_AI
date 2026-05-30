@@ -15,7 +15,7 @@ load_dotenv()
 
 # --- Config ---
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
@@ -27,7 +27,8 @@ CORS_ORIGINS = [
     "http://localhost:3000",
 ]
 
-litellm.api_key = GEMINI_API_KEY
+# LiteLLM reads ANTHROPIC_API_KEY from the environment automatically
+os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 
 # Lazy Upstash client
 _redis = None
@@ -90,7 +91,7 @@ def _build_samples_block(samples: list[str]) -> str:
 
 async def _rewrite_generic(draft: str) -> str:
     response = await litellm.acompletion(
-        model="gemini/gemini-2.0-flash",
+        model="claude-haiku-4-5-20251001",
         messages=[
             {
                 "role": "system",
@@ -111,7 +112,7 @@ async def _rewrite_generic(draft: str) -> str:
 async def _rewrite_personalized(samples: list[str], draft: str) -> str:
     samples_block = _build_samples_block(samples)
     response = await litellm.acompletion(
-        model="gemini/gemini-2.0-flash",
+        model="claude-haiku-4-5-20251001",
         messages=[
             {
                 "role": "system",
@@ -194,7 +195,7 @@ def health():
 
 @app.post("/rewrite", response_model=RewriteResponse)
 async def rewrite(req: RewriteRequest):
-    if not GEMINI_API_KEY:
+    if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=503, detail="API key not configured")
 
     try:
