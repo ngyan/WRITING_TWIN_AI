@@ -71,10 +71,14 @@ class RewriteResponse(BaseModel):
 
 class FeedbackRequest(BaseModel):
     session_id: str
-    chosen_option: str  # "option1" or "option2"
+    chosen_option: str  # "option1" | "option2" | "nodiff"
     option_order: list[str]  # echoed from RewriteResponse
     would_send: bool
-    email: str | None = None  # waitlist signup
+    confidence: int | None = None  # 1-5
+    comment: str | None = None
+    email: str | None = None
+    role: str | None = None
+    payment_intent: str | None = None  # "no" | "maybe" | "$5/mo" | "$10/mo" | "$20/mo"
 
 
 class FeedbackResponse(BaseModel):
@@ -176,18 +180,28 @@ async def _log_feedback(
     chosen_option: str,
     option_order: list[str],
     would_send: bool,
+    confidence: int | None,
+    comment: str | None,
     email: str | None,
+    role: str | None,
+    payment_intent: str | None,
 ):
-    # Determine which version was preferred
-    idx = 0 if chosen_option == "option1" else 1
-    preferred_version = option_order[idx]  # "generic" or "personalized"
+    if chosen_option == "nodiff":
+        preferred_version = "none"
+    else:
+        idx = 0 if chosen_option == "option1" else 1
+        preferred_version = option_order[idx]  # "generic" or "personalized"
 
     record = {
         "session_id": session_id,
         "chosen_option": chosen_option,
         "preferred_version": preferred_version,
         "would_send": would_send,
+        "confidence": confidence,
+        "comment": comment,
         "email": email,
+        "role": role,
+        "payment_intent": payment_intent,
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -274,7 +288,11 @@ async def feedback(req: FeedbackRequest):
             req.chosen_option,
             req.option_order,
             req.would_send,
+            req.confidence,
+            req.comment,
             req.email,
+            req.role,
+            req.payment_intent,
         )
     )
     if req.email:

@@ -8,99 +8,101 @@ interface Props {
   onNext: () => void;
 }
 
-const PLACEHOLDER = [
-  "Hi Sarah,\n\nJust wanted to follow up on the deployment timeline we discussed. I think we can move faster if we parallelize the DB migration — let me know if you want to jump on a quick call to align.\n\nThanks,\nGyan",
-  "Hey team,\n\nHeads up — the test environment is flaky again this morning. Seeing intermittent 502s on the validation endpoint. I've opened a ticket but wanted to flag it here so nobody wastes time debugging locally.\n\nWill update when it's stable.",
-];
+const SAMPLE_DATA = `Hey Sarah,
+
+Just a quick heads up — I'm going to push the Monday deadline to Wednesday. The data pipeline's not fully stable yet and I'd rather ship it right than rush it. I'll send a proper update tomorrow once I've stress-tested it.
+
+— Gyan
+
+---
+
+Hey team, the staging deploy is live. Couple of things to flag before you test:
+- The auth flow has a known redirect issue on Firefox — skip that for now
+- The new onboarding wizard is behind the ONBOARDING_V2 flag, turn it on manually if you want to test it
+- Performance on the dashboard is slower than expected, I'm looking into it
+
+Let me know what you find.
+
+---
+
+Hi Marcus,
+
+Wanted to follow up on the Q3 planning doc — I've added my comments but I'm still unclear on the budget allocation for infra. Can we get 15 mins this week to walk through it? I'd rather align early than discover a gap during the board review.
+
+Thanks`;
 
 export default function SamplesStep({ samples, onChange, onNext }: Props) {
   const [error, setError] = useState("");
+  const [usedSample, setUsedSample] = useState(false);
 
-  const update = (i: number, val: string) => {
-    const next = [...samples];
-    next[i] = val;
-    onChange(next);
-  };
-
-  const addSample = () => {
-    if (samples.length < 5) onChange([...samples, ""]);
-  };
-
-  const removeSample = (i: number) => {
-    if (samples.length > 1) onChange(samples.filter((_, idx) => idx !== i));
-  };
+  const text = samples[0] ?? "";
 
   const handleNext = () => {
-    const filled = samples.filter((s) => s.trim().length >= 50);
-    if (filled.length === 0) {
-      setError("Paste at least one writing sample (50+ characters) so we can learn your style.");
+    if (text.trim().length < 50) {
+      setError("Paste at least 50 characters of your writing so we can learn your style.");
       return;
     }
     setError("");
     onNext();
   };
 
+  const loadSampleData = () => {
+    onChange([SAMPLE_DATA]);
+    setUsedSample(true);
+    setError("");
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">
-          Paste some of your writing
+          Share some of your writing
         </h1>
         <p className="mt-2 text-gray-500 text-sm leading-relaxed">
-          Add 1–5 emails, messages, or posts you&apos;ve actually written. We&apos;ll learn
-          your vocabulary, rhythm, and tone. The more samples you add, the better.
+          Paste anything you&apos;ve written — emails, Slack messages, LinkedIn posts,
+          status updates, meeting notes. The more you share, the better it learns your voice.
         </p>
       </div>
 
-      <div className="space-y-4">
-        {samples.map((s, i) => (
-          <div key={i} className="relative">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Sample {i + 1}
-              </label>
-              {samples.length > 1 && (
-                <button
-                  onClick={() => removeSample(i)}
-                  className="text-xs text-gray-400 hover:text-red-500"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-            <textarea
-              value={s}
-              onChange={(e) => update(i, e.target.value)}
-              placeholder={PLACEHOLDER[i % 2]}
-              rows={6}
-              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-300 focus:border-gray-400 focus:outline-none resize-none"
-            />
-            <div className="text-right text-xs text-gray-300 mt-0.5">
-              {s.length} chars
-            </div>
-          </div>
-        ))}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Your writing
+          </label>
+          <button
+            onClick={loadSampleData}
+            className="text-xs text-amber-600 hover:text-amber-700 font-medium border border-amber-200 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-full transition-colors"
+          >
+            {usedSample ? "✓ Sample loaded" : "Try with sample data"}
+          </button>
+        </div>
+        <textarea
+          value={text}
+          onChange={(e) => { onChange([e.target.value]); setUsedSample(false); setError(""); }}
+          placeholder={"Paste your writing here — a few emails, messages, or posts you've actually written.\n\nYou can paste multiple examples separated by a blank line or \"---\". The more you share, the better Writing Twin learns your style."}
+          rows={12}
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-300 focus:border-gray-400 focus:outline-none resize-none"
+        />
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-gray-400">
+            {text.length < 50
+              ? `${Math.max(0, 50 - text.length)} more characters needed`
+              : "Ready to continue"}
+          </p>
+          <span className="text-xs text-gray-300">{text.length} chars</span>
+        </div>
       </div>
-
-      {samples.length < 5 && (
-        <button
-          onClick={addSample}
-          className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1"
-        >
-          <span className="text-lg leading-none">+</span> Add another sample
-        </button>
-      )}
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="pt-2">
+      <div className="pt-2 space-y-3">
         <button
           onClick={handleNext}
-          className="w-full rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          className="w-full rounded-xl bg-gray-900 px-6 py-3.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
         >
           Continue →
         </button>
-        <p className="text-xs text-gray-400 text-center mt-3">
+        <p className="text-xs text-gray-400 text-center">
           Your writing is only used to personalize this session. It is not stored permanently.
         </p>
       </div>

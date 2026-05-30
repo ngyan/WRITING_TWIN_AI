@@ -15,10 +15,14 @@ export interface RewriteResponse {
 
 export interface FeedbackRequest {
   session_id: string;
-  chosen_option: "option1" | "option2";
+  chosen_option: "option1" | "option2" | "nodiff";
   option_order: string[];
   would_send: boolean;
+  confidence?: number;
+  comment?: string;
   email?: string;
+  role?: string;
+  payment_intent?: string;
 }
 
 export async function rewrite(req: RewriteRequest): Promise<RewriteResponse> {
@@ -29,7 +33,6 @@ export async function rewrite(req: RewriteRequest): Promise<RewriteResponse> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    // FastAPI validation errors return detail as an array of objects
     const detail = Array.isArray(err.detail)
       ? err.detail.map((e: { msg?: string }) => e.msg ?? JSON.stringify(e)).join("; ")
       : err.detail;

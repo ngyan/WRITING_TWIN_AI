@@ -1,35 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import LandingStep from "./components/LandingStep";
 import SamplesStep from "./components/SamplesStep";
 import DraftStep from "./components/DraftStep";
 import ComparisonStep from "./components/ComparisonStep";
 import ThankYouStep from "./components/ThankYouStep";
 import { RewriteResponse } from "./lib/api";
 
-type Step = "samples" | "draft" | "comparison" | "thankyou";
+type Step = "landing" | "samples" | "draft" | "comparison" | "thankyou";
 
 export default function Home() {
-  const [step, setStep] = useState<Step>("samples");
+  const [step, setStep] = useState<Step>("landing");
   const [samples, setSamples] = useState<string[]>([""]);
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<RewriteResponse | null>(null);
+
+  const inDemo = step !== "landing";
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => setStep("landing")}
+            className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+          >
             <span className="font-semibold text-gray-900">Writing Twin</span>
             <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
               Early demo
             </span>
-          </div>
-          <StepIndicator current={step} />
+          </button>
+          {inDemo && <StepIndicator current={step} />}
         </div>
       </header>
 
       <div className="flex-1 max-w-2xl w-full mx-auto px-6 py-10">
+        {step === "landing" && (
+          <LandingStep onTryDemo={() => setStep("samples")} />
+        )}
         {step === "samples" && (
           <SamplesStep
             samples={samples}
