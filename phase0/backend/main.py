@@ -19,6 +19,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 
 CORS_ORIGINS = [
     ALLOWED_ORIGIN,
@@ -200,6 +201,40 @@ async def _log_feedback(
         pass
 
 
+async def _send_waitlist_email(email: str):
+    if not RESEND_API_KEY:
+        return
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        resend.Emails.send({
+            "from": "Writing Twin <waitlist@writingtwinai.com>",
+            "to": [email],
+            "reply_to": "ngyan.prakash@gmail.com",
+            "subject": "You're on the Writing Twin waitlist ✓",
+            "html": """
+<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#111">
+  <p style="font-size:20px;font-weight:600;margin:0 0 16px">You're on the list.</p>
+  <p style="color:#444;line-height:1.6;margin:0 0 16px">
+    Thanks for testing Writing Twin. Your feedback helps us validate whether
+    AI can genuinely learn someone's writing voice — not just polish their prose.
+  </p>
+  <p style="color:#444;line-height:1.6;margin:0 0 24px">
+    We're running this demo with ~20 professionals. If 70%+ prefer the personalized
+    version, we'll build the Chrome Extension next (Gmail + LinkedIn).
+    Early access users get a <strong>60-day free Pro trial</strong> when it launches.
+  </p>
+  <p style="color:#444;line-height:1.6;margin:0 0 8px">
+    We'll email you as soon as it's ready. One email, no spam.
+  </p>
+  <p style="color:#888;font-size:13px;margin:32px 0 0">— Gyan, founder of Writing Twin</p>
+</div>
+""",
+        })
+    except Exception:
+        pass  # email is best-effort, never block the response
+
+
 # --- Routes ---
 
 @app.get("/health")
@@ -242,6 +277,8 @@ async def feedback(req: FeedbackRequest):
             req.email,
         )
     )
+    if req.email:
+        asyncio.create_task(_send_waitlist_email(req.email))
     return FeedbackResponse(ok=True)
 
 
