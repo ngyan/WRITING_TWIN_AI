@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { submitFeedback, RewriteResponse } from "../lib/api";
 import { getSessionId } from "../lib/session";
 
@@ -12,6 +12,7 @@ interface Props {
 
 export default function ComparisonStep({ result, onDone, onRetry }: Props) {
   const [chosen, setChosen] = useState<"option1" | "option2" | null>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
   const [wouldSend, setWouldSend] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +27,8 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
 
   const handleSubmit = async () => {
     if (!chosen) {
-      setValidationMsg("Please select one of the options above.");
+      setValidationMsg("Please select Option 1 or Option 2 above.");
+      optionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (wouldSend === null) {
@@ -66,7 +68,7 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
       </div>
 
       {/* Blind comparison cards */}
-      <div className="space-y-4">
+      <div className="space-y-4" ref={optionsRef}>
         {[
           { id: "option1" as const, label: "Option 1", text: option1Text },
           { id: "option2" as const, label: "Option 2", text: option2Text },
@@ -94,6 +96,11 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
           </button>
         ))}
       </div>
+
+      {/* Inline error — shown directly below options so users see what to fix */}
+      {validationMsg && !chosen && (
+        <p className="text-sm text-red-500 -mt-2">{validationMsg}</p>
+      )}
 
       {/* Would you send it? — always visible */}
       <div className="space-y-3 pt-2 border-t border-gray-100">
@@ -142,9 +149,6 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
       )}
 
       {/* Actions */}
-      {validationMsg && (
-        <p className="text-sm text-red-500 -mb-2">{validationMsg}</p>
-      )}
       <div className="flex gap-3 pt-2">
         <button
           onClick={onRetry}
