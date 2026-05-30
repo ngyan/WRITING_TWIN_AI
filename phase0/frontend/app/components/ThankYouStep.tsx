@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getSessionId } from "../lib/session";
 
 const PAYMENT_OPTIONS = [
   { val: "no", label: "No" },
@@ -17,13 +18,12 @@ export default function ThankYouStep() {
   const handlePayIntent = (val: string) => {
     setPayIntent(val);
     setSaved(true);
-    // Fire-and-forget — store in session storage for now
-    try {
-      const existing = JSON.parse(sessionStorage.getItem("wt_feedback") ?? "{}");
-      sessionStorage.setItem("wt_feedback", JSON.stringify({ ...existing, payment_intent: val }));
-    } catch {
-      // best-effort
-    }
+    // Send to backend
+    fetch("/api/payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: getSessionId(), payment_intent: val }),
+    }).catch(() => undefined);
   };
 
   return (
