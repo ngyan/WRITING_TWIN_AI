@@ -7,7 +7,7 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Pre-Development — Vault initialized, Sprint 1 ready to execute
+**Phase:** Phase 0 ✅ Complete — Live at `https://writingtwinai.com`
 **Current Sprint:** Sprint 1 — Backend Foundation (NOT STARTED)
 **Target Launch:** MVP by end of Sprint 5 (~6–10 weeks from Sprint 1 start)
 
@@ -17,18 +17,23 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 0% | No code written yet |
-| **Production Readiness** | 0% | No infra, no deploy |
+| **MVP Readiness** | 5% | Phase 0 live, Sprint 1 not started |
+| **Production Readiness** | 15% | VPS + NGINX + SSL live, no DB yet |
 | **Test Coverage** | 0% | No tests |
-| **Documentation** | 85% | Vault complete, CLAUDE_RESUME done |
+| **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
-| **Marketing** | 10% | Copy drafted, no landing page yet |
+| **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
 
 ---
 
 ## ✅ Last Completed Task
 
-- [2026-05-30] Vault initialized + restructured (11 master docs + CLAUDE_RESUME + PROJECT_STATUS + DECISIONS + ROADMAP + MONETIZATION + COMPETITOR_ANALYSIS + USER_PERSONAS + METRICS + CLAUDE_WORKFLOW + subfolders: active/, archive/, architecture/, ops/, growth/, deploy/)
+- [2026-05-30] **Phase 0 demo deployed** — FastAPI backend + Next.js frontend live on Hostinger VPS (`72.61.236.80`). NGINX + Let's Encrypt SSL. All endpoints verified:
+  - `https://writingtwinai.com` → 200 OK
+  - `https://www.writingtwinai.com` → 301 → root
+  - `https://api.writingtwinai.com/health` → `{"status":"ok"}`
+  - Containers: `wt_backend` (port 8011), `wt_frontend` (port 3010)
+  - Redeploy: `./Vault/deploy/deploy-phase0.sh`
 
 ---
 

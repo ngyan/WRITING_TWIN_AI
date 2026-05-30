@@ -47,6 +47,35 @@
 
 <!-- Add future sprint entries below this line -->
 
+## [2026-05-30] Phase 0 — Demo Deployment (Hostinger VPS)
+
+- Files created:
+  - `phase0/backend/main.py` — FastAPI app (rewrite, feedback, stats, health endpoints)
+  - `phase0/backend/Dockerfile` — Python 3.12-slim + uv
+  - `phase0/backend/pyproject.toml` — FastAPI, LiteLLM, Upstash Redis, Uvicorn
+  - `phase0/frontend/` — Next.js 14 App Router with A/B writing style comparison UI
+  - `phase0/frontend/Dockerfile` — multi-stage Node 20 standalone build
+  - `docker-compose.phase0.yml` — wt_backend (8011) + wt_frontend (3010)
+  - `Vault/deploy/nginx-writingtwinai.conf` — NGINX config (www→root 301, SSL blocks)
+  - `Vault/deploy/deploy-phase0.sh` — rsync + docker compose redeploy script
+  - `DNS_SETUP.md` — VPS deployment reference (replaces Render/Vercel approach)
+- Files modified:
+  - `phase0/frontend/next.config.ts` — added `output: "standalone"`
+- Infrastructure:
+  - VPS: Hostinger `72.61.236.80` (shares server with onwardsafe.com, zero conflict)
+  - Ports: backend 8011, frontend 3010 (onwardsafe uses 8020, 3000, 5173)
+  - SSL: Let's Encrypt via Certbot, auto-renews, expires 2026-08-28
+  - DNS: 3 A records in Hostinger → VPS IP
+- LLM: LiteLLM → `gemini/gemini-1.5-flash` (Phase 0 only)
+- Storage: Upstash Redis (feedback + waitlist logging)
+- Notes:
+  - Switched from Render (backend) + Vercel (frontend) to VPS mid-session — eliminates cold starts, keep-warm cron, and credential sprawl across 3 platforms
+  - `BACKEND_URL` is server-side only; frontend containers reach backend via Docker internal network (`http://wt-backend:8000`)
+  - Phase 0 has no DB — all state in Upstash Redis
+- Branch: `main`
+- Commit: `c5e8304`
+- Status: ✅ Complete — live at `https://writingtwinai.com`
+
 ## [2026-05-30] Doc Update — Founding Constitution Integration
 
 - Files created:

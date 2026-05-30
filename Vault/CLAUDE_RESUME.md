@@ -17,14 +17,15 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Sprint** | Sprint 1 — NOT STARTED |
-| **Branch** | `main` (no code yet) |
-| **Backend** | Not built |
-| **Database** | Not initialized |
+| **Sprint** | Sprint 1 — NOT STARTED (Phase 0 ✅ live) |
+| **Branch** | `main` |
+| **Phase 0 Demo** | ✅ Live at `https://writingtwinai.com` |
+| **Backend (Phase 0)** | ✅ FastAPI on VPS — `https://api.writingtwinai.com/health` |
+| **Frontend (Phase 0)** | ✅ Next.js on VPS — `https://writingtwinai.com` |
+| **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt |
+| **Database** | Not initialized (Sprint 1) |
 | **Chrome Extension** | Not started |
-| **Frontend** | Not started |
-| **Deployed** | No |
-| **MVP Readiness** | 0% |
+| **MVP Readiness** | 5% (Phase 0 done, Sprint 1 next) |
 
 ---
 
