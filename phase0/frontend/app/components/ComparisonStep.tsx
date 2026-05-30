@@ -16,6 +16,7 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [validationMsg, setValidationMsg] = useState("");
 
   // Map display order to content
   const option1Text =
@@ -23,10 +24,16 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
   const option2Text =
     result.option_order[1] === "generic" ? result.generic : result.personalized;
 
-  const canSubmit = chosen !== null && wouldSend !== null;
-
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!chosen) {
+      setValidationMsg("Please select one of the options above.");
+      return;
+    }
+    if (wouldSend === null) {
+      setValidationMsg("Please answer whether you'd send it as-is.");
+      return;
+    }
+    setValidationMsg("");
     setSubmitting(true);
     try {
       await submitFeedback({
@@ -88,9 +95,8 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
         ))}
       </div>
 
-      {/* Would you send it? */}
-      {chosen && (
-        <div className="space-y-3 pt-2 border-t border-gray-100">
+      {/* Would you send it? — always visible */}
+      <div className="space-y-3 pt-2 border-t border-gray-100">
           <p className="text-sm font-medium text-gray-700">
             Would you send the version you chose without editing it?
           </p>
@@ -113,10 +119,9 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
             ))}
           </div>
         </div>
-      )}
 
       {/* Waitlist */}
-      {chosen && wouldSend !== null && (
+      {wouldSend !== null && (
         <div className="rounded-xl bg-amber-50 border border-amber-100 px-5 py-4 space-y-3">
           <div>
             <p className="text-sm font-medium text-gray-900">
@@ -137,6 +142,9 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
       )}
 
       {/* Actions */}
+      {validationMsg && (
+        <p className="text-sm text-red-500 -mb-2">{validationMsg}</p>
+      )}
       <div className="flex gap-3 pt-2">
         <button
           onClick={onRetry}
@@ -146,7 +154,7 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={!canSubmit || submitting || submitted}
+          disabled={submitting || submitted}
           className="flex-1 rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-40"
         >
           {submitted ? "✓ Saved" : submitting ? "Saving..." : "Submit feedback →"}
