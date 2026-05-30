@@ -73,7 +73,7 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
         ].map(({ id, label, text }) => (
           <button
             key={id}
-            onClick={() => setChosen(id)}
+            onClick={() => { setChosen(id); setValidationMsg(""); }}
             className={`w-full text-left rounded-xl border-2 px-5 py-4 transition-all ${
               chosen === id
                 ? "border-gray-900 bg-gray-50 shadow-sm"
@@ -107,7 +107,7 @@ export default function ComparisonStep({ result, onDone, onRetry }: Props) {
             ].map(({ val, label }) => (
               <button
                 key={String(val)}
-                onClick={() => setWouldSend(val)}
+                onClick={() => { setWouldSend(val); setValidationMsg(""); }}
                 className={`flex-1 rounded-lg border px-4 py-2.5 text-sm transition-all ${
                   wouldSend === val
                     ? "border-gray-900 bg-gray-900 text-white"
