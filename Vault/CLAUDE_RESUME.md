@@ -1,7 +1,7 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-05-30
+> **Last Updated:** 2026-05-30 (evening)
 
 ---
 
@@ -17,15 +17,33 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Sprint** | Sprint 1 — NOT STARTED (Phase 0 ✅ live) |
+| **Sprint** | Phase 0 validation — fully live, collecting real user data |
 | **Branch** | `main` |
 | **Phase 0 Demo** | ✅ Live at `https://writingtwinai.com` |
 | **Backend (Phase 0)** | ✅ FastAPI on VPS — `https://api.writingtwinai.com/health` |
-| **Frontend (Phase 0)** | ✅ Next.js on VPS — `https://writingtwinai.com` |
+| **Frontend (Phase 0)** | ✅ Next.js on VPS — redesigned with landing page + enhanced feedback |
 | **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt |
+| **Email** | ✅ Resend live — waitlist confirmation + founder notification on every submission |
+| **Feedback storage** | ✅ Upstash Redis — view at `https://api.writingtwinai.com/responses` |
 | **Database** | Not initialized (Sprint 1) |
 | **Chrome Extension** | Not started |
-| **MVP Readiness** | 5% (Phase 0 done, Sprint 1 next) |
+| **Phase 0 Threshold** | 30 users · 60%+ prefer personalized → unlocks Sprint 1 |
+
+### Phase 0 — What's Live
+
+| Feature | Status |
+|---|---|
+| Landing page — hero, 3-step explainer, before/after example | ✅ |
+| Single textarea + "Try with sample data" button | ✅ |
+| Blind comparison: Version A / Version B / No Difference | ✅ |
+| Confidence rating 1–5 | ✅ |
+| Optional comment field | ✅ |
+| Waitlist: email + role | ✅ |
+| Payment intent question (No/Maybe/$5/$10/$20/mo) | ✅ |
+| Founder email notification on every submission | ✅ |
+| `GET /responses` — all individual feedback records | ✅ |
+| `GET /stats` — aggregate validation metrics | ✅ |
+| `POST /payment-intent` — stores intent from thank-you screen | ✅ |
 
 ---
 

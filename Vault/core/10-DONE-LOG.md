@@ -47,6 +47,65 @@
 
 <!-- Add future sprint entries below this line -->
 
+## [2026-05-30] Phase 0 — Resend Email Integration
+
+- Files modified:
+  - `phase0/backend/main.py` — added `RESEND_API_KEY` config, `_send_waitlist_email()` async function, `asyncio.create_task` in feedback route
+  - `phase0/backend/pyproject.toml` — added `resend>=2.0`
+  - `phase0/backend/.env.example` — added `RESEND_API_KEY` entry
+- Infrastructure:
+  - Resend domain verified: `writingtwinai.com` — 4 DNS records added in Hostinger (DKIM TXT, MX send, SPF TXT, DMARC TXT)
+  - Sending from: `waitlist@writingtwinai.com`
+- Notes: Email is best-effort (exceptions swallowed), never blocks the response. API key stored only on VPS in `.env`, never in git.
+- Commits: `3e2f29d`
+- Status: ✅ Complete
+
+## [2026-05-30] Phase 0 — UX Bug Fixes (Comparison Step)
+
+- Files modified:
+  - `phase0/frontend/app/components/ComparisonStep.tsx`:
+    - Validation error message moved to directly below option cards (not buried at bottom of page)
+    - Page auto-scrolls to option cards when Submit clicked without selection (`useRef` + `scrollIntoView`)
+    - `setValidationMsg("")` added to option card clicks and would-send button clicks so error clears on selection
+    - Error text updated to "Please select Version A, Version B, or No Difference above."
+- Commits: `6825b1c`, `54999b1`
+- Status: ✅ Complete
+
+## [2026-05-30] Phase 0 — Full Redesign (Pivot Directive)
+
+Executed full product strategy pivot: from minimal A/B demo → conversion-optimised validation tool.
+
+- Files created:
+  - `phase0/frontend/app/components/LandingStep.tsx` — hero, 3-step explainer, before/after example cards, dual CTA ("Try the Demo" + "See Example"), bottom CTA
+- Files modified:
+  - `phase0/frontend/app/page.tsx` — added `"landing"` step as default; header logo now navigates back to landing; step indicator only visible in demo steps
+  - `phase0/frontend/app/components/SamplesStep.tsx` — single large textarea replaces 5 separate boxes; "Try with sample data" amber pill button; character progress hint
+  - `phase0/frontend/app/components/ComparisonStep.tsx` — renamed Option 1/2 → Version A/B; added "No difference" dashed button; added confidence 1–5 row; added optional comment textarea; added role field to waitlist section; chosen_option now accepts `"nodiff"`
+  - `phase0/frontend/app/components/ThankYouStep.tsx` — added payment intent question (No/Maybe/$5/$10/$20/mo) shown before thank-you message; success criteria updated to 30 users / 60%
+  - `phase0/frontend/app/lib/api.ts` — FeedbackRequest updated with `confidence`, `comment`, `role`, `payment_intent` fields; chosen_option type includes `"nodiff"`
+  - `phase0/backend/main.py` — FeedbackRequest model expanded; `_log_feedback` stores all new fields; `preferred_version` = `"none"` for nodiff; Phase 0 threshold updated to 30 users / 60%
+- Commits: `28824b6`
+- Status: ✅ Complete
+
+## [2026-05-30] Phase 0 — Founder Feedback Loop + Payment Intent Backend
+
+- Files created:
+  - `phase0/frontend/app/api/payment-intent/route.ts` — Next.js proxy route → backend `/payment-intent`
+- Files modified:
+  - `phase0/backend/main.py`:
+    - `_notify_founder()` — sends email to `ngyan.prakash@gmail.com` on every feedback submission via Resend; includes preferred version, would-send, confidence, comment, email, role, payment intent
+    - `_log_feedback()` — now calls `_notify_founder()` as background task after saving to Redis
+    - `GET /responses` — returns all individual feedback records (newest first, session_id truncated)
+    - `POST /payment-intent` — stores payment intent from thank-you screen; patches matching feedback record in Redis
+    - `GET /stats` — now includes `payment_interest` count and `payment_intent_breakdown` dict; threshold updated to 30/60%
+  - `phase0/frontend/app/components/ThankYouStep.tsx` — imports `getSessionId`, POSTs to `/api/payment-intent` instead of sessionStorage
+- How to access responses:
+  - Per-submission email → `ngyan.prakash@gmail.com`
+  - All responses: `https://api.writingtwinai.com/responses`
+  - Aggregate stats: `https://api.writingtwinai.com/stats`
+- Commits: `02ecc61`
+- Status: ✅ Complete
+
 ## [2026-05-30] Phase 0 — Demo Deployment (Hostinger VPS)
 
 - Files created:

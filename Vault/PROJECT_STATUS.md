@@ -1,15 +1,16 @@
 # Writing Twin AI — Project Status Dashboard
 
 > **Update this file at the end of every sprint.**
-> **Last Updated:** 2026-05-30
+> **Last Updated:** 2026-05-30 (evening)
 
 ---
 
 ## 🎯 Current Milestone
 
-**Phase:** Phase 0 ✅ Complete — Live at `https://writingtwinai.com`
-**Current Sprint:** Sprint 1 — Backend Foundation (NOT STARTED)
-**Target Launch:** MVP by end of Sprint 5 (~6–10 weeks from Sprint 1 start)
+**Phase:** Phase 0 — Validation Demo Live & Collecting Data
+**Current Sprint:** Phase 0 validation in progress — waiting for 30 users, 60%+ personalized preference
+**Next Sprint:** Sprint 1 — Backend Foundation (unlocks when Phase 0 threshold met)
+**Target Launch:** MVP by end of Sprint 5 (~6–10 weeks after Sprint 1 start)
 
 ---
 
@@ -26,23 +27,41 @@
 
 ---
 
-## ✅ Last Completed Task
+## ✅ Last Completed Tasks (2026-05-30)
 
-- [2026-05-30] **Phase 0 demo deployed** — FastAPI backend + Next.js frontend live on Hostinger VPS (`72.61.236.80`). NGINX + Let's Encrypt SSL. All endpoints verified:
-  - `https://writingtwinai.com` → 200 OK
-  - `https://www.writingtwinai.com` → 301 → root
-  - `https://api.writingtwinai.com/health` → `{"status":"ok"}`
-  - Containers: `wt_backend` (port 8011), `wt_frontend` (port 3010)
-  - Redeploy: `./Vault/deploy/deploy-phase0.sh`
+1. **Phase 0 full redesign** per pivot directive:
+   - Landing page: hero ("Write Like Yourself. Not Like AI."), 3-step explainer, before/after example, dual CTA
+   - Samples step: single textarea replaces 5 boxes; "Try with sample data" button for zero-friction testing
+   - Comparison step: Version A/B/No Difference, confidence 1–5, comment, role field
+   - Thank-you step: payment intent question (No/Maybe/$5/$10/$20/mo)
+   - Success threshold updated: 30 users · 60%+ preference (was 10 users · 70%)
+
+2. **Founder feedback loop**:
+   - Email notification to `ngyan.prakash@gmail.com` on every submission (Resend)
+   - `GET https://api.writingtwinai.com/responses` — all individual records
+   - `GET https://api.writingtwinai.com/stats` — aggregate + payment intent breakdown
+   - `POST /payment-intent` — stores thank-you screen intent in Redis
+
+3. **Resend domain verified** — DNS records added in Hostinger, `waitlist@writingtwinai.com` sending live
+
+4. **UX bug fixes**:
+   - Validation error now shown directly below option cards (not buried at bottom)
+   - Page auto-scrolls to options when Submit clicked without selection
+   - Error clears immediately when user selects an option
 
 ---
 
 ## 🔜 Next Task
 
-**Sprint 1** — Backend Foundation
+**Immediate** — Drive 30 users to `writingtwinai.com`:
+- Share with target users: non-native English professionals (engineers, PMs, founders, consultants)
+- Monitor: `https://api.writingtwinai.com/stats` + email inbox for per-submission notifications
+- Track: total comparisons, % preferring personalized, waitlist sign-ups, payment intent
+
+**When Phase 0 threshold met (30 users, 60%+):**
+- Start Sprint 1 — Backend Foundation
 - Paste prompt from `active/SPRINT_01_BACKEND_FOUNDATION.md` into Claude Code
 - Branch: `sprint-01-backend-foundation`
-- Deliverables: FastAPI scaffold, JWT auth, PostgreSQL + Redis + Qdrant in docker-compose, Alembic migration 0001, audit_log + usage_events + feature_flags tables, 12+ tests passing
 
 ---
 
