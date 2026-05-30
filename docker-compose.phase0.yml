@@ -1,0 +1,21 @@
+services:
+  wt-backend:
+    build: ./phase0/backend
+    container_name: wt_backend
+    env_file: ./phase0/backend/.env
+    ports:
+      - "127.0.0.1:8011:8000"
+    restart: always
+
+  wt-frontend:
+    build: ./phase0/frontend
+    container_name: wt_frontend
+    environment:
+      - NODE_ENV=production
+      # Reaches the backend through the Docker internal network — never through NGINX
+      - BACKEND_URL=http://wt-backend:8000
+    depends_on:
+      - wt-backend
+    ports:
+      - "127.0.0.1:3010:3000"
+    restart: always
