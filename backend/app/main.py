@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 
 import structlog
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure all ORM models are registered with Base.metadata before alembic / test DB setup
 import app.models.audit_log  # noqa: F401
@@ -31,6 +32,17 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("shutdown")
 
 
+_CORS_ORIGINS = [
+    # Chrome extension (wildcard — specific IDs added after Web Store publish)
+    "chrome-extension://*",
+    # Local development
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://writingtwinai.com",
+    "https://www.writingtwinai.com",
+]
+
+
 def create_app() -> FastAPI:
     application = FastAPI(
         title="Writing Twin AI API",
@@ -38,6 +50,14 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.APP_ENV != "production" else None,
         redoc_url=None,
         lifespan=lifespan,
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"chrome-extension://.*",
+        allow_origins=_CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
     application.include_router(health.router)
     application.include_router(auth.router)

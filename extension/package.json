@@ -1,0 +1,16 @@
+{
+  "name": "writing-twin-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:prod": "node build.mjs --prod",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.269",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.4.0"
+  }
+}

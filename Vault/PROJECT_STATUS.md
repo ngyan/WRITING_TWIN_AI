@@ -7,9 +7,9 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 2 — Humanization API Complete
-**Current Sprint:** Sprint 3 — Chrome Extension MVP
-**Next Sprint:** Sprint 4 — Writing DNA Engine
+**Phase:** Sprint 3 — Chrome Extension MVP Complete
+**Current Sprint:** Sprint 4 — Writing DNA Engine
+**Next Sprint:** Sprint 5 — Personalization
 **Target Launch:** MVP by end of Sprint 5 (~3–7 weeks from now)
 
 ---
@@ -18,7 +18,7 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 25% | Sprint 2 complete, humanization pipeline live |
+| **MVP Readiness** | 40% | Sprint 3 complete, Chrome extension built |
 | **Production Readiness** | 20% | VPS + NGINX + SSL live, Postgres + Redis + Qdrant in Docker |
 | **Test Coverage** | 10% | 12 tests passing (auth + humanize) |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
@@ -107,8 +107,8 @@
 |---|---|---|---|---|
 | **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | `05a258c` |
 | **S2** | Humanization API | 🟢 Done | `sprint-02-humanization-api` | `5408f75` |
-| **S3** | Chrome Extension MVP | 🔵 Next | — | — |
-| **S4** | Writing DNA Engine | ⚪ Locked | — | — |
+| **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | pending |
+| **S4** | Writing DNA Engine | 🔵 Next | — | — |
 | **S5** | Personalization (DNA + Memory + Cultural) | ⚪ Locked | — | — |
 | **S6** | AI Routing Hardening + Quality Retry | ⚪ Locked | — | — |
 | **S7** | Billing + Auth Polish | ⚪ Locked | — | — |

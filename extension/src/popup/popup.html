@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Twin AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="logo">✨</span>
+      <div>
+        <h1>Writing Twin AI</h1>
+        <p class="tagline">Write like yourself. Not like AI.</p>
+      </div>
+    </header>
+
+    <div id="view-login" class="view">
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="submit" id="login-btn">Log in</button>
+        <p id="login-error" class="error-msg" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <div id="view-logged-in" class="view hidden">
+      <div class="account-row">
+        <div class="avatar" id="avatar-initial"></div>
+        <div class="account-info">
+          <span id="account-email" class="account-email"></span>
+          <span class="plan-badge">Free plan</span>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <p>Open Gmail → compose an email → click <strong>✨ Humanize</strong> in the toolbar.</p>
+        <p class="shortcut">Shortcut: <kbd>⌘⇧H</kbd></p>
+      </div>
+
+      <button id="logout-btn" class="btn-secondary">Log out</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
