@@ -190,6 +190,44 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
 - Commit: `05a258c`
 - Status: ✅ Complete
 
+## [2026-05-31] Sprint 2 — Humanization API
+
+- Files created:
+  - `backend/alembic/versions/0002_rewrites.py` — creates `rewrites` table (all columns + indexes)
+  - `backend/app/models/rewrite.py` — Rewrite ORM model with quality score columns
+  - `backend/app/prompts/__init__.py`
+  - `backend/app/prompts/humanize_base.py` — humanize.base.v1 prompt (`build_messages`)
+  - `backend/app/prompts/context_intent.py` — context.detect.v1 + intent.classify.v1 prompts + parsers
+  - `backend/app/prompts/quality_v1.py` — quality.score.v1 prompt
+  - `backend/app/repositories/rewrite_repo.py` — create, get_by_id, update_feedback, update_quality_score
+  - `backend/app/routers/humanize.py` — POST /v1/humanize, POST /v1/humanize/{id}/feedback
+  - `backend/app/schemas/humanize.py` — HumanizeRequest, RewriteResponse, FeedbackRequest
+  - `backend/app/services/cache_service.py` — exact Redis cache + semantic Qdrant cache
+  - `backend/app/services/humanize_service.py` — full pipeline orchestrator
+  - `backend/app/services/quality_service.py` — fire-and-forget async quality scoring
+  - `backend/app/services/router_service.py` — plan-based LLM routing + fallback chains
+  - `backend/tests/test_humanize.py` — 6 tests
+- Files modified:
+  - `backend/app/main.py` — import all models; register humanize router; call configure_keys() in lifespan
+  - `backend/pyproject.toml` — `asyncio_default_test_loop_scope = session`; ruff E501 ignore for prompts/
+- Packages added: none (all already in Sprint 1 dependencies)
+- Migration: `0002_rewrites` — creates rewrites table
+- Tests: 6/6 humanize + 6/6 auth = 12/12 passing
+- Quality: ruff ✅  mypy ✅  pytest ✅
+- Key decisions:
+  - Exact cache key: SHA-256 of `tone:normalized_text`, TTL 24h
+  - Semantic cache via Qdrant + text-embedding-3-small, skips gracefully if OPENAI_API_KEY unset
+  - Context + intent detection run concurrently via asyncio.gather, fallback to "other"
+  - Plan routing: free→Gemini Flash, pro/team→Claude Haiku, enterprise/executive→Claude Sonnet
+  - Quality scoring gated behind FEATURE_QUALITY_RETRY flag (default False)
+  - Test strings use module-level `_RUN_ID = str(uuid4())[:8]` to avoid Redis cache pollution between runs
+- Branch: `sprint-02-humanization-api`
+- Commit: `5408f75`
+- PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/2
+- Status: ✅ Complete
+
+---
+
 ## [2026-05-30] Doc Update — Founding Constitution Integration
 
 - Files created:
