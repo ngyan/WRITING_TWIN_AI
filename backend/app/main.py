@@ -11,8 +11,10 @@ import app.models.feature_flag  # noqa: F401
 import app.models.rewrite  # noqa: F401
 import app.models.usage_event  # noqa: F401
 import app.models.user  # noqa: F401
+import app.models.writing_profile  # noqa: F401
 from app.core.config import settings
 from app.routers import auth, health
+from app.routers import dna as dna_router
 from app.routers import humanize as humanize_router
 
 logger = structlog.get_logger()
@@ -62,6 +64,7 @@ def create_app() -> FastAPI:
     application.include_router(health.router)
     application.include_router(auth.router)
     application.include_router(humanize_router.router)
+    application.include_router(dna_router.router)
     return application
 
 
