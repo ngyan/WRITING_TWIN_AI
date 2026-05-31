@@ -21,6 +21,12 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface DnaProfileResponse {
+  extraction_status: string;
+  version: number | null;
+  sample_count: number;
+}
+
 async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -42,6 +48,30 @@ export async function login(email: string, password: string): Promise<LoginRespo
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
+}
+
+export async function register(email: string, password: string): Promise<LoginResponse> {
+  await request<unknown>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  return login(email, password);
+}
+
+export async function submitDnaSamples(rawTexts: string[], token: string): Promise<void> {
+  const samples = rawTexts.map((body) => ({ source: 'email', body }));
+  await request<void>('/dna/samples', {
+    method: 'POST',
+    body: JSON.stringify({ samples }),
+  }, token);
+}
+
+export async function getDnaProfile(token: string): Promise<DnaProfileResponse | null> {
+  try {
+    return await request<DnaProfileResponse>('/dna/profile', { method: 'GET' }, token);
+  } catch {
+    return null;
+  }
 }
 
 export async function humanize(text: string, tone: Tone, token: string): Promise<RewriteResponse> {

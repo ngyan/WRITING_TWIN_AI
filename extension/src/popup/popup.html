@@ -16,6 +16,7 @@
       </div>
     </header>
 
+    <!-- Login view -->
     <div id="view-login" class="view">
       <form id="login-form">
         <label for="email">Email</label>
@@ -25,8 +26,43 @@
         <button type="submit" id="login-btn">Log in</button>
         <p id="login-error" class="error-msg" aria-live="polite"></p>
       </form>
+      <p class="switch-link">Don't have an account? <a href="#" id="go-register">Create one</a></p>
     </div>
 
+    <!-- Register view -->
+    <div id="view-register" class="view hidden">
+      <p class="view-title">Create your account</p>
+      <form id="register-form">
+        <label for="reg-email">Email</label>
+        <input id="reg-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        <label for="reg-password">Password</label>
+        <input id="reg-password" type="password" placeholder="At least 8 characters" autocomplete="new-password" required>
+        <button type="submit" id="register-btn">Create account</button>
+        <p id="register-error" class="error-msg" aria-live="polite"></p>
+      </form>
+      <p class="switch-link">Already have an account? <a href="#" id="go-login">Log in</a></p>
+    </div>
+
+    <!-- DNA setup view -->
+    <div id="view-dna-setup" class="view hidden">
+      <p class="view-title">Train your Writing Twin</p>
+      <p class="view-subtitle">Paste 3+ emails or messages you've written. Separate each with <strong>---</strong> on its own line.</p>
+      <textarea
+        id="dna-textarea"
+        placeholder="Hi Sarah,&#10;Just following up on our call last week...&#10;&#10;---&#10;&#10;Hey team,&#10;Quick update on the project status..."
+        rows="8"
+        spellcheck="false"
+      ></textarea>
+      <p id="dna-sample-count" class="sample-count"></p>
+      <button id="dna-submit-btn">Train Writing Twin</button>
+      <p id="dna-error" class="error-msg" aria-live="polite"></p>
+      <p class="dna-success hidden" id="dna-success">
+        Training in progress. Your Writing Twin will be ready in ~30 seconds. ✓
+      </p>
+      <button id="dna-skip-btn" class="btn-link">Skip for now</button>
+    </div>
+
+    <!-- Logged-in view -->
     <div id="view-logged-in" class="view hidden">
       <div class="account-row">
         <div class="avatar" id="avatar-initial"></div>
@@ -34,6 +70,15 @@
           <span id="account-email" class="account-email"></span>
           <span class="plan-badge">Free plan</span>
         </div>
+      </div>
+
+      <div id="dna-prompt-box" class="dna-prompt hidden">
+        <p class="dna-prompt-title">Your Writing Twin isn't trained yet</p>
+        <button id="setup-dna-btn">Train Writing Twin</button>
+      </div>
+
+      <div id="dna-trained-box" class="dna-trained hidden">
+        <span class="dna-trained-badge">✓ Writing Twin trained</span>
       </div>
 
       <div class="tip-box">
