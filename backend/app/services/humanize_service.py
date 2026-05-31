@@ -8,9 +8,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.models.user import User
 from app.prompts import context_intent, humanize_base
+from app.prompts.humanize import dna_v1
 from app.repositories import rewrite_repo
 from app.schemas.humanize import FeedbackRequest, HumanizeRequest, RewriteResponse
-from app.services import cache_service, quality_service, router_service
+from app.services import (
+    cache_service,
+    cultural_service,
+    memory_service,
+    personalization_service,
+    quality_service,
+    router_service,
+)
 
 log = structlog.get_logger()
 
@@ -33,17 +41,33 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         log.info("cache.semantic.hit", user_id=str(user.id))
         return RewriteResponse.model_validate({**semantic, "cache_hit": True})
 
-    # 4 — Select model and build prompt
-    mc = router_service.select_model(user.plan, req.tone, context_detected)
-    messages = humanize_base.build_messages(req.tone, req.text)
+    # 4 — Personalization context (DNA + memory + cultural) — best-effort
+    dna_block: str | None = None
+    memory_examples: list[str] = []
+    profile_version_used: int | None = None
+    if req.use_dna:
+        dna_block, memory_examples, profile_version_used = (
+            await personalization_service.build_context(db, user.id, req.text, req.tone)
+        )
+    locale = getattr(user, "locale", "en-US") or "en-US"
+    cultural_block = cultural_service.get_block(locale, req.tone)
 
-    # 5 — Call LLM
+    # 5 — Select model and build prompt
+    mc = router_service.select_model(user.plan, req.tone, context_detected)
+    if dna_block:
+        messages = dna_v1.build_messages(
+            req.tone, req.text, dna_block, memory_examples, cultural_block
+        )
+    else:
+        messages = humanize_base.build_messages(req.tone, req.text)
+
+    # 6 — Call LLM
     t0 = time.monotonic()
     output_text, in_tok, out_tok = await router_service.complete(mc, messages)
     latency_ms = int((time.monotonic() - t0) * 1000)
     cost_usd = router_service.compute_cost(mc, in_tok, out_tok)
 
-    # 6 — Persist
+    # 7 — Persist
     row = await rewrite_repo.create(db, {
         "user_id": user.id,
         "input_text": req.text,
@@ -61,7 +85,7 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         "cost_usd": cost_usd,
     })
 
-    # 7 — Store in cache (fire-and-forget)
+    # 8 — Store in cache (fire-and-forget)
     response_payload = {
         "id": str(row.id),
         "output_text": output_text,
@@ -73,13 +97,14 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         "cost_usd": cost_usd,
         "context_detected": context_detected,
         "intent_detected": intent_detected,
+        "profile_version_used": profile_version_used,
     }
     asyncio.create_task(cache_service.store_exact(input_hash, response_payload))
     asyncio.create_task(
         cache_service.store_semantic(req.text, req.tone, row.id, output_text)
     )
 
-    # 8 — Quality scoring (async, gated behind feature flag)
+    # 9 — Quality scoring (async, gated behind feature flag)
     if settings.FEATURE_QUALITY_RETRY:
         quality_service.schedule_scoring(str(row.id), req.text, output_text, req.tone)
 
@@ -103,6 +128,21 @@ async def record_feedback(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Rewrite not found")
     await rewrite_repo.update_feedback(db, row, req.action, req.thumb, req.edit_text)
+
+    # Communication Memory Engine — store accepted/edited rewrites as learning signal
+    if req.action in ("accepted", "edited"):
+        final_text = req.edit_text if req.action == "edited" and req.edit_text else row.output_text
+        asyncio.create_task(
+            memory_service.store_memory(
+                user_id=user.id,
+                rewrite_id=row.id,
+                action=req.action,
+                final_text=final_text,
+                original_output=row.output_text,
+                tone=row.tone,
+                context=row.context_detected,
+            )
+        )
 
 
 async def _detect_context_intent(text: str) -> tuple[str, str]:

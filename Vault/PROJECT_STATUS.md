@@ -7,9 +7,9 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 3 — Chrome Extension MVP Complete
-**Current Sprint:** Sprint 4 — Writing DNA Engine
-**Next Sprint:** Sprint 5 — Personalization
+**Phase:** Sprint 4 — Writing DNA Engine Complete
+**Current Sprint:** Sprint 5 — Personalization
+**Next Sprint:** Sprint 6 — AI Routing Hardening + Quality Retry
 **Target Launch:** MVP by end of Sprint 5 (~3–7 weeks from now)
 
 ---
@@ -18,9 +18,9 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 40% | Sprint 3 complete, Chrome extension built |
+| **MVP Readiness** | 55% | Sprint 4 complete, DNA engine + Chrome extension built |
 | **Production Readiness** | 20% | VPS + NGINX + SSL live, Postgres + Redis + Qdrant in Docker |
-| **Test Coverage** | 10% | 12 tests passing (auth + humanize) |
+| **Test Coverage** | 15% | 17 tests passing (auth + humanize + dna) |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
 | **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
@@ -29,7 +29,17 @@
 
 ## ✅ Last Completed Tasks (2026-05-31)
 
-1. **Sprint 2 — Humanization API** complete:
+1. **Sprint 4 — Writing DNA Engine** complete:
+   - `POST /v1/dna/samples` — accepts 1–200 writing samples, fires background extraction
+   - `GET /v1/dna/profile` — returns quantitative + qualitative DNA scores
+   - `POST /v1/dna/profile/refine` — re-triggers extraction from existing data
+   - `DELETE /v1/dna/profile` — removes DB row + Qdrant vectors (GDPR)
+   - Background pipeline: embed → Qdrant (skips if no OPENAI_API_KEY), LLM extraction → JSONB columns
+   - LLM routing: Claude Haiku → Gemini Flash fallback for reliable JSON output
+   - 17/17 tests passing, ruff ✅, mypy ✅
+   - PR #4 merged: https://github.com/ngyan/WRITING_TWIN_AI/pull/4
+
+2. **Sprint 2 — Humanization API** complete:
    - `POST /v1/humanize` — full pipeline: exact cache → semantic cache → context/intent detection → LLM routing → persist → async quality scoring
    - `POST /v1/humanize/{id}/feedback` — accept/reject/edit signals
    - Plan-based routing: free→Gemini Flash, pro/team→Claude Haiku, enterprise/executive→Claude Sonnet
@@ -72,14 +82,14 @@
 
 ## 🔜 Next Task
 
-**Sprint 3 — Chrome Extension MVP:**
-- Read `Vault/active/SPRINT_03_CHROME_EXTENSION.md` (create if not exists)
-- Branch: `sprint-03-chrome-extension`
-- Goal: Gmail compose hook that injects "Humanize" button → calls `/v1/humanize` → replaces selected text
+**Sprint 5 — Personalization (DNA + Memory + Cultural engines):**
+- Read `Vault/active/SPRINT_05_PERSONALIZATION.md`
+- Branch: `sprint-05-personalization`
+- Goal: Use extracted Writing DNA to personalize humanize output; add Communication Memory
 
-**Before Sprint 3:**
-- Deploy Sprint 1 + 2 backend to VPS (Postgres + Redis + Qdrant need setup on `72.61.236.80`)
-- Set `.env` on VPS with all API keys (never in git)
+**Before Sprint 5:**
+- Deploy Sprint 4 backend to VPS (run `./Vault/deploy/deploy.sh full`; adds `writing_profiles` table via migration)
+- Ensure Anthropic + Gemini API keys are set in VPS backend `.env`
 
 ---
 
@@ -107,9 +117,9 @@
 |---|---|---|---|---|
 | **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | `05a258c` |
 | **S2** | Humanization API | 🟢 Done | `sprint-02-humanization-api` | `5408f75` |
-| **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | pending |
-| **S4** | Writing DNA Engine | 🔵 Next | — | — |
-| **S5** | Personalization (DNA + Memory + Cultural) | ⚪ Locked | — | — |
+| **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | — |
+| **S4** | Writing DNA Engine | 🟢 Done | `sprint-04-writing-dna` | `7a06806` |
+| **S5** | Personalization (DNA + Memory + Cultural) | 🔵 Next | — | — |
 | **S6** | AI Routing Hardening + Quality Retry | ⚪ Locked | — | — |
 | **S7** | Billing + Auth Polish | ⚪ Locked | — | — |
 | **S8** | Frontend Dashboard | ⚪ Locked | — | — |

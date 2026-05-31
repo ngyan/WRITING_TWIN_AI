@@ -26,6 +26,7 @@ class RewriteResponse(BaseModel):
     cost_usd: float
     context_detected: str | None
     intent_detected: str | None
+    profile_version_used: int | None = None
 
 
 class FeedbackRequest(BaseModel):

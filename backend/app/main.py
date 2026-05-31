@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure all ORM models are registered with Base.metadata before alembic / test DB setup
 import app.models.audit_log  # noqa: F401
+import app.models.communication_memory  # noqa: F401
 import app.models.feature_flag  # noqa: F401
 import app.models.rewrite  # noqa: F401
 import app.models.usage_event  # noqa: F401

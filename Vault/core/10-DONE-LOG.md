@@ -226,6 +226,36 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
 - PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/2
 - Status: ✅ Complete
 
+## [2026-05-31] Sprint 4 — Writing DNA Engine
+
+- Files created:
+  - `backend/alembic/versions/0003_writing_profiles.py` — writing_profiles table (quantitative + JSONB qualitative columns)
+  - `backend/app/models/writing_profile.py` — WritingProfile ORM model
+  - `backend/app/prompts/dna/__init__.py`
+  - `backend/app/prompts/dna/extract_v1.py` — `dna.extract.v1` prompt (builds samples block + LLM messages)
+  - `backend/app/repositories/dna_repo.py` — get_by_user_id, upsert_profile, update_scores, mark_failed, delete_profile
+  - `backend/app/repositories/qdrant_repo.py` — ensure_dna_collection, upsert_sample_vectors, delete_user_vectors, embed_texts
+  - `backend/app/routers/dna.py` — POST /v1/dna/samples (202), GET /v1/dna/profile, POST /v1/dna/profile/refine (202), DELETE /v1/dna/profile (204)
+  - `backend/app/schemas/dna.py` — WritingSampleInput, DNASamplesRequest, DNASamplesResponse, WritingProfileRead
+  - `backend/app/services/dna_service.py` — submit_samples, get_profile, refine_profile, delete_profile
+  - `backend/app/tasks/__init__.py`
+  - `backend/app/tasks/extract_dna_task.py` — run_extraction pipeline (embed → Qdrant, LLM → JSONB update)
+  - `backend/tests/test_dna.py` — 5 tests
+- Files modified:
+  - `backend/app/main.py` — import writing_profile model; register dna_router
+- Migration: `0003_writing_profiles`
+- Tests: 5 DNA + 12 existing = 17/17 passing
+- Quality: ruff ✅  mypy ✅  pytest ✅
+- Key decisions:
+  - Shared Qdrant collection `user_writing_samples` (not per-user) — filtered by `user_id` payload; better scaling per Qdrant docs
+  - Qdrant + OpenAI embedding gracefully skipped when OPENAI_API_KEY is absent
+  - `asyncio.create_task` (not Celery) for background extraction — consistent with quality_service.py
+  - LLM: Claude Haiku → Gemini Flash fallback for reliable JSON output
+  - extraction_status: "pending" | "processing" | "complete" | "failed"
+- Branch: `sprint-04-writing-dna`
+- PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/4
+- Status: ✅ Complete
+
 ---
 
 ## [2026-05-30] Doc Update — Founding Constitution Integration
