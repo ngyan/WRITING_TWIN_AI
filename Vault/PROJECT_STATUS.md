@@ -1,16 +1,16 @@
 # Writing Twin AI — Project Status Dashboard
 
 > **Update this file at the end of every sprint.**
-> **Last Updated:** 2026-05-30 (evening)
+> **Last Updated:** 2026-05-31
 
 ---
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 1 — Backend Foundation Complete
-**Current Sprint:** Sprint 2 — Humanization API
-**Next Sprint:** Sprint 3 — Chrome Extension MVP
-**Target Launch:** MVP by end of Sprint 5 (~4–8 weeks from now)
+**Phase:** Sprint 3 — Chrome Extension MVP Complete
+**Current Sprint:** Sprint 4 — Writing DNA Engine
+**Next Sprint:** Sprint 5 — Personalization
+**Target Launch:** MVP by end of Sprint 5 (~3–7 weeks from now)
 
 ---
 
@@ -18,9 +18,9 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 15% | Sprint 1 complete, FastAPI auth + DB live |
+| **MVP Readiness** | 40% | Sprint 3 complete, Chrome extension built |
 | **Production Readiness** | 20% | VPS + NGINX + SSL live, Postgres + Redis + Qdrant in Docker |
-| **Test Coverage** | 5% | 6 auth tests passing |
+| **Test Coverage** | 10% | 12 tests passing (auth + humanize) |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
 | **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
@@ -29,7 +29,18 @@
 
 ## ✅ Last Completed Tasks (2026-05-31)
 
-1. **Sprint 1 — Backend Foundation** complete:
+1. **Sprint 2 — Humanization API** complete:
+   - `POST /v1/humanize` — full pipeline: exact cache → semantic cache → context/intent detection → LLM routing → persist → async quality scoring
+   - `POST /v1/humanize/{id}/feedback` — accept/reject/edit signals
+   - Plan-based routing: free→Gemini Flash, pro/team→Claude Haiku, enterprise/executive→Claude Sonnet
+   - Fallback chains on provider errors (gemini→gpt-4o-mini→claude-haiku, etc.)
+   - Exact cache: Redis SHA-256(tone:text), TTL 24h
+   - Semantic cache: Qdrant + text-embedding-3-small, cosine ≥ 0.93, skips if no OPENAI_API_KEY
+   - Quality scoring: fire-and-forget, gated behind FEATURE_QUALITY_RETRY flag
+   - 12/12 tests passing, ruff ✅, mypy ✅
+   - PR #2 merged: https://github.com/ngyan/WRITING_TWIN_AI/pull/2
+
+2. **Sprint 1 — Backend Foundation** complete (prior session):
    - FastAPI 0.110+ with async SQLAlchemy 2.0, asyncpg, Alembic
    - Auth: JWT (15min access + 30-day refresh), bcrypt password hashing
    - Routes: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/refresh`, `GET /v1/auth/me`, `GET /v1/health`
@@ -61,15 +72,14 @@
 
 ## 🔜 Next Task
 
-**Immediate** — Drive 30 users to `writingtwinai.com`:
-- Share with target users: non-native English professionals (engineers, PMs, founders, consultants)
-- Monitor: `https://api.writingtwinai.com/stats` + email inbox for per-submission notifications
-- Track: total comparisons, % preferring personalized, waitlist sign-ups, payment intent
+**Sprint 3 — Chrome Extension MVP:**
+- Read `Vault/active/SPRINT_03_CHROME_EXTENSION.md` (create if not exists)
+- Branch: `sprint-03-chrome-extension`
+- Goal: Gmail compose hook that injects "Humanize" button → calls `/v1/humanize` → replaces selected text
 
-**When Phase 0 threshold met (30 users, 60%+):**
-- Start Sprint 1 — Backend Foundation
-- Paste prompt from `active/SPRINT_01_BACKEND_FOUNDATION.md` into Claude Code
-- Branch: `sprint-01-backend-foundation`
+**Before Sprint 3:**
+- Deploy Sprint 1 + 2 backend to VPS (Postgres + Redis + Qdrant need setup on `72.61.236.80`)
+- Set `.env` on VPS with all API keys (never in git)
 
 ---
 
@@ -96,9 +106,9 @@
 | Sprint | Name | Status | Branch | Commit |
 |---|---|---|---|---|
 | **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | `05a258c` |
-| **S2** | Humanization API | 🔵 In Progress | — | — |
-| **S3** | Chrome Extension MVP | ⚪ Locked | — | — |
-| **S4** | Writing DNA Engine | ⚪ Locked | — | — |
+| **S2** | Humanization API | 🟢 Done | `sprint-02-humanization-api` | `5408f75` |
+| **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | pending |
+| **S4** | Writing DNA Engine | 🔵 Next | — | — |
 | **S5** | Personalization (DNA + Memory + Cultural) | ⚪ Locked | — | — |
 | **S6** | AI Routing Hardening + Quality Retry | ⚪ Locked | — | — |
 | **S7** | Billing + Auth Polish | ⚪ Locked | — | — |

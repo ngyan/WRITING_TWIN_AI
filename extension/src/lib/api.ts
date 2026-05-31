@@ -1,0 +1,63 @@
+export const API_BASE = 'https://api.writingtwinai.com/v1';
+
+export type Tone = 'casual' | 'professional' | 'executive' | 'friendly' | 'direct' | 'diplomatic';
+
+export interface RewriteResponse {
+  id: string;
+  output_text: string;
+  cache_hit: boolean;
+  provider: string;
+  model: string;
+  latency_ms: number;
+  cost_usd: number;
+  quality_score: number | null;
+  context_detected: string | null;
+  intent_detected: string | null;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` })) as { detail: string };
+    throw new Error(err.detail);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  return request<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function humanize(text: string, tone: Tone, token: string): Promise<RewriteResponse> {
+  return request<RewriteResponse>('/humanize', {
+    method: 'POST',
+    body: JSON.stringify({ text, tone }),
+  }, token);
+}
+
+export async function submitFeedback(
+  rewriteId: string,
+  action: 'accepted' | 'rejected',
+  token: string,
+): Promise<void> {
+  await request<void>(`/humanize/${rewriteId}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ action }),
+  }, token);
+}

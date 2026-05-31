@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: writing_twin_postgres
+    environment:
+      POSTGRES_USER: wt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: writing_twin
+    volumes:
+      - wt_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wt -d writing_twin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - wt_prod
+
+  redis:
+    image: redis:7-alpine
+    container_name: writing_twin_redis
+    volumes:
+      - wt_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - wt_prod
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: writing_twin_qdrant
+    volumes:
+      - wt_qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333' 2>/dev/null && echo ok || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - wt_prod
+
+  api:
+    build: ./backend
+    container_name: writing_twin_api
+    env_file: ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8010:8000"
+    restart: unless-stopped
+    networks:
+      - wt_prod
+
+networks:
+  wt_prod:
+    name: wt_prod
+
+volumes:
+  wt_postgres_data:
+  wt_redis_data:
+  wt_qdrant_data:

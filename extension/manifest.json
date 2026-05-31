@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Writing Twin AI",
+  "version": "0.1.0",
+  "description": "Rewrite your emails to sound exactly like you.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://api.writingtwinai.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content/gmail.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Writing Twin AI"
+  }
+}

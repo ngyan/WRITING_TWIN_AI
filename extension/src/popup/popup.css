@@ -1,0 +1,154 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #1F2937;
+  background: #fff;
+  width: 280px;
+  min-height: 160px;
+}
+
+.container { padding: 16px; }
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F4F5F7;
+}
+.logo { font-size: 22px; line-height: 1; }
+h1 { font-size: 14px; font-weight: 700; color: #0F172A; line-height: 1.2; }
+.tagline { font-size: 11px; color: #6B7280; margin-top: 1px; }
+
+/* Login form */
+label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+input[type="email"], input[type="password"] {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1.5px solid #E8EAED;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1F2937;
+  outline: none;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+input:focus { border-color: #4F46E5; }
+
+#login-btn {
+  width: 100%;
+  height: 36px;
+  background: #4F46E5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+#login-btn:hover { background: #3F37C9; }
+#login-btn:disabled { opacity: 0.6; cursor: default; }
+
+.error-msg {
+  font-size: 11px;
+  color: #EF4444;
+  min-height: 16px;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* Logged in view */
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F4F5F7;
+  margin-bottom: 12px;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4F46E5;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.account-email {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1F2937;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plan-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4F46E5;
+  background: #EDE9FE;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-top: 2px;
+}
+
+.tip-box {
+  background: #F4F5F7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.5;
+}
+.tip-box p + p { margin-top: 4px; }
+.shortcut { font-size: 11px; color: #6B7280; }
+kbd {
+  background: #fff;
+  border: 1px solid #D2D5DA;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.btn-secondary {
+  width: 100%;
+  height: 32px;
+  background: #fff;
+  color: #374151;
+  border: 1.5px solid #E8EAED;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-secondary:hover { border-color: #EF4444; color: #EF4444; }
+
+/* View toggle */
+.view { }
+.hidden { display: none; }
