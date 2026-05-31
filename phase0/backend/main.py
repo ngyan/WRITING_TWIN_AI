@@ -19,6 +19,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 
 CORS_ORIGINS = [
     ALLOWED_ORIGIN,
@@ -70,10 +71,14 @@ class RewriteResponse(BaseModel):
 
 class FeedbackRequest(BaseModel):
     session_id: str
-    chosen_option: str  # "option1" or "option2"
+    chosen_option: str  # "option1" | "option2" | "nodiff"
     option_order: list[str]  # echoed from RewriteResponse
     would_send: bool
-    email: str | None = None  # waitlist signup
+    confidence: int | None = None  # 1-5
+    comment: str | None = None
+    email: str | None = None
+    role: str | None = None
+    payment_intent: str | None = None  # "no" | "maybe" | "$5/mo" | "$10/mo" | "$20/mo"
 
 
 class FeedbackResponse(BaseModel):
@@ -175,18 +180,28 @@ async def _log_feedback(
     chosen_option: str,
     option_order: list[str],
     would_send: bool,
+    confidence: int | None,
+    comment: str | None,
     email: str | None,
+    role: str | None,
+    payment_intent: str | None,
 ):
-    # Determine which version was preferred
-    idx = 0 if chosen_option == "option1" else 1
-    preferred_version = option_order[idx]  # "generic" or "personalized"
+    if chosen_option == "nodiff":
+        preferred_version = "none"
+    else:
+        idx = 0 if chosen_option == "option1" else 1
+        preferred_version = option_order[idx]  # "generic" or "personalized"
 
     record = {
         "session_id": session_id,
         "chosen_option": chosen_option,
         "preferred_version": preferred_version,
         "would_send": would_send,
+        "confidence": confidence,
+        "comment": comment,
         "email": email,
+        "role": role,
+        "payment_intent": payment_intent,
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -198,6 +213,96 @@ async def _log_feedback(
                 r.lpush("phase0:waitlist", json.dumps({"email": email, "ts": record["ts"]}))
     except Exception:
         pass
+
+    asyncio.create_task(_notify_founder(record))
+
+
+async def _notify_founder(record: dict):
+    """Email Gyan every time someone submits feedback."""
+    if not RESEND_API_KEY:
+        return
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+
+        preferred = record.get("preferred_version", "?")
+        would_send = "Yes" if record.get("would_send") else "No"
+        confidence = record.get("confidence") or "—"
+        comment = record.get("comment") or "—"
+        email = record.get("email") or "—"
+        role = record.get("role") or "—"
+        payment = record.get("payment_intent") or "—"
+        ts = record.get("ts", "")[:19].replace("T", " ")
+
+        rows = [
+            ("Preferred version", preferred.upper()),
+            ("Would send as-is", would_send),
+            ("Confidence (1–5)", str(confidence)),
+            ("Comment", comment),
+            ("Email", email),
+            ("Role", role),
+            ("Payment intent", payment),
+            ("Time", ts + " UTC"),
+        ]
+        table_rows = "".join(
+            f'<tr><td style="padding:6px 12px;color:#666;white-space:nowrap">{k}</td>'
+            f'<td style="padding:6px 12px;color:#111;font-weight:500">{v}</td></tr>'
+            for k, v in rows
+        )
+
+        resend.Emails.send({
+            "from": "Writing Twin <waitlist@writingtwinai.com>",
+            "to": ["ngyan.prakash@gmail.com"],
+            "subject": f"[Writing Twin] New response — preferred: {preferred}",
+            "html": f"""
+<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#111">
+  <p style="font-size:16px;font-weight:600;margin:0 0 16px">New demo response</p>
+  <table style="width:100%;border-collapse:collapse;background:#f9f9f9;border-radius:8px;overflow:hidden">
+    {table_rows}
+  </table>
+  <p style="color:#888;font-size:12px;margin:20px 0 0">
+    Session: {record.get('session_id','')[:8]}... ·
+    <a href="https://api.writingtwinai.com/responses" style="color:#888">View all responses</a>
+  </p>
+</div>
+""",
+        })
+    except Exception:
+        pass
+
+
+async def _send_waitlist_email(email: str):
+    if not RESEND_API_KEY:
+        return
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        resend.Emails.send({
+            "from": "Writing Twin <waitlist@writingtwinai.com>",
+            "to": [email],
+            "reply_to": "ngyan.prakash@gmail.com",
+            "subject": "You're on the Writing Twin waitlist ✓",
+            "html": """
+<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#111">
+  <p style="font-size:20px;font-weight:600;margin:0 0 16px">You're on the list.</p>
+  <p style="color:#444;line-height:1.6;margin:0 0 16px">
+    Thanks for testing Writing Twin. Your feedback helps us validate whether
+    AI can genuinely learn someone's writing voice — not just polish their prose.
+  </p>
+  <p style="color:#444;line-height:1.6;margin:0 0 24px">
+    We're running this demo with ~20 professionals. If 70%+ prefer the personalized
+    version, we'll build the Chrome Extension next (Gmail + LinkedIn).
+    Early access users get a <strong>60-day free Pro trial</strong> when it launches.
+  </p>
+  <p style="color:#444;line-height:1.6;margin:0 0 8px">
+    We'll email you as soon as it's ready. One email, no spam.
+  </p>
+  <p style="color:#888;font-size:13px;margin:32px 0 0">— Gyan, founder of Writing Twin</p>
+</div>
+""",
+        })
+    except Exception:
+        pass  # email is best-effort, never block the response
 
 
 # --- Routes ---
@@ -239,9 +344,15 @@ async def feedback(req: FeedbackRequest):
             req.chosen_option,
             req.option_order,
             req.would_send,
+            req.confidence,
+            req.comment,
             req.email,
+            req.role,
+            req.payment_intent,
         )
     )
+    if req.email:
+        asyncio.create_task(_send_waitlist_email(req.email))
     return FeedbackResponse(ok=True)
 
 
@@ -261,6 +372,7 @@ async def stats():
         would_send = sum(1 for r in records if r.get("would_send"))
         waitlist = r.llen("phase0:waitlist")
 
+        would_pay = [r.get("payment_intent") for r in records if r.get("payment_intent") and r.get("payment_intent") != "no"]
         return {
             "total_comparisons": total,
             "preferred_personalized": preferred_personalized,
@@ -268,10 +380,58 @@ async def stats():
             "would_send": would_send,
             "would_send_pct": round(would_send / total * 100) if total else 0,
             "waitlist_signups": waitlist,
+            "payment_interest": len(would_pay),
+            "payment_intent_breakdown": {v: would_pay.count(v) for v in set(would_pay)},
             "phase0_threshold_met": (
-                total >= 10
-                and (preferred_personalized / total >= 0.70 if total else False)
+                total >= 30
+                and (preferred_personalized / total >= 0.60 if total else False)
             ),
         }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+class PaymentIntentRequest(BaseModel):
+    session_id: str
+    payment_intent: str
+
+
+@app.post("/payment-intent")
+async def payment_intent(req: PaymentIntentRequest):
+    """Store payment intent submitted from the thank-you screen."""
+    try:
+        r = get_redis()
+        if r:
+            r.lpush("phase0:payment-intent", json.dumps({
+                "session_id": req.session_id,
+                "payment_intent": req.payment_intent,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }))
+            # Patch into existing feedback record if it exists
+            raw = r.lrange("phase0:feedback", 0, -1)
+            for i, item in enumerate(raw):
+                rec = json.loads(item)
+                if rec.get("session_id") == req.session_id:
+                    rec["payment_intent"] = req.payment_intent
+                    r.lset("phase0:feedback", i, json.dumps(rec))
+                    break
+    except Exception:
+        pass
+    return {"ok": True}
+
+
+@app.get("/responses")
+async def responses():
+    """All individual feedback records — for founder review."""
+    r = get_redis()
+    if not r:
+        return {"error": "Redis not configured"}
+    try:
+        raw = r.lrange("phase0:feedback", 0, -1)
+        records = [json.loads(f) for f in raw]
+        # newest first, hide full session_id
+        for rec in records:
+            rec["session_id"] = rec.get("session_id", "")[:8] + "..."
+        return {"count": len(records), "responses": records}
     except Exception as e:
         return {"error": str(e)}
