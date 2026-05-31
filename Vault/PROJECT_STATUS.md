@@ -95,7 +95,7 @@
 
 | Sprint | Name | Status | Branch | Commit |
 |---|---|---|---|---|
-| **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | TBD |
+| **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | `05a258c` |
 | **S2** | Humanization API | 🔵 In Progress | — | — |
 | **S3** | Chrome Extension MVP | ⚪ Locked | — | — |
 | **S4** | Writing DNA Engine | ⚪ Locked | — | — |

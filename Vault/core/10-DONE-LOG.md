@@ -187,7 +187,7 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
   - All datetime columns use `DateTime(timezone=True)` for asyncpg tz-aware compatibility
   - pytest-asyncio `asyncio_default_fixture_loop_scope = session` + `asyncio_default_test_loop_scope = session` required for shared event loop across session-scope fixtures
 - Branch: `sprint-01-backend-foundation`
-- Commit: TBD
+- Commit: `05a258c`
 - Status: ✅ Complete
 
 ## [2026-05-30] Doc Update — Founding Constitution Integration
