@@ -15,7 +15,9 @@ _TestSessionLocal = async_sessionmaker(_test_engine, expire_on_commit=False, cla
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_test_db():
+    # Always drop first so schema changes between sessions are picked up cleanly
     async with _test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield
     async with _test_engine.begin() as conn:
