@@ -135,6 +135,61 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
 - Commit: `c5e8304`
 - Status: ✅ Complete — live at `https://writingtwinai.com`
 
+---
+
+## [2026-05-31] Sprint 1 — Backend Foundation
+
+- Files created:
+  - `backend/pyproject.toml` — FastAPI + SQLAlchemy + asyncpg + alembic + redis + qdrant-client + structlog + httpx; bcrypt direct (passlib dropped for bcrypt 5.x compat)
+  - `backend/Dockerfile` — python:3.12-slim + uv
+  - `backend/.env.example` — all env vars (app, DB, LLM providers, Stripe, observability, feature flags)
+  - `backend/alembic.ini` — standard alembic config
+  - `backend/alembic/env.py` — async-aware alembic env; imports all 4 models
+  - `backend/alembic/script.py.mako` — standard template
+  - `backend/alembic/versions/0001_initial.py` — creates users, audit_log, usage_events, feature_flags; seeds 6 feature flags
+  - `backend/app/__init__.py`
+  - `backend/app/main.py` — FastAPI app factory with structlog lifespan
+  - `backend/app/core/__init__.py`
+  - `backend/app/core/config.py` — Pydantic Settings (all env vars + feature flags)
+  - `backend/app/core/security.py` — hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+  - `backend/app/core/db.py` — async engine, AsyncSessionLocal, Base
+  - `backend/app/models/__init__.py`
+  - `backend/app/models/user.py` — User model (id, email, hashed_password, full_name, is_active, is_verified, plan, google_id, created_at, updated_at, last_active_at); all datetime columns tz-aware
+  - `backend/app/models/audit_log.py` — AuditLog model per spec
+  - `backend/app/models/usage_event.py` — UsageEvent model per spec
+  - `backend/app/models/feature_flag.py` — FeatureFlag model per spec
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/schemas/auth.py` — RegisterRequest (8-char min), LoginRequest, TokenPair, RefreshRequest
+  - `backend/app/schemas/user.py` — UserRead (from_attributes=True), UserCreate
+  - `backend/app/repositories/__init__.py`
+  - `backend/app/repositories/user_repo.py` — get_by_email, get_by_id, create, update_last_active
+  - `backend/app/services/__init__.py`
+  - `backend/app/services/auth_service.py` — register, login, refresh, get_current_user_by_token
+  - `backend/app/services/audit_service.py` — fire-and-forget asyncio.create_task audit logging
+  - `backend/app/services/usage_service.py` — fire-and-forget usage event logging
+  - `backend/app/routers/__init__.py`
+  - `backend/app/routers/health.py` — GET /v1/health with DB+Redis check
+  - `backend/app/routers/auth.py` — register, login, refresh, logout, me; google/forgot-password/reset-password stubbed (Sprint 7 TODOs)
+  - `backend/app/deps/__init__.py`
+  - `backend/app/deps/db.py` — get_db async generator
+  - `backend/app/deps/auth.py` — current_user dependency (HTTPBearer → decode → DB lookup)
+  - `backend/tests/__init__.py`
+  - `backend/tests/conftest.py` — session-scoped event loop, test DB create/drop, client fixture per test
+  - `backend/tests/test_auth.py` — 6 tests (register, login success, login wrong password, refresh, me with token, me without token)
+  - `docker-compose.yml` — postgres:16 + redis:7 + qdrant:latest + backend with healthchecks
+  - `.gitignore` — Python, Node, env, IDE, logs
+- Packages added: fastapi[standard], uvicorn[standard], sqlalchemy[asyncio], asyncpg, alembic, pydantic, pydantic-settings, python-jose[cryptography], bcrypt>=4, redis, qdrant-client, structlog, httpx; dev: pytest, pytest-asyncio, ruff, mypy
+- Migration: `0001_initial` — creates 4 tables + 6 feature flag seeds
+- Tests: 6/6 passing (`pytest -q`)
+- Quality: ruff ✅  mypy ✅  pytest ✅
+- Key decisions:
+  - Dropped passlib in favour of bcrypt direct — passlib 1.7.4 incompatible with bcrypt 5.x
+  - All datetime columns use `DateTime(timezone=True)` for asyncpg tz-aware compatibility
+  - pytest-asyncio `asyncio_default_fixture_loop_scope = session` + `asyncio_default_test_loop_scope = session` required for shared event loop across session-scope fixtures
+- Branch: `sprint-01-backend-foundation`
+- Commit: TBD
+- Status: ✅ Complete
+
 ## [2026-05-30] Doc Update — Founding Constitution Integration
 
 - Files created:

@@ -7,10 +7,10 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Phase 0 — Validation Demo Live & Collecting Data
-**Current Sprint:** Phase 0 validation in progress — waiting for 30 users, 60%+ personalized preference
-**Next Sprint:** Sprint 1 — Backend Foundation (unlocks when Phase 0 threshold met)
-**Target Launch:** MVP by end of Sprint 5 (~6–10 weeks after Sprint 1 start)
+**Phase:** Sprint 1 — Backend Foundation Complete
+**Current Sprint:** Sprint 2 — Humanization API
+**Next Sprint:** Sprint 3 — Chrome Extension MVP
+**Target Launch:** MVP by end of Sprint 5 (~4–8 weeks from now)
 
 ---
 
@@ -18,18 +18,26 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 5% | Phase 0 live, Sprint 1 not started |
-| **Production Readiness** | 15% | VPS + NGINX + SSL live, no DB yet |
-| **Test Coverage** | 0% | No tests |
+| **MVP Readiness** | 15% | Sprint 1 complete, FastAPI auth + DB live |
+| **Production Readiness** | 20% | VPS + NGINX + SSL live, Postgres + Redis + Qdrant in Docker |
+| **Test Coverage** | 5% | 6 auth tests passing |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
 | **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
 
 ---
 
-## ✅ Last Completed Tasks (2026-05-30)
+## ✅ Last Completed Tasks (2026-05-31)
 
-1. **Phase 0 full redesign** per pivot directive:
+1. **Sprint 1 — Backend Foundation** complete:
+   - FastAPI 0.110+ with async SQLAlchemy 2.0, asyncpg, Alembic
+   - Auth: JWT (15min access + 30-day refresh), bcrypt password hashing
+   - Routes: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/refresh`, `GET /v1/auth/me`, `GET /v1/health`
+   - 4 DB tables: users, audit_log, usage_events, feature_flags (+ 6 feature flag seeds)
+   - Docker Compose: postgres:16 + redis:7 + qdrant:latest + backend with healthchecks
+   - 6/6 tests passing, ruff ✅, mypy ✅
+
+2. **Phase 0 full redesign** per pivot directive:
    - Landing page: hero ("Write Like Yourself. Not Like AI."), 3-step explainer, before/after example, dual CTA
    - Samples step: single textarea replaces 5 boxes; "Try with sample data" button for zero-friction testing
    - Comparison step: Version A/B/No Difference, confidence 1–5, comment, role field
@@ -87,8 +95,8 @@
 
 | Sprint | Name | Status | Branch | Commit |
 |---|---|---|---|---|
-| **S1** | Backend Foundation | ⚪ Not Started | — | — |
-| **S2** | Humanization API | ⚪ Locked | — | — |
+| **S1** | Backend Foundation | 🟢 Done | `sprint-01-backend-foundation` | TBD |
+| **S2** | Humanization API | 🔵 In Progress | — | — |
 | **S3** | Chrome Extension MVP | ⚪ Locked | — | — |
 | **S4** | Writing DNA Engine | ⚪ Locked | — | — |
 | **S5** | Personalization (DNA + Memory + Cultural) | ⚪ Locked | — | — |
