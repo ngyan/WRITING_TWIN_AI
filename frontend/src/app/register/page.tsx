@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { EMAIL_KEY, REFRESH_KEY, TOKEN_KEY, register } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const posthog = usePostHog();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +33,8 @@ export default function RegisterPage() {
       localStorage.setItem(TOKEN_KEY, res.access_token);
       localStorage.setItem(REFRESH_KEY, res.refresh_token);
       localStorage.setItem(EMAIL_KEY, email);
+      posthog?.identify(email, { email });
+      posthog?.capture("user_registered");
       router.push("/onboarding/dna");
     } catch (err) {
       setError((err as Error).message || "Registration failed. Try a different email.");

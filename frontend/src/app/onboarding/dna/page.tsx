@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { Nav } from "@/components/Nav";
 import { DnaProfile, getDnaProfile, getToken, submitDnaSamples } from "@/lib/api";
 
@@ -28,7 +29,7 @@ No blockers. Will share the full analytics in Friday's review.`;
 
 function parseSamples(raw: string): string[] {
   return raw
-    .split(/\n---\n/)
+    .split(/\s*---\s*/)
     .map((s) => s.trim())
     .filter((s) => s.length > 50);
 }
@@ -48,6 +49,7 @@ function ProgressStep({ label, active, done }: { label: string; active?: boolean
 
 export default function DnaOnboardingPage() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [raw, setRaw] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "polling" | "done" | "error">("idle");
   const [profile, setProfile] = useState<DnaProfile | null>(null);
@@ -80,6 +82,7 @@ export default function DnaOnboardingPage() {
       if (p?.extraction_status === "complete") {
         setProfile(p);
         setStatus("done");
+        posthog?.capture("dna_training_complete", { sample_count: p.sample_count });
         clearInterval(interval);
       } else if (p?.extraction_status === "failed") {
         setStatus("error");
@@ -98,6 +101,7 @@ export default function DnaOnboardingPage() {
     setStatus("submitting");
     try {
       await submitDnaSamples(samples);
+      posthog?.capture("dna_samples_submitted", { sample_count: samples.length });
       setStatus("polling");
       startPolling();
     } catch (err) {
@@ -184,7 +188,7 @@ export default function DnaOnboardingPage() {
               />
 
               <p className="text-xs text-neutral-400 mt-2">
-                Separate each sample with <code className="bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded text-[10px]">---</code> on its own line.
+                Separate each sample with <code className="bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded text-[10px]">---</code> between samples.
                 Minimum 3 samples, 50+ characters each.
               </p>
             </div>

@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { usePostHog } from "posthog-js/react";
 
 export default function BillingSuccessPage() {
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog?.capture("billing_success", { plan: "pro_early_adopter" });
+  }, [posthog]);
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-900 flex flex-col items-center justify-center px-4 text-center">
       <div className="text-6xl mb-6">🎉</div>

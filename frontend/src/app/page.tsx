@@ -169,6 +169,7 @@ export default function LandingPage() {
             <Link href="/pricing" className="hover:text-neutral-600 transition-colors">Pricing</Link>
             <a href="mailto:support@writingtwinai.com" className="hover:text-neutral-600 transition-colors">Support</a>
             <Link href="/privacy" className="hover:text-neutral-600 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-neutral-600 transition-colors">Terms</Link>
           </div>
         </div>
       </footer>
