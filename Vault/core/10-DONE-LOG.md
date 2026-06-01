@@ -47,6 +47,29 @@
 
 <!-- Add future sprint entries below this line -->
 
+## [2026-05-31] Sprint 3 — Chrome Extension MVP
+
+- Files created:
+  - `extension/manifest.json` — MV3, Gmail host permissions, storage permission
+  - `extension/src/background.ts` — service worker; message bridge between popup and content script
+  - `extension/src/content/gmail.ts` — Shadow DOM injection into Gmail compose toolbar; ✨ Humanize button + tone picker panel + status/error display; keyboard shortcut Cmd+Shift+H
+  - `extension/src/popup/popup.html` + `popup.ts` + `popup.css` — login/logout UI, token storage
+  - `extension/src/lib/api.ts` — typed wrapper around backend API (login, humanize)
+  - `extension/src/lib/auth.ts` — chrome.storage.local token get/set helpers
+  - `extension/build.mjs` — esbuild bundler script (background, content/gmail, popup)
+  - `extension/package.json`
+  - `extension/tsconfig.json`
+- Files modified: none (greenfield)
+- Notes:
+  - Injects into Gmail compose via Shadow DOM — no page CSS leakage
+  - 6 tones: Professional, Casual, Friendly, Direct, Diplomatic, Executive
+  - JWT stored in `chrome.storage.local` (not cookies)
+  - Build output: ~70 KB
+- Branch: `sprint-03-chrome-extension`
+- Status: ✅ Complete
+
+---
+
 ## [2026-05-30] Phase 0 — Resend Email Integration
 
 - Files modified:
@@ -329,6 +352,110 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
   - Build output: 69.8 KB, zero errors
 - Branch: `main` (gap fill, no dedicated branch needed)
 - Status: ✅ Complete
+
+---
+
+## [2026-06-01] Sprint 7 — Billing (Stripe + Entitlements + Plan Gates)
+
+- Files created:
+  - `backend/alembic/versions/0005_billing.py` — adds `stripe_customer_id`, `stripe_subscription_id`, `plan_expires_at`, `monthly_rewrite_count`, `monthly_reset_at` to users table
+  - `backend/app/routers/billing.py` — `POST /v1/billing/checkout` (Stripe Checkout session), `POST /v1/billing/portal` (customer portal), `POST /v1/billing/webhook` (Stripe webhook handler: checkout.completed, subscription.deleted/updated), `GET /v1/billing/status`
+  - `backend/app/services/billing_service.py` — create_checkout_session, create_portal_session, handle_webhook, get_billing_status
+  - `backend/app/schemas/billing.py` — CheckoutRequest, PortalRequest, BillingStatusResponse
+  - `backend/tests/test_billing.py` — 10 tests
+- Files modified:
+  - `backend/app/main.py` — register billing router
+  - `backend/app/services/humanize_service.py` — monthly rewrite counter check; raises 429 with `LIMIT_REACHED` detail when free (20/mo) or pro (300/mo) limit hit
+  - `backend/app/core/config.py` — `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_YEARLY`, `FREE_MONTHLY_LIMIT=20`, `PRO_MONTHLY_LIMIT=300`
+- Migration: `0005_billing`
+- Tests: 10 billing + 38 existing = 48/48 passing
+- Quality: ruff ✅  mypy ✅  pytest ✅
+- Key decisions:
+  - Stripe Checkout only (PCI compliance — never store card details)
+  - Webhook atomically upgrades user.plan to "pro" on checkout.session.completed
+  - Monthly counter resets via `monthly_reset_at` timestamp checked on each rewrite
+- Branch: `sprint-07-billing`
+- PR: #7 merged
+- Status: ✅ Complete
+
+---
+
+## [2026-06-01] Sprint 8 — Frontend Dashboard (Next.js 14)
+
+- Files created:
+  - `frontend/` — full Next.js 14 App Router project (TypeScript + Tailwind CSS)
+  - `frontend/src/app/page.tsx` — landing page (hero, 3-step, before/after example, pricing CTA, footer with privacy/terms links)
+  - `frontend/src/app/login/page.tsx` — email/password login form → POST /v1/auth/login → store JWT → redirect /dashboard
+  - `frontend/src/app/register/page.tsx` — registration form → POST /v1/auth/register
+  - `frontend/src/app/dashboard/page.tsx` — usage widget (rewrites used/limit), plan badge, DNA status, upgrade CTA
+  - `frontend/src/app/onboarding/dna/page.tsx` — DNA training textarea (splits on `---`), progress polling, completion badge
+  - `frontend/src/app/pricing/page.tsx` — Free vs Pro comparison table, Stripe Checkout button
+  - `frontend/src/app/billing/success/page.tsx` — post-checkout success page
+  - `frontend/src/app/billing/cancel/page.tsx` — post-checkout cancel page
+  - `frontend/src/lib/api.ts` — typed fetch wrapper with JWT auth header
+  - `frontend/src/lib/auth.ts` — localStorage token helpers
+  - `frontend/Dockerfile` — multi-stage Node 20 standalone build; NEXT_PUBLIC_* ARGs baked at build time
+  - `frontend/next.config.ts` — `output: standalone`
+  - `docker-compose.yml` — added `frontend` service (port 3001)
+- Files modified:
+  - `Vault/deploy/deploy.sh` — added frontend rsync + docker build for frontend (reads Stripe price ID + PostHog key from backend/.env at build time)
+- Notes:
+  - NEXT_PUBLIC_* vars baked at Docker build time — deploy.sh exports them before `docker compose build frontend`
+  - DNA sample separator bug fixed: `/\s*---\s*/` instead of `/\n---\n/`
+- Branch: `sprint-08-frontend-dashboard`
+- PR: #8 merged
+- Status: ✅ Complete
+
+---
+
+## [2026-06-01] Sprint 9 — Polish + Launch Readiness
+
+- Files created:
+  - `frontend/src/app/privacy/page.tsx` — full privacy policy (required for Chrome Web Store); covers data collection, LLM providers, Stripe, PostHog, Resend, retention, rights, Chrome extension specifics
+  - `frontend/src/app/terms/page.tsx` — terms of service covering acceptance, service description, plans/billing, IP, AI disclaimer, liability, termination
+  - `frontend/src/app/robots.ts` — Next.js metadata API robots.txt (allows /, disallows /dashboard, /onboarding, /billing; sitemap pointer)
+  - `frontend/src/app/sitemap.ts` — Next.js metadata API sitemap.xml (6 URLs: /, /pricing, /login, /register, /privacy, /terms)
+  - `frontend/src/components/PostHogProvider.tsx` — PostHog client init + `PageviewTracker` (auto-tracks all route changes via `usePathname`)
+- Files modified:
+  - `frontend/src/app/layout.tsx` — wrapped in PostHogProvider
+  - `frontend/src/app/register/page.tsx` — PostHog `identify` + `user_registered` event
+  - `frontend/src/app/login/page.tsx` — PostHog `identify` + `user_logged_in` event
+  - `frontend/src/app/onboarding/dna/page.tsx` — `dna_samples_submitted` + `dna_training_complete` events
+  - `frontend/src/app/pricing/page.tsx` — `upgrade_clicked` event (plan name + price)
+  - `frontend/src/app/billing/success/page.tsx` — `billing_success` event; converted to `"use client"`
+  - `frontend/src/app/billing/cancel/page.tsx` — copy fix: "30 rewrites a day" → "20 rewrites/month"
+  - `frontend/src/app/page.tsx` — added Terms link to footer
+  - `extension/src/content/gmail.ts` — 429 limit-reached shows amber upgrade card (`#wt-limit`) with link to `/pricing` instead of plain error text
+  - `extension/src/lib/api.ts` — auto-refresh JWT on 401 (`tryRefresh()`), retry request with new token; 429 throws `LIMIT_REACHED:<detail>` sentinel
+- Packages added: `posthog-js`
+- Notes:
+  - PostHog `api_host` set to `"https://us.i.posthog.com"` (no custom proxy needed)
+  - Extension keyboard shortcut (Cmd+Shift+H) moved to global document listener — was broken inside `inject()` when button wasn't found
+  - Gmail `[data-tooltip^="Send"]` prefix match fixes "Send ⌘Enter" tooltip mismatch; walk-up depth 12→25
+- Branch: `sprint-09-polish-launch` → squash merged as PR #9
+- Status: ✅ Complete
+
+---
+
+## [2026-06-01] Sprint 10 — Chrome Web Store Packaging
+
+- Files created:
+  - `extension/icons/icon.svg` — brand logo recreation: indigo (#4F46E5) rounded-rect background, open book (two bezier page paths meeting at spine), left page = circuit board traces (lines + endpoint dots), right page = organic AI curves (bezier paths + dots)
+  - `extension/icons/generate.mjs` — Node.js script using `sharp` to render SVG→PNG at 16/32/48/128px
+  - `extension/icons/icon16.png`, `icon32.png`, `icon48.png`, `icon128.png` — generated PNGs
+  - `extension/package-ext.mjs` — pure Node.js ZIP packager (implements CRC32 + ZIP binary format, no external deps); outputs `writing-twin-ai-extension.zip`
+  - `extension/WEBSTORE_LISTING.md` — complete store listing copy (name, 132-char summary, full description, features, privacy statement) + submission checklist + post-approval CORS update steps
+  - `extension/writing-twin-ai-extension.zip` — 31 KB, 10 files, ready for Web Store upload
+- Files modified:
+  - `extension/manifest.json` — added `homepage_url`, `minimum_chrome_version: 116`, all 4 icon sizes in `action.default_icon`
+  - `extension/build.mjs` — added `mkdirSync dist/icons` + `copyFileSync` for all 4 PNG sizes
+- Notes:
+  - ZIP contains: manifest.json, background.js, content/gmail.js, popup/popup.{html,css,js}, icons/icon{16,32,48,128}.png
+  - After Web Store approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` and update CORS origins in `backend/app/main.py`
+  - No VPS deploy needed — extension-only changes
+- Branch: `sprint-10-webstore`
+- PR: #10 open — https://github.com/ngyan/WRITING_TWIN_AI/pull/10
+- Status: ✅ Code Complete | 🔄 Web Store Review Pending
 
 ---
 

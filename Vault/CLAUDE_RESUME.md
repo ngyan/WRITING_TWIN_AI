@@ -1,13 +1,13 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-05-30 (evening)
+> **Last Updated:** 2026-06-01
 
 ---
 
 ## 🎯 What We're Building
 
-AI communication assistant that learns how YOU write (Writing DNA) and rewrites any text to sound exactly like you — delivered primarily via Chrome extension (Gmail, Outlook, LinkedIn, Slack, Teams).
+AI communication assistant that learns how YOU write (Writing DNA) and rewrites any text to sound exactly like you — delivered via Chrome extension (Gmail first; LinkedIn, Slack, Outlook coming).
 
 **North Star:** User reads output and thinks: *"This sounds exactly like me."*
 
@@ -17,61 +17,75 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Sprint** | Phase 0 validation — fully live, collecting real user data |
-| **Branch** | `main` |
-| **Phase 0 Demo** | ✅ Live at `https://writingtwinai.com` |
-| **Backend (Phase 0)** | ✅ FastAPI on VPS — `https://api.writingtwinai.com/health` |
-| **Frontend (Phase 0)** | ✅ Next.js on VPS — redesigned with landing page + enhanced feedback |
-| **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt |
-| **Email** | ✅ Resend live — waitlist confirmation + founder notification on every submission |
-| **Feedback storage** | ✅ Upstash Redis — view at `https://api.writingtwinai.com/responses` |
-| **Database** | Not initialized (Sprint 1) |
-| **Chrome Extension** | Not started |
-| **Phase 0 Threshold** | 30 users · 60%+ prefer personalized → unlocks Sprint 1 |
-
-### Phase 0 — What's Live
-
-| Feature | Status |
-|---|---|
-| Landing page — hero, 3-step explainer, before/after example | ✅ |
-| Single textarea + "Try with sample data" button | ✅ |
-| Blind comparison: Version A / Version B / No Difference | ✅ |
-| Confidence rating 1–5 | ✅ |
-| Optional comment field | ✅ |
-| Waitlist: email + role | ✅ |
-| Payment intent question (No/Maybe/$5/$10/$20/mo) | ✅ |
-| Founder email notification on every submission | ✅ |
-| `GET /responses` — all individual feedback records | ✅ |
-| `GET /stats` — aggregate validation metrics | ✅ |
-| `POST /payment-intent` — stores intent from thank-you screen | ✅ |
+| **Last Sprint** | Sprint 10 — Chrome Web Store Packaging |
+| **Branch** | `sprint-10-webstore` (PR #10 open — merge it) |
+| **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt (SSL exp 2026-08-28) |
+| **Backend API** | ✅ Live — `https://api.writingtwinai.com/v1/health` |
+| **Frontend Dashboard** | ✅ Live — `https://writingtwinai.com` (Next.js 14 on VPS) |
+| **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (31 KB, 10 files) |
+| **Chrome Web Store** | 🔴 Not yet submitted — user action required |
+| **Billing** | ✅ Stripe Checkout + Customer Portal live |
+| **Writing DNA** | ✅ Training API live + extension popup onboarding |
+| **PostHog Analytics** | ✅ Live — pageview + funnel events tracking |
+| **Privacy / Terms** | ✅ `/privacy` + `/terms` pages live |
+| **SEO** | ✅ robots.txt + sitemap.xml live |
 
 ---
 
 ## 🏗️ Architecture (TL;DR)
 
 ```
-Chrome Extension (content.js + background.js)
-         ↓ JWT Bearer
-FastAPI Backend (app/)
-    ├── /v1/auth/*          → JWT + Google OAuth
-    ├── /v1/rewrite         → Humanize + DNA injection
-    ├── /v1/dna/*           → Writing DNA samples
-    ├── /v1/memory/*        → Communication Memory
-    └── /v1/profile         → User settings
+Chrome Extension (gmail.js + background.js + popup)
+         ↓ JWT Bearer (auto-refresh on 401)
+FastAPI Backend (api.writingtwinai.com)
+    ├── /v1/auth/*          → JWT + refresh rotation
+    ├── /v1/humanize        → DNA injection + LiteLLM routing + monthly limit gate
+    ├── /v1/dna/*           → Writing DNA samples + background extraction
+    ├── /v1/billing/*       → Stripe Checkout / Portal / Webhook
+    └── /v1/health          → DB + Redis liveness check
          ↓                           ↓
    PostgreSQL 16             Qdrant (vector DB)
-   Redis 7 (cache)           LiteLLM (AI routing)
+   Redis 7 (cache)           LiteLLM → Gemini Flash / Claude Haiku / Sonnet
+         ↓
+Next.js 14 Frontend (writingtwinai.com)
+    ├── /                   → Landing page
+    ├── /dashboard          → Usage widget + plan badge + DNA status
+    ├── /onboarding/dna     → DNA training textarea
+    ├── /pricing            → Free vs Pro comparison + Stripe Checkout
+    ├── /privacy + /terms   → Legal pages
+    └── /billing/success|cancel
 ```
 
-**Stack at a glance:**
-- Backend: FastAPI 0.110+ / Python 3.12 / SQLAlchemy 2.0 async / Alembic / uv
-- Vector: Qdrant — user writing DNA embeddings (`user_dna` + `user_memory` collections)
-- Cache: Redis 7 — semantic cache, rate limiting, refresh tokens
-- LLM: LiteLLM → Gemini Flash (Free) → Claude Haiku (Pro) → Claude Sonnet (Enterprise)
-- Frontend: Next.js 14 App Router + TypeScript + Tailwind
-- Extension: Chrome MV3 (TypeScript, no framework)
-- Auth: JWT (15min access + 24h refresh httpOnly) + Google OAuth
-- Deploy: Docker Compose on Hostinger VPS → NGINX public proxy
+**Deploy:** rsync → VPS → docker compose build + up (never git pull on VPS)
+
+---
+
+## 🔑 Plan Limits
+
+| Plan | Rewrites/month | Price |
+|---|---|---|
+| Free | 20 | $0 |
+| Pro | 300 | $5/mo (founding member) |
+
+Monthly counter in `users.monthly_rewrite_count`, resets via `monthly_reset_at`.
+On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows amber upgrade card.
+
+---
+
+## 🔜 What To Do Next Session
+
+### If continuing Web Store launch:
+1. Merge PR #10 on GitHub
+2. Create Chrome Web Store developer account ($5 fee)
+3. Upload `extension/writing-twin-ai-extension.zip`
+4. Fill listing from `extension/WEBSTORE_LISTING.md`
+5. Take 3 screenshots (1280×800) of the extension in Gmail
+6. Submit for review
+7. After approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS in `backend/app/main.py`
+
+### If starting Sprint 11:
+- Read `Vault/PROJECT_STATUS.md` → candidates: Google OAuth, email verification, LinkedIn extension, referral system
+- Branch: `sprint-11-<name>`
 
 ---
 
@@ -101,26 +115,27 @@ git log --oneline -5
 git status
 
 # Start a sprint
-git checkout -b sprint-01-backend-foundation
+git checkout main && git pull
+git checkout -b sprint-11-<name>
 
-# Commit pattern (always use Sprint N prefix)
-git commit -m "feat: [Sprint 1] backend foundation — FastAPI + auth + DB"
+# Commit pattern
+git commit -m "feat: [Sprint N] description"
 
-# After sprint: push + open PR (do NOT merge to main until reviewed)
-git push -u origin sprint-01-backend-foundation
+# Push + PR
+git push -u origin sprint-11-<name>
+gh pr create --title "Sprint N — Name"
 ```
 
 ---
 
 ## 🚦 Hard Rules (Every Session)
 
-1. Read this file + `PROJECT_STATUS.md` + active sprint spec before writing any code
+1. Read this file + `PROJECT_STATUS.md` before writing any code
 2. One sprint = one Claude Code session — close terminal between sprints
 3. All LLM calls go through LiteLLM — **NEVER** direct provider SDK in business logic
 4. All config via Pydantic `Settings` from `.env` — **NEVER** hardcoded values
 5. All routes prefixed `/v1/`. All ORM access async. All responses via Pydantic schemas.
-6. Feature flags (`settings.FEATURE_*`) gate every engine — never ship dark code without a flag
-7. Log `audit_log` and `usage_events` from Sprint 1 — do not defer observability
-8. Update `PROJECT_STATUS.md` + `architecture/DECISIONS.md` after any architecture choice
-9. Log completion in `core/10-DONE-LOG.md` before closing the session
-10. See `CLAUDE_WORKFLOW.md` for the full before/during/after checklist
+6. Feature flags (`settings.FEATURE_*`) gate every engine — never ship dark code
+7. **NEVER** commit `.env`. Stage specific files, not `git add -A`
+8. **NEVER** `git pull` on VPS — deploy via `./Vault/deploy/deploy.sh full` (rsync only)
+9. Log completion in `core/10-DONE-LOG.md` + update `PROJECT_STATUS.md` at session end

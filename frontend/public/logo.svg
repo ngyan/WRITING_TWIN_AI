@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="#4F46E5"/>
+
+  <!-- Left book page -->
+  <path d="M64 18
+           C60 20, 44 24, 32 36
+           C22 46, 20 60, 22 72
+           C24 82, 30 90, 40 92
+           C50 94, 58 86, 64 78
+           Z"
+        fill="white"/>
+
+  <!-- Right book page -->
+  <path d="M64 18
+           C68 20, 84 24, 96 36
+           C106 46, 108 60, 106 72
+           C104 82, 98 90, 88 92
+           C78 94, 70 86, 64 78
+           Z"
+        fill="white"/>
+
+  <!-- Spine shadow line -->
+  <line x1="64" y1="18" x2="64" y2="78" stroke="#4F46E5" stroke-width="2.5" opacity="0.4"/>
+
+  <!-- LEFT PAGE — circuit traces (3 horizontal lines + nodes) -->
+  <!-- Center hub dots -->
+  <circle cx="54" cy="48" r="3.5" fill="#4F46E5"/>
+  <circle cx="54" cy="60" r="3.5" fill="#4F46E5"/>
+  <circle cx="54" cy="72" r="3.5" fill="#4F46E5"/>
+  <!-- Outer endpoint dots -->
+  <circle cx="33" cy="44" r="3.5" fill="#4F46E5"/>
+  <circle cx="30" cy="60" r="3.5" fill="#4F46E5"/>
+  <circle cx="33" cy="76" r="3.5" fill="#4F46E5"/>
+  <!-- Connecting lines -->
+  <line x1="33" y1="44" x2="54" y2="48" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  <line x1="30" y1="60" x2="54" y2="60" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  <line x1="33" y1="76" x2="54" y2="72" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- RIGHT PAGE — organic flowing curves + nodes -->
+  <!-- Center hub dots -->
+  <circle cx="74" cy="48" r="3.5" fill="#4F46E5"/>
+  <circle cx="74" cy="60" r="3.5" fill="#4F46E5"/>
+  <circle cx="74" cy="72" r="3.5" fill="#4F46E5"/>
+  <!-- Outer endpoint dots -->
+  <circle cx="95" cy="44" r="3.5" fill="#4F46E5"/>
+  <circle cx="98" cy="60" r="3.5" fill="#4F46E5"/>
+  <circle cx="95" cy="76" r="3.5" fill="#4F46E5"/>
+  <!-- Curved connecting lines -->
+  <path d="M74 48 C82 44, 88 42, 95 44"
+        fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M74 60 C82 56, 90 58, 98 60"
+        fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M74 72 C82 76, 88 78, 95 76"
+        fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+</svg>
