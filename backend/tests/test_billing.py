@@ -56,7 +56,7 @@ async def test_free_user_under_limit_can_rewrite(
 
 @pytest.mark.asyncio
 async def test_free_user_at_limit_unit() -> None:
-    """Unit: require_rewrite_quota raises 429 when daily count >= FREE_DAILY_LIMIT."""
+    """Unit: require_rewrite_quota raises 429 when monthly count >= FREE_MONTHLY_LIMIT."""
     import uuid as _uuid
     from fastapi import HTTPException
 
@@ -67,14 +67,14 @@ async def test_free_user_at_limit_unit() -> None:
     user.id = _uuid.uuid4()
 
     mock_result = MagicMock()
-    mock_result.scalar.return_value = 30  # at limit
+    mock_result.scalar.return_value = 20  # at monthly limit
     mock_db = AsyncMock()
     mock_db.execute.return_value = mock_result
 
     with pytest.raises(HTTPException) as exc_info:
         await require_rewrite_quota(user=user, db=mock_db)
     assert exc_info.value.status_code == 429
-    assert "Daily limit" in exc_info.value.detail
+    assert "rewrites for this month" in exc_info.value.detail
 
 
 @pytest.mark.asyncio
@@ -103,7 +103,7 @@ async def test_usage_returns_plan_and_counts(
     assert body["plan"] == "free"
     assert isinstance(body["today_count"], int)
     assert isinstance(body["monthly_count"], int)
-    assert body["daily_limit"] == 30  # free plan
+    assert body["monthly_limit"] == 20  # free plan monthly cap
 
 
 # ── Checkout ─────────────────────────────────────────────────────────────────

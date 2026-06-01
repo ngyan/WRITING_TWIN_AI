@@ -175,9 +175,17 @@ async def get_usage(db: AsyncSession, user: User) -> dict:
     today_count: int = today_result.scalar() or 0
     monthly_count: int = monthly_result.scalar() or 0
 
+    monthly_limit: int | None
+    if user.plan == "free":
+        monthly_limit = settings.FREE_MONTHLY_LIMIT
+    elif user.plan == "pro":
+        monthly_limit = settings.PRO_MONTHLY_LIMIT
+    else:
+        monthly_limit = None
+
     return {
         "plan": user.plan,
         "today_count": today_count,
         "monthly_count": monthly_count,
-        "daily_limit": settings.FREE_DAILY_LIMIT if user.plan == "free" else None,
+        "monthly_limit": monthly_limit,
     }

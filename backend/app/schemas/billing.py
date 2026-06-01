@@ -23,4 +23,4 @@ class UsageResponse(BaseModel):
     plan: str
     today_count: int
     monthly_count: int
-    daily_limit: int | None
+    monthly_limit: int | None  # None = unlimited (Pro+)
