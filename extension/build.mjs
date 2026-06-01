@@ -7,6 +7,7 @@ const outdir = 'dist';
 mkdirSync(outdir, { recursive: true });
 mkdirSync(`${outdir}/content`, { recursive: true });
 mkdirSync(`${outdir}/popup`, { recursive: true });
+mkdirSync(`${outdir}/icons`, { recursive: true });
 
 await esbuild.build({
   entryPoints: {
@@ -25,6 +26,9 @@ await esbuild.build({
 copyFileSync('manifest.json', `${outdir}/manifest.json`);
 copyFileSync('src/popup/popup.html', `${outdir}/popup/popup.html`);
 copyFileSync('src/popup/popup.css', `${outdir}/popup/popup.css`);
+for (const size of [16, 32, 48, 128]) {
+  copyFileSync(`icons/icon${size}.png`, `${outdir}/icons/icon${size}.png`);
+}
 
 // Print bundle sizes
 const files = [
