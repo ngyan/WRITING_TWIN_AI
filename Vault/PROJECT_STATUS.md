@@ -7,10 +7,10 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 5 gaps filled — Extension UX complete
-**Current Sprint:** Sprint 6 — AI Routing Hardening + Quality Retry
-**Next Sprint:** Sprint 7 — Billing
-**Target Launch:** MVP by end of Sprint 6 (~2–5 weeks from now)
+**Phase:** Sprint 6 — AI Routing Hardening Complete
+**Current Sprint:** Sprint 7 — Billing
+**Next Sprint:** Sprint 8 — Analytics + Observability
+**Target Launch:** MVP by end of Sprint 7 (~2–4 weeks from now)
 
 ---
 
@@ -29,7 +29,17 @@
 
 ## ✅ Last Completed Tasks (2026-06-01)
 
-1. **Sprint 5 gap fill — Extension UX (register + DNA onboarding)**:
+1. **Sprint 6 — AI Routing Hardening + Quality Retry**:
+   - `router_service.py` — circuit breaker (opens after N failures, auto-resets); typed exception handling; `HTTP 503` with `Retry-After` when all providers fail
+   - `cost_guard_service.py` — daily spend ceiling from `rewrites.cost_usd`; degrades any plan to gemini-flash when hit
+   - `quality_service.py` — `score_with_retry()`: sync scoring before return, up to 2 retries, best-scored attempt on exhaustion; thresholds tone_fit≥0.75, voice_match≥0.70, risk≤0.40
+   - `feature_flags.py` — DB-override layer for dynamic flag control
+   - `humanize_service.py` — cost guard check + quality retry wired in
+   - `humanize schema` — `retry_count` added to response
+   - 38/38 tests passing, ruff ✅, mypy ✅
+   - PR #6 merged
+
+2. **Sprint 5 gap fill — Extension UX (register + DNA onboarding)**:
    - `extension/src/lib/api.ts` — added `register()`, `submitDnaSamples()`, `getDnaProfile()`
    - `extension/src/background.ts` — added `REGISTER`, `SUBMIT_DNA`, `GET_DNA_STATUS` message handlers
    - `popup.html` — 4 views: login, register, dna-setup, logged-in
@@ -133,8 +143,8 @@
 | **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | — |
 | **S4** | Writing DNA Engine | 🟢 Done | `sprint-04-writing-dna` | `7a06806` |
 | **S5** | Personalization (DNA + Memory + Cultural) | 🟢 Done | `sprint-05-personalization` | `4955913` |
-| **S6** | AI Routing Hardening + Quality Retry | 🔵 Next | — | — |
-| **S7** | Billing + Auth Polish | ⚪ Locked | — | — |
+| **S6** | AI Routing Hardening + Quality Retry | 🟢 Done | `sprint-06-routing-hardening` | `033c1ca` |
+| **S7** | Billing + Auth Polish | 🔵 Next | — | — |
 | **S8** | Frontend Dashboard | ⚪ Locked | — | — |
 | **S9** | Polish + Launch | ⚪ Locked | — | — |
 

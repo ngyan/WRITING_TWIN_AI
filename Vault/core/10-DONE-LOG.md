@@ -293,6 +293,27 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
 
 ---
 
+## [2026-06-01] Sprint 6 — AI Routing Hardening + Quality Retry
+
+- Files created:
+  - `backend/app/core/feature_flags.py` — DB-override layer for dynamic flag control
+  - `backend/app/services/cost_guard_service.py` — daily USD ceiling from rewrites table
+  - `backend/tests/test_routing.py` — 8 new tests: circuit breaker, fallback, 503, cost guard, quality retry
+- Files modified:
+  - `backend/app/core/config.py` — added `LLM_TIMEOUT_SECONDS`, `CIRCUIT_BREAK_THRESHOLD`, `CIRCUIT_RESET_SECONDS`, `COST_GUARD_DAILY_LIMIT_USD`
+  - `backend/app/services/router_service.py` — circuit breaker (in-process dict), typed exception handling, 503 on full failure
+  - `backend/app/services/quality_service.py` — `score_with_retry()` sync loop; thresholds tone_fit≥0.75/voice_match≥0.70/risk≤0.40; best-attempt return on exhaustion
+  - `backend/app/services/humanize_service.py` — cost guard check before LLM call; quality retry path when FEATURE_QUALITY_RETRY=True
+  - `backend/app/prompts/quality_v1.py` — added `risk` score dimension
+  - `backend/app/repositories/rewrite_repo.py` — `score_risk` param on update_quality_scores
+  - `backend/app/schemas/humanize.py` — `retry_count: int = 0` on RewriteResponse
+- Tests: 38/38 passing, ruff ✅, mypy ✅
+- Branch: `sprint-06-routing-hardening`
+- PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/6
+- Status: ✅ Complete
+
+---
+
 ## [2026-06-01] Sprint 5b — Extension UX: Register + DNA Onboarding
 
 - Files modified:
