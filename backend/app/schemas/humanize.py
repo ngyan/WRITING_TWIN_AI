@@ -27,6 +27,7 @@ class RewriteResponse(BaseModel):
     context_detected: str | None
     intent_detected: str | None
     profile_version_used: int | None = None
+    retry_count: int = 0
 
 
 class FeedbackRequest(BaseModel):

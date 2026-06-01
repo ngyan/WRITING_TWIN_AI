@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     LANGFUSE_SECRET_KEY: str = ""
     LANGFUSE_HOST: str = "https://cloud.langfuse.com"
 
+    # LLM timeouts + circuit breaker
+    LLM_TIMEOUT_SECONDS: int = 20
+    CIRCUIT_BREAK_THRESHOLD: int = 3    # consecutive failures before opening circuit
+    CIRCUIT_RESET_SECONDS: int = 60     # seconds before half-open retry
+
+    # Cost guard
+    COST_GUARD_DAILY_LIMIT_USD: float = 10.0   # 0 = disabled
+
     # Feature Flags
     FEATURE_WRITING_DNA: bool = False
     FEATURE_CONTEXT_ENGINE: bool = True

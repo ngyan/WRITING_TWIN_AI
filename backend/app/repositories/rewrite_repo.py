@@ -40,9 +40,12 @@ async def update_quality_scores(
     score_human: float,
     score_style_match: float,
     score_readability: float,
+    score_risk: float | None = None,
 ) -> None:
     rewrite.quality_score = quality_score
     rewrite.score_human = score_human
     rewrite.score_style_match = score_style_match
     rewrite.score_readability = score_readability
+    if score_risk is not None:
+        rewrite.score_risk = score_risk
     await db.commit()
