@@ -7,10 +7,10 @@
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 6 — AI Routing Hardening Complete
-**Current Sprint:** Sprint 7 — Billing
-**Next Sprint:** Sprint 8 — Analytics + Observability
-**Target Launch:** MVP by end of Sprint 7 (~2–4 weeks from now)
+**Phase:** Sprint 9 — Polish + Launch
+**Current Sprint:** Sprint 9 — Polish + Launch
+**Next Sprint:** Chrome Web Store submission
+**Target Launch:** Imminent — all core features live
 
 ---
 
@@ -18,16 +18,29 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 70% | Sprint 5 complete — all 3 personalization engines live |
+| **MVP Readiness** | 82% | Sprint 7 complete — billing + entitlements live |
 | **Production Readiness** | 20% | VPS + NGINX + SSL live; Sprint 5 deploy pending (SSH temporarily down) |
-| **Test Coverage** | 20% | 30 tests passing (auth + humanize + dna + personalization) |
+| **Test Coverage** | 25% | 48 tests passing (auth + humanize + dna + personalization + routing + billing) |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
 | **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
 
 ---
 
-## ✅ Last Completed Tasks (2026-06-01)
+## ✅ Last Completed Tasks (2026-06-01) — Sprint 9
+
+1. **Sprint 9 — Polish + Launch**:
+   - `/privacy` page live (linked from footer)
+   - `/terms` page live (linked from privacy page)
+   - `robots.txt` + `sitemap.xml` via Next.js App Router metadata API
+   - PostHog pageview tracking (all routes auto-tracked via `PageviewTracker`)
+   - PostHog event tracking: `user_registered`, `user_logged_in`, `dna_samples_submitted`, `dna_training_complete`, `upgrade_clicked`, `billing_success`
+   - `billing/cancel` copy fix: "30 rewrites a day" → "20 rewrites/month"
+   - Footer: added Terms link
+   - Chrome extension: 429 (monthly limit) shows amber upgrade card with link to `/pricing` instead of plain error message
+   - Extension build: 72.7 KB, clean
+
+## ✅ Previously Completed Tasks (2026-06-01)
 
 1. **Sprint 6 — AI Routing Hardening + Quality Retry**:
    - `router_service.py` — circuit breaker (opens after N failures, auto-resets); typed exception handling; `HTTP 503` with `Retry-After` when all providers fail
@@ -105,14 +118,15 @@
 
 ## 🔜 Next Task
 
-**Sprint 6 — AI Routing Hardening + Quality Retry:**
-- Read `Vault/core/04-SPRINT-PLAN.md` Sprint 6 section
-- Branch: `sprint-06-routing-hardening`
-- Goal: Fallback chains, circuit breakers, quality retry loop, cost guard
+**Sprint 8 — Frontend Dashboard:**
+- Read `Vault/core/04-SPRINT-PLAN.md` Sprint 8 section
+- Branch: `sprint-08-frontend-dashboard`
+- Goal: Next.js dashboard — pricing page, usage widget, subscription management
 
-**Before Sprint 6:**
-- Deploy Sprint 5 to VPS: `./Vault/deploy/deploy.sh full` (VPS SSH was down; retry when available)
-  - Adds `locale` column to users + `communication_memory` table (migration 0004)
+**Before Sprint 8:**
+- Deploy Sprint 7 to VPS: `./Vault/deploy/deploy.sh full` then `alembic upgrade head` (migration 0005)
+- Set in VPS `.env`: `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_YEARLY`, `STRIPE_PRICE_TEAM_MONTHLY`
+- Register `/v1/billing/webhook` in Stripe dashboard webhook settings
 
 ---
 
@@ -128,9 +142,9 @@
 
 | Item | Severity | Sprint to Fix |
 |---|---|---|
-| Google OAuth not wired (stub only) | Low | Sprint 7 |
-| Email verification not implemented (stub only) | Low | Sprint 7 |
-| No Stripe billing | Low | Sprint 7 |
+| Google OAuth not wired (stub only) | Low | Sprint 8 |
+| Email verification not implemented (stub only) | Low | Sprint 8 |
+| No frontend pricing/portal page | Medium | Sprint 8 |
 
 ---
 
@@ -144,9 +158,9 @@
 | **S4** | Writing DNA Engine | 🟢 Done | `sprint-04-writing-dna` | `7a06806` |
 | **S5** | Personalization (DNA + Memory + Cultural) | 🟢 Done | `sprint-05-personalization` | `4955913` |
 | **S6** | AI Routing Hardening + Quality Retry | 🟢 Done | `sprint-06-routing-hardening` | `033c1ca` |
-| **S7** | Billing + Auth Polish | 🔵 Next | — | — |
-| **S8** | Frontend Dashboard | ⚪ Locked | — | — |
-| **S9** | Polish + Launch | ⚪ Locked | — | — |
+| **S7** | Billing + Auth Polish | 🟢 Done | `sprint-07-billing` | `d0a3e9b` |
+| **S8** | Frontend Dashboard | 🟢 Done | `sprint-08-frontend-dashboard` | `905828f` |
+| **S9** | Polish + Launch | 🔵 In Progress | `sprint-09-polish-launch` | — |
 
 **Legend:** ⚪ Locked → 🔵 In Progress → 🟢 Done → 🔴 Blocked
 

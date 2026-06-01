@@ -1,7 +1,11 @@
 #!/bin/bash
-# Writing Twin AI — Sprint 1+2 Backend Deployment
+# Writing Twin AI — Deployment Script
 # Usage: ./Vault/deploy/deploy.sh {push|build|migrate|start|nginx|full|logs|status|health}
 # Run from the project root. VPS has no git repo — deploys via rsync.
+#
+# Frontend env vars baked at build time — set these on VPS before first frontend build:
+#   export NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY=price_xxx
+#   (NEXT_PUBLIC_POSTHOG_KEY, NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY optional)
 
 set -e
 
@@ -20,10 +24,10 @@ warn() { echo -e "${YELLOW}[warn]${NC} $1"; }
 error() { echo -e "${RED}[error]${NC} $1"; exit 1; }
 
 # ─────────────────────────────────────────────────────────
-# push — rsync backend code + compose file to VPS
+# push — rsync backend + frontend + compose file to VPS
 # ─────────────────────────────────────────────────────────
 push_code() {
-    log "Pushing code to VPS..."
+    log "Pushing backend to VPS..."
     rsync -az --delete \
         --exclude='.env' \
         --exclude='.env.*' \
@@ -35,17 +39,36 @@ push_code() {
         --exclude='tests/' \
         "$REPO_ROOT/backend/" "$VPS:$REMOTE_DIR/backend/"
 
+    log "Pushing frontend to VPS..."
+    rsync -az --delete \
+        --exclude='.env.local' \
+        --exclude='.env.*' \
+        --exclude='node_modules/' \
+        --exclude='.next/' \
+        "$REPO_ROOT/frontend/" "$VPS:$REMOTE_DIR/frontend/"
+
     rsync -az "$REPO_ROOT/$COMPOSE_FILE" "$VPS:$REMOTE_DIR/$COMPOSE_FILE"
     log "Code pushed ✓"
 }
 
 # ─────────────────────────────────────────────────────────
-# build — docker build on VPS
+# build — docker build on VPS (backend + frontend)
 # ─────────────────────────────────────────────────────────
 build_image() {
     log "Building backend image on VPS..."
     ssh "$VPS" "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE build api"
-    log "Image built ✓"
+    log "Building frontend image on VPS..."
+    # Read Stripe price IDs from backend/.env and expose as NEXT_PUBLIC_* build args.
+    # NEXT_PUBLIC_* vars are baked into the Next.js bundle at build time.
+    ssh "$VPS" "
+        cd $REMOTE_DIR
+        _MONTHLY=\$(grep '^STRIPE_PRICE_PRO_MONTHLY=' backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo '')
+        _POSTHOG=\$(grep '^NEXT_PUBLIC_POSTHOG_KEY=' backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo '')
+        export NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY=\"\$_MONTHLY\"
+        export NEXT_PUBLIC_POSTHOG_KEY=\"\$_POSTHOG\"
+        docker compose -f $COMPOSE_FILE build frontend
+    "
+    log "Images built ✓"
 }
 
 # ─────────────────────────────────────────────────────────
@@ -105,6 +128,7 @@ deploy_full() {
     update_nginx
     check_health
     log "Full deployment complete ✓"
+    log "Frontend live at https://writingtwinai.com"
     log "API live at https://api.writingtwinai.com/v1/health"
 }
 
@@ -162,9 +186,9 @@ case "$1" in
         echo "Re-deploy:     push → build → start"
         echo ""
         echo "Commands:"
-        echo "  push        Rsync backend code + compose file to VPS (no .env)"
-        echo "  build       docker build on VPS"
-        echo "  start       docker compose up -d (infra + api)"
+        echo "  push        Rsync backend + frontend + compose file to VPS (no .env)"
+        echo "  build       docker build api + frontend on VPS (NEXT_PUBLIC_* must be exported)"
+        echo "  start       docker compose up -d (infra + api + frontend)"
         echo "  migrate     Run alembic upgrade head inside api container"
         echo "  nginx       Copy + reload NGINX config"
         echo "  health      Check /v1/health endpoint"

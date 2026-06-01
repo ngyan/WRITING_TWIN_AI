@@ -37,6 +37,7 @@ async function request<T>(path: string, options: RequestInit, token?: string): P
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` })) as { detail: string };
+    if (res.status === 429) throw new Error(`LIMIT_REACHED:${err.detail}`);
     throw new Error(err.detail);
   }
   if (res.status === 204) return undefined as T;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 import { Nav } from "@/components/Nav";
 import { createCheckout, getToken } from "@/lib/api";
 
@@ -45,9 +46,11 @@ const PLANS = [
 
 export default function PricingPage() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [loading, setLoading] = useState<string | null>(null);
 
   async function handleCheckout(plan: typeof PLANS[0]) {
+    posthog?.capture("upgrade_clicked", { plan: plan.name, price: plan.price });
     if (plan.price === 0) {
       router.push("/register");
       return;

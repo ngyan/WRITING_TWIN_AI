@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { EMAIL_KEY, REFRESH_KEY, TOKEN_KEY, login } from "@/lib/api";
 
 function LoginForm() {
@@ -10,6 +11,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
 
+  const posthog = usePostHog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,6 +26,8 @@ function LoginForm() {
       localStorage.setItem(TOKEN_KEY, res.access_token);
       localStorage.setItem(REFRESH_KEY, res.refresh_token);
       localStorage.setItem(EMAIL_KEY, email);
+      posthog?.identify(email, { email });
+      posthog?.capture("user_logged_in");
       router.push(next);
     } catch (err) {
       setError((err as Error).message || "Login failed. Check your credentials.");

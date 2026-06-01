@@ -73,6 +73,19 @@ const BUTTON_CSS = `
   #wt-status.error { color: #EF4444; }
   #wt-status.success { color: #10B981; }
 
+  #wt-limit {
+    display: none; margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+    background: #FFF8F1; border: 1px solid #FED7AA; text-align: center;
+  }
+  #wt-limit.visible { display: block; }
+  #wt-limit p { font-size: 11px; color: #92400E; margin: 0 0 8px; line-height: 1.4; }
+  #wt-limit a {
+    display: inline-block; padding: 5px 14px; border-radius: 9999px;
+    background: #F59E0B; color: #fff; font-size: 11px; font-weight: 600;
+    text-decoration: none;
+  }
+  #wt-limit a:hover { background: #D97706; }
+
   #wt-actions {
     display: none; gap: 6px; margin-top: 8px;
   }
@@ -117,6 +130,10 @@ function inject(composeBody: Element): void {
       </div>
       <button id="wt-rewrite" disabled>Rewrite →</button>
       <div id="wt-status"></div>
+      <div id="wt-limit">
+        <p>You've used all your free rewrites this month.</p>
+        <a href="https://writingtwinai.com/pricing" target="_blank" rel="noopener">Upgrade to Pro — $5/mo</a>
+      </div>
       <div id="wt-actions">
         <button class="wt-action accept" id="wt-accept">✓ Keep it</button>
         <button class="wt-action reject" id="wt-reject">✗ Undo</button>
@@ -128,6 +145,7 @@ function inject(composeBody: Element): void {
   const panel = shadow.getElementById('wt-panel') as HTMLDivElement;
   const rewriteBtn = shadow.getElementById('wt-rewrite') as HTMLButtonElement;
   const statusEl = shadow.getElementById('wt-status') as HTMLDivElement;
+  const limitEl = shadow.getElementById('wt-limit') as HTMLDivElement;
   const actionsEl = shadow.getElementById('wt-actions') as HTMLDivElement;
   const acceptBtn = shadow.getElementById('wt-accept') as HTMLButtonElement;
   const rejectBtn = shadow.getElementById('wt-reject') as HTMLButtonElement;
@@ -143,6 +161,7 @@ function inject(composeBody: Element): void {
       rewriteBtn.disabled = false;
       statusEl.textContent = '';
       statusEl.className = '';
+      limitEl.classList.remove('visible');
       actionsEl.classList.remove('visible');
     });
   });
@@ -207,7 +226,13 @@ function inject(composeBody: Element): void {
       setStatus('Done ✓', 'success');
       actionsEl.classList.add('visible');
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Failed', 'error');
+      const msg = err instanceof Error ? err.message : 'Failed';
+      if (msg.startsWith('LIMIT_REACHED:')) {
+        limitEl.classList.add('visible');
+        setStatus('');
+      } else {
+        setStatus(msg, 'error');
+      }
     } finally {
       btn.disabled = false;
       rewriteBtn.disabled = selectedTone === null;
