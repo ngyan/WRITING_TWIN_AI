@@ -58,9 +58,16 @@ build_image() {
     log "Building backend image on VPS..."
     ssh "$VPS" "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE build api"
     log "Building frontend image on VPS..."
-    # NEXT_PUBLIC_* vars must be exported in the VPS shell before this runs —
-    # they are baked into the Next.js bundle at build time via docker-compose ARGs.
-    ssh "$VPS" "cd $REMOTE_DIR && docker compose -f $COMPOSE_FILE build frontend"
+    # Read Stripe price IDs from backend/.env and expose as NEXT_PUBLIC_* build args.
+    # NEXT_PUBLIC_* vars are baked into the Next.js bundle at build time.
+    ssh "$VPS" "
+        cd $REMOTE_DIR
+        _MONTHLY=\$(grep '^STRIPE_PRICE_PRO_MONTHLY=' backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo '')
+        _POSTHOG=\$(grep '^NEXT_PUBLIC_POSTHOG_KEY=' backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo '')
+        export NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY=\"\$_MONTHLY\"
+        export NEXT_PUBLIC_POSTHOG_KEY=\"\$_POSTHOG\"
+        docker compose -f $COMPOSE_FILE build frontend
+    "
     log "Images built ✓"
 }
 
