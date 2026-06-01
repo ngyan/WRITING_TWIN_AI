@@ -62,7 +62,7 @@ export default function LandingPage() {
             See plans
           </Link>
         </div>
-        <p className="text-xs text-neutral-400 mt-4">Free plan: 30 rewrites/day. No credit card required.</p>
+        <p className="text-xs text-neutral-400 mt-4">Free: 20 rewrites/month. Pro Early Adopter: $5/mo. No credit card required to start.</p>
       </section>
 
       {/* Before / After */}
@@ -120,16 +120,42 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="bg-primary-500 py-20">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Stop sounding like everyone else using AI.
+      {/* Pro Early Adopter CTA */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
+        <div className="card p-10 text-center">
+          <span className="inline-flex items-center px-3 py-1 rounded-pill bg-accent-50 border border-accent-100 text-accent-700 text-xs font-semibold mb-4">
+            Founding Member Pricing
+          </span>
+          <h2 className="text-3xl font-bold text-ink dark:text-white mb-3">
+            $5/month while we&apos;re in beta.
           </h2>
-          <p className="text-primary-100 mb-8">
-            Takes 2 minutes to set up. Your voice, every time.
+          <p className="text-neutral-500 mb-2 leading-relaxed max-w-sm mx-auto">
+            300 rewrites per month. Lock in this price forever — it will go up when we exit beta.
           </p>
-          <Link href="/register" className="inline-flex items-center gap-2 px-7 h-12 rounded-pill bg-white text-primary-600 font-semibold text-base hover:bg-primary-50 transition-colors duration-150 shadow-md">
+          <p className="text-sm text-neutral-400 mb-8">
+            Free plan available too: 20 rewrites/month, no card needed.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/register" className="btn-primary text-base px-7 h-12">
+              Start free
+            </Link>
+            <Link href="/pricing" className="btn-secondary text-base px-7 h-12">
+              See Pro — $5/mo
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA strip */}
+      <section className="bg-primary-500 py-16">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            AI That Sounds Like You.
+          </h2>
+          <p className="text-primary-100 mb-6 text-sm">
+            Your personal writing style — in Gmail, LinkedIn, Slack, and Outlook.
+          </p>
+          <Link href="/register" className="inline-flex items-center gap-2 px-7 h-11 rounded-pill bg-white text-primary-600 font-semibold text-sm hover:bg-primary-50 transition-colors duration-150 shadow-md">
             Start free — no card needed
           </Link>
         </div>

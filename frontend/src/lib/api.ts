@@ -84,7 +84,7 @@ export interface UsageResponse {
   plan: string;
   today_count: number;
   monthly_count: number;
-  daily_limit: number | null;
+  monthly_limit: number | null;  // null = unlimited (Pro+)
 }
 
 export async function getUsage(): Promise<UsageResponse> {

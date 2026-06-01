@@ -44,7 +44,8 @@ class Settings(BaseSettings):
     COST_GUARD_DAILY_LIMIT_USD: float = 10.0   # 0 = disabled
 
     # Billing
-    FREE_DAILY_LIMIT: int = 30
+    FREE_MONTHLY_LIMIT: int = 20
+    PRO_MONTHLY_LIMIT: int = 300
 
     # Feature Flags
     FEATURE_BILLING: bool = True

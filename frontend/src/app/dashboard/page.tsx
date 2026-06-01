@@ -4,17 +4,37 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
-import { DnaProfile, MeResponse, UsageResponse, createPortal, getDnaProfile, getMe, getToken, getUsage } from "@/lib/api";
+import {
+  DnaProfile,
+  MeResponse,
+  UsageResponse,
+  createPortal,
+  getDnaProfile,
+  getMe,
+  getToken,
+  getUsage,
+} from "@/lib/api";
 
-const PLAN_LABEL: Record<string, { label: string; color: string }> = {
-  free:       { label: "Free",       color: "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300" },
-  pro:        { label: "Pro",        color: "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300" },
-  team:       { label: "Team",       color: "bg-accent-50 text-accent-700 dark:bg-amber-900/30 dark:text-amber-300" },
-  enterprise: { label: "Enterprise", color: "bg-ink text-white" },
+const PLAN_DISPLAY: Record<string, { label: string; color: string; description: string }> = {
+  free: {
+    label: "Free Beta",
+    color: "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300",
+    description: "20 rewrites per month.",
+  },
+  pro: {
+    label: "Pro Early Adopter",
+    color: "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300",
+    description: "300 rewrites per month. Founding Member pricing locked in.",
+  },
+  enterprise: {
+    label: "Enterprise",
+    color: "bg-ink text-white",
+    description: "Unlimited rewrites.",
+  },
 };
 
 function PlanBadge({ plan }: { plan: string }) {
-  const cfg = PLAN_LABEL[plan] ?? PLAN_LABEL.free;
+  const cfg = PLAN_DISPLAY[plan] ?? PLAN_DISPLAY.free;
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-pill text-xs font-semibold ${cfg.color}`}>
       {cfg.label}
@@ -22,25 +42,48 @@ function PlanBadge({ plan }: { plan: string }) {
   );
 }
 
-function UsageBar({ count, limit }: { count: number; limit: number | null }) {
-  if (!limit) return (
-    <p className="text-sm text-neutral-500">Unlimited rewrites on your plan.</p>
-  );
+function MonthlyUsageBar({ count, limit }: { count: number; limit: number | null }) {
+  if (!limit) {
+    return <p className="text-sm text-neutral-500">Unlimited rewrites on your plan.</p>;
+  }
   const pct = Math.min((count / limit) * 100, 100);
-  const color = pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-accent-500" : "bg-primary-500";
+  const remaining = limit - count;
+  const nearLimit = pct >= 80;
+  const atLimit = count >= limit;
+  const barColor = atLimit ? "bg-red-500" : nearLimit ? "bg-accent-500" : "bg-primary-500";
+
   return (
     <div>
       <div className="flex justify-between text-xs text-neutral-500 mb-1.5">
-        <span>{count} used today</span>
-        <span>{limit - count} left</span>
+        <span>{count} of {limit} used this month</span>
+        <span>{remaining > 0 ? `${remaining} left` : "Limit reached"}</span>
       </div>
       <div className="h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      {pct >= 90 && (
-        <p className="text-xs text-red-500 mt-1.5">
-          Almost at your daily limit.{" "}
-          <Link href="/pricing" className="underline font-medium">Upgrade to Pro</Link> for unlimited.
+      {atLimit && (
+        <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800">
+          <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2">
+            You&apos;ve used all {limit} rewrites for this month.
+          </p>
+          <p className="text-xs text-red-500 dark:text-red-400 mb-3">
+            Continue writing in your own voice with up to 300 rewrites per month.
+          </p>
+          <Link href="/pricing" className="btn-primary text-xs h-8 px-4">
+            Upgrade to Pro — $5/mo
+          </Link>
+        </div>
+      )}
+      {nearLimit && !atLimit && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5">
+          Running low.{" "}
+          <Link href="/pricing" className="underline font-medium">
+            Upgrade to Pro
+          </Link>{" "}
+          for 300 rewrites/month at $5.
         </p>
       )}
     </div>
@@ -86,8 +129,9 @@ export default function DashboardPage() {
     );
   }
 
-  const dnaStatus = dna?.extraction_status;
-  const dnaTrained = dnaStatus === "complete";
+  const dnaTrained = dna?.extraction_status === "complete";
+  const dnaProcessing = dna?.extraction_status === "processing";
+  const planCfg = PLAN_DISPLAY[me.plan] ?? PLAN_DISPLAY.free;
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
@@ -105,86 +149,71 @@ export default function DashboardPage() {
 
         <div className="grid sm:grid-cols-2 gap-5">
 
-          {/* Usage card */}
+          {/* Monthly usage */}
           <div className="card p-6">
-            <h2 className="text-sm font-semibold text-ink dark:text-white mb-4">Today&apos;s usage</h2>
+            <h2 className="text-sm font-semibold text-ink dark:text-white mb-4">Monthly usage</h2>
             {usage ? (
-              <UsageBar count={usage.today_count} limit={usage.daily_limit} />
+              <MonthlyUsageBar count={usage.monthly_count} limit={usage.monthly_limit} />
             ) : (
               <div className="h-6 bg-neutral-100 dark:bg-neutral-700 rounded animate-pulse" />
             )}
-            {usage && (
-              <p className="text-xs text-neutral-400 mt-3">
-                {usage.monthly_count} rewrites this month
-              </p>
-            )}
           </div>
 
-          {/* Plan card */}
+          {/* Plan */}
           <div className="card p-6">
-            <h2 className="text-sm font-semibold text-ink dark:text-white mb-1">Your plan</h2>
-            <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-sm font-semibold text-ink dark:text-white mb-2">Your plan</h2>
+            <div className="flex items-center gap-2 mb-3">
               <PlanBadge plan={me.plan} />
             </div>
+            <p className="text-sm text-neutral-500 mb-4 leading-relaxed">{planCfg.description}</p>
             {me.plan === "free" ? (
-              <div>
-                <p className="text-sm text-neutral-500 mb-4 leading-relaxed">
-                  30 rewrites/day. Upgrade to Pro for unlimited rewrites and Writing DNA personalization.
-                </p>
-                <Link href="/pricing" className="btn-primary text-sm">
-                  Upgrade to Pro — $15/mo
-                </Link>
-              </div>
+              <Link href="/pricing" className="btn-primary text-sm">
+                Upgrade to Pro — $5/mo
+              </Link>
             ) : (
-              <div>
-                <p className="text-sm text-neutral-500 mb-4">Unlimited rewrites. Billing managed via Stripe.</p>
-                <button
-                  onClick={handleManageBilling}
-                  disabled={portalLoading}
-                  className="btn-secondary text-sm"
-                >
-                  {portalLoading ? "Opening…" : "Manage billing"}
-                </button>
-              </div>
+              <button
+                onClick={handleManageBilling}
+                disabled={portalLoading}
+                className="btn-secondary text-sm"
+              >
+                {portalLoading ? "Opening…" : "Manage billing"}
+              </button>
             )}
           </div>
 
-          {/* Writing DNA card */}
+          {/* Writing DNA */}
           <div className="card p-6">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-semibold text-ink dark:text-white">Writing DNA</h2>
               {dnaTrained ? (
                 <span className="text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-pill">
                   Trained ✓
                 </span>
+              ) : dnaProcessing ? (
+                <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-pill">
+                  Training…
+                </span>
               ) : (
                 <span className="text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-700 px-2 py-0.5 rounded-pill">
-                  {dnaStatus === "processing" ? "Training…" : "Not trained"}
+                  Not trained
                 </span>
               )}
             </div>
             <p className="text-sm text-neutral-500 mb-4 leading-relaxed">
               {dnaTrained
-                ? `Your voice is trained from ${dna?.sample_count ?? 0} writing samples. Rewrites will sound like you.`
-                : "Train Writing Twin on your past emails and messages to get personalized rewrites."}
+                ? `Trained from ${dna?.sample_count ?? 0} writing samples. Your rewrites will sound like you.`
+                : "Paste a few of your emails or messages to train your writing voice."}
             </p>
-            {!dnaTrained && (
-              <Link href="/onboarding/dna" className="btn-secondary text-sm">
-                {dnaStatus === "processing" ? "View training progress" : "Train my writing voice"}
-              </Link>
-            )}
-            {dnaTrained && (
-              <Link href="/onboarding/dna" className="btn-ghost text-sm px-0">
-                Add more samples →
-              </Link>
-            )}
+            <Link href="/onboarding/dna" className={dnaTrained ? "btn-ghost text-sm px-0" : "btn-secondary text-sm"}>
+              {dnaTrained ? "Add more samples →" : "Train my writing voice"}
+            </Link>
           </div>
 
-          {/* Extension card */}
+          {/* Chrome Extension */}
           <div className="card p-6">
-            <h2 className="text-sm font-semibold text-ink dark:text-white mb-1">Chrome Extension</h2>
+            <h2 className="text-sm font-semibold text-ink dark:text-white mb-2">Chrome Extension</h2>
             <p className="text-sm text-neutral-500 mb-4 leading-relaxed">
-              The extension puts a ✦ Humanize button in Gmail, LinkedIn, Slack, and Outlook.
+              Puts a ✦ Humanize button in Gmail, LinkedIn, Slack, and Outlook. One click rewrites in your voice.
             </p>
             <a
               href="https://chrome.google.com/webstore"
@@ -198,13 +227,14 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* Empty state — first rewrite prompt */}
-        {usage && usage.today_count === 0 && (
+        {/* Empty state — first rewrite */}
+        {usage && usage.monthly_count === 0 && (
           <div className="mt-8 card p-8 text-center">
             <div className="text-4xl mb-3">✦</div>
-            <h3 className="font-semibold text-ink dark:text-white mb-2">Ready for your first rewrite?</h3>
-            <p className="text-sm text-neutral-500 mb-5">
-              Install the Chrome extension, open Gmail, and click the Humanize button in any compose window.
+            <h3 className="font-semibold text-ink dark:text-white mb-2">Make your first rewrite</h3>
+            <p className="text-sm text-neutral-500 mb-5 max-w-sm mx-auto leading-relaxed">
+              Install the extension, open Gmail, and click the Humanize button in any compose window.
+              Your first rewrite takes under 5 seconds.
             </p>
             <a
               href="https://chrome.google.com/webstore"
@@ -212,7 +242,7 @@ export default function DashboardPage() {
               rel="noopener noreferrer"
               className="btn-primary"
             >
-              Install extension
+              Install Chrome Extension
             </a>
           </div>
         )}
