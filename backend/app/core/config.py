@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     # Cost guard
     COST_GUARD_DAILY_LIMIT_USD: float = 10.0   # 0 = disabled
 
+    # Billing
+    FREE_DAILY_LIMIT: int = 30
+
     # Feature Flags
+    FEATURE_BILLING: bool = True
     FEATURE_WRITING_DNA: bool = False
     FEATURE_CONTEXT_ENGINE: bool = True
     FEATURE_CULTURAL_ENGINE: bool = False
