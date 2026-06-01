@@ -1,3 +1,5 @@
+import { getTokens, setTokens } from './auth';
+
 export const API_BASE = 'https://api.writingtwinai.com/v1';
 
 export type Tone = 'casual' | 'professional' | 'executive' | 'friendly' | 'direct' | 'diplomatic';
@@ -27,14 +29,40 @@ export interface DnaProfileResponse {
   sample_count: number;
 }
 
-async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+async function rawFetch(path: string, options: RequestInit, token?: string): Promise<Response> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(`${API_BASE}${path}`, { ...options, headers });
+}
+
+async function tryRefresh(): Promise<string | null> {
+  const stored = await getTokens();
+  if (!stored?.refresh_token) return null;
+  try {
+    const res = await rawFetch('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: stored.refresh_token }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { access_token: string; refresh_token: string };
+    await setTokens({ ...stored, access_token: data.access_token, refresh_token: data.refresh_token });
+    return data.access_token;
+  } catch {
+    return null;
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+}
+
+async function request<T>(path: string, options: RequestInit, token?: string): Promise<T> {
+  let res = await rawFetch(path, options, token);
+
+  // Auto-refresh on 401 then retry once
+  if (res.status === 401 && token) {
+    const newToken = await tryRefresh();
+    if (newToken) {
+      res = await rawFetch(path, options, newToken);
+    }
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` })) as { detail: string };
     if (res.status === 429) throw new Error(`LIMIT_REACHED:${err.detail}`);
