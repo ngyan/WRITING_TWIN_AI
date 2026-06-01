@@ -5,7 +5,7 @@ body {
   font-size: 13px;
   color: #1F2937;
   background: #fff;
-  width: 280px;
+  width: 300px;
   min-height: 160px;
 }
 
@@ -148,6 +148,154 @@ kbd {
   transition: border-color 0.15s, color 0.15s;
 }
 .btn-secondary:hover { border-color: #EF4444; color: #EF4444; }
+
+/* Register / switch link */
+.view-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 12px;
+}
+
+.view-subtitle {
+  font-size: 11px;
+  color: #6B7280;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.switch-link {
+  font-size: 11px;
+  color: #6B7280;
+  text-align: center;
+  margin-top: 10px;
+}
+.switch-link a {
+  color: #4F46E5;
+  text-decoration: none;
+  font-weight: 600;
+}
+.switch-link a:hover { text-decoration: underline; }
+
+/* DNA setup */
+textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 8px 10px;
+  border: 1.5px solid #E8EAED;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #1F2937;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+textarea:focus { border-color: #4F46E5; }
+textarea::placeholder { color: #9CA3AF; }
+
+.sample-count {
+  font-size: 11px;
+  color: #4F46E5;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  min-height: 16px;
+}
+
+#dna-submit-btn {
+  width: 100%;
+  height: 36px;
+  background: #4F46E5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#dna-submit-btn:hover { background: #3F37C9; }
+#dna-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+.dna-success {
+  font-size: 12px;
+  color: #059669;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 8px;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.btn-link:hover { color: #374151; }
+
+/* DNA prompt / trained in logged-in view */
+.dna-prompt {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.dna-prompt-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+  margin-bottom: 8px;
+}
+#setup-dna-btn {
+  width: 100%;
+  height: 30px;
+  background: #D97706;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#setup-dna-btn:hover { background: #B45309; }
+
+.dna-trained {
+  margin-bottom: 10px;
+}
+.dna-trained-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  background: #D1FAE5;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+/* register button */
+#register-btn {
+  width: 100%;
+  height: 36px;
+  background: #4F46E5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+#register-btn:hover { background: #3F37C9; }
+#register-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* View toggle */
 .view { }

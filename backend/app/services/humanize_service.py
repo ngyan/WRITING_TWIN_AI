@@ -13,6 +13,7 @@ from app.repositories import rewrite_repo
 from app.schemas.humanize import FeedbackRequest, HumanizeRequest, RewriteResponse
 from app.services import (
     cache_service,
+    cost_guard_service,
     cultural_service,
     memory_service,
     personalization_service,
@@ -52,8 +53,11 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
     locale = getattr(user, "locale", "en-US") or "en-US"
     cultural_block = cultural_service.get_block(locale, req.tone)
 
-    # 5 — Select model and build prompt
+    # 5 — Select model and build prompt (degrade if daily cost ceiling hit)
     mc = router_service.select_model(user.plan, req.tone, context_detected)
+    if await cost_guard_service.is_degraded(db):
+        log.warning("cost_guard.degraded", user_id=str(user.id), original_model=mc.key)
+        mc = router_service.MODELS["gemini-flash"]
     if dna_block:
         messages = dna_v1.build_messages(
             req.tone, req.text, dna_block, memory_examples, cultural_block
@@ -61,9 +65,22 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
     else:
         messages = humanize_base.build_messages(req.tone, req.text)
 
-    # 6 — Call LLM
+    # 6 — Call LLM (with quality retry when flag enabled)
     t0 = time.monotonic()
-    output_text, in_tok, out_tok = await router_service.complete(mc, messages)
+    retry_count = 0
+    quality_scores: dict = {}
+    if settings.FEATURE_QUALITY_RETRY:
+        output_text, in_tok, out_tok, quality_scores, retry_count = (
+            await quality_service.score_with_retry(
+                messages=messages,
+                mc=mc,
+                input_text=req.text,
+                tone=req.tone,
+                has_dna=bool(dna_block),
+            )
+        )
+    else:
+        output_text, in_tok, out_tok = await router_service.complete(mc, messages)
     latency_ms = int((time.monotonic() - t0) * 1000)
     cost_usd = router_service.compute_cost(mc, in_tok, out_tok)
 
@@ -89,7 +106,7 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
     response_payload = {
         "id": str(row.id),
         "output_text": output_text,
-        "quality_score": None,
+        "quality_score": quality_scores.get("overall"),
         "cache_hit": False,
         "provider": mc.provider,
         "model": mc.model,
@@ -98,14 +115,15 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         "context_detected": context_detected,
         "intent_detected": intent_detected,
         "profile_version_used": profile_version_used,
+        "retry_count": retry_count,
     }
     asyncio.create_task(cache_service.store_exact(input_hash, response_payload))
     asyncio.create_task(
         cache_service.store_semantic(req.text, req.tone, row.id, output_text)
     )
 
-    # 9 — Quality scoring (async, gated behind feature flag)
-    if settings.FEATURE_QUALITY_RETRY:
+    # 9 — Async quality scoring when retry loop not active
+    if not settings.FEATURE_QUALITY_RETRY:
         quality_service.schedule_scoring(str(row.id), req.text, output_text, req.tone)
 
     log.info(

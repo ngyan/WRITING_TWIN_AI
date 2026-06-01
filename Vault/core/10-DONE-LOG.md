@@ -226,6 +226,41 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
 - PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/2
 - Status: ✅ Complete
 
+## [2026-06-01] Sprint 5 — Personalization (DNA + Memory + Cultural)
+
+- Files created:
+  - `backend/alembic/versions/0004_communication_memory.py` — adds `locale` to users + creates `communication_memory` table
+  - `backend/app/models/communication_memory.py` — CommunicationMemory ORM model
+  - `backend/app/prompts/cultural.py` — locale ruleset table + `get_cultural_block()` renderer
+  - `backend/app/prompts/humanize/__init__.py`
+  - `backend/app/prompts/humanize/dna_v1.py` — `humanize.dna.v1` prompt with DNA block + memory examples + cultural block placeholders
+  - `backend/app/repositories/memory_repo.py` — create, get_recent_for_user, update_qdrant_point_id
+  - `backend/app/services/cultural_service.py` — Cultural Intelligence Engine (locale → cultural_block string)
+  - `backend/app/services/memory_service.py` — Communication Memory Engine (store/retrieve approved rewrites)
+  - `backend/app/services/personalization_service.py` — composes DNA + memory into prompt context
+  - `backend/tests/test_personalization.py` — 13 tests
+- Files modified:
+  - `backend/app/main.py` — import communication_memory model
+  - `backend/app/models/user.py` — added `locale` column (default "en-US")
+  - `backend/app/schemas/humanize.py` — added `profile_version_used: int | None` to RewriteResponse
+  - `backend/app/services/humanize_service.py` — inject DNA + memory + cultural when use_dna=True; write memory on accepted/edited feedback
+  - `backend/tests/conftest.py` — drop_all before create_all to ensure clean schema on every test session
+- Migration: `0004_communication_memory`
+- Tests: 13 new + 17 existing = 30/30 passing
+- Quality: ruff ✅  mypy ✅  pytest ✅
+- Key decisions:
+  - en-US returns None from cultural service (it's the baseline — no adaptation needed)
+  - Memory service opens its own AsyncSessionLocal (not request-scoped session) — safe for asyncio.create_task
+  - DNA prompt used only when profile.extraction_status == "complete"
+  - Cultural block suppressed for en-US + direct tone (already-direct locales)
+  - `drop_all` + `create_all` in conftest prevents stale schema between test sessions
+- Branch: `sprint-05-personalization`
+- PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/5
+- Deploy: Pending (VPS SSH temporarily unreachable — run `./Vault/deploy/deploy.sh full` when available)
+- Status: ✅ Code Complete | 🔄 Deploy Pending
+
+---
+
 ## [2026-05-31] Sprint 4 — Writing DNA Engine
 
 - Files created:
@@ -254,6 +289,24 @@ Executed full product strategy pivot: from minimal A/B demo → conversion-optim
   - extraction_status: "pending" | "processing" | "complete" | "failed"
 - Branch: `sprint-04-writing-dna`
 - PR: https://github.com/ngyan/WRITING_TWIN_AI/pull/4
+- Status: ✅ Complete
+
+---
+
+## [2026-06-01] Sprint 5b — Extension UX: Register + DNA Onboarding
+
+- Files modified:
+  - `extension/src/lib/api.ts` — added `register()`, `submitDnaSamples()`, `getDnaProfile()`, `DnaProfileResponse` type
+  - `extension/src/background.ts` — added `REGISTER`, `SUBMIT_DNA`, `GET_DNA_STATUS` message handlers + `DnaProfileResponse` import
+  - `extension/src/popup/popup.html` — 4 views: login, register, dna-setup, logged-in (DNA prompt + trained badge)
+  - `extension/src/popup/popup.ts` — full view transition machine; `parseSamples()` splits textarea on `---`; live sample count; auto-prompt DNA setup after register; `GET_DNA_STATUS` called on popup open
+  - `extension/src/popup/popup.css` — register button, switch links, textarea, sample-count label, DNA prompt box (amber), trained badge (green)
+- Notes:
+  - Users can now sign up entirely inside the popup — no web browser required
+  - After registration, DNA setup is auto-prompted; existing users see DNA trained badge if profile exists
+  - Samples textarea splits on `---` separator (one per blank line); min 1 sample of 10+ chars required
+  - Build output: 69.8 KB, zero errors
+- Branch: `main` (gap fill, no dedicated branch needed)
 - Status: ✅ Complete
 
 ---

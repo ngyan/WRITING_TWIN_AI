@@ -1,16 +1,16 @@
 # Writing Twin AI — Project Status Dashboard
 
 > **Update this file at the end of every sprint.**
-> **Last Updated:** 2026-05-31
+> **Last Updated:** 2026-06-01
 
 ---
 
 ## 🎯 Current Milestone
 
-**Phase:** Sprint 4 — Writing DNA Engine Complete
-**Current Sprint:** Sprint 5 — Personalization
-**Next Sprint:** Sprint 6 — AI Routing Hardening + Quality Retry
-**Target Launch:** MVP by end of Sprint 5 (~3–7 weeks from now)
+**Phase:** Sprint 5 gaps filled — Extension UX complete
+**Current Sprint:** Sprint 6 — AI Routing Hardening + Quality Retry
+**Next Sprint:** Sprint 7 — Billing
+**Target Launch:** MVP by end of Sprint 6 (~2–5 weeks from now)
 
 ---
 
@@ -18,16 +18,29 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 55% | Sprint 4 complete, DNA engine + Chrome extension built |
-| **Production Readiness** | 20% | VPS + NGINX + SSL live, Postgres + Redis + Qdrant in Docker |
-| **Test Coverage** | 15% | 17 tests passing (auth + humanize + dna) |
+| **MVP Readiness** | 70% | Sprint 5 complete — all 3 personalization engines live |
+| **Production Readiness** | 20% | VPS + NGINX + SSL live; Sprint 5 deploy pending (SSH temporarily down) |
+| **Test Coverage** | 20% | 30 tests passing (auth + humanize + dna + personalization) |
 | **Documentation** | 90% | Vault complete + Phase 0 deploy docs |
 | **Business Model** | 70% | Pricing defined, cost model done |
 | **Marketing** | 20% | Phase 0 demo live at writingtwinai.com |
 
 ---
 
-## ✅ Last Completed Tasks (2026-05-31)
+## ✅ Last Completed Tasks (2026-06-01)
+
+1. **Sprint 5 gap fill — Extension UX (register + DNA onboarding)**:
+   - `extension/src/lib/api.ts` — added `register()`, `submitDnaSamples()`, `getDnaProfile()`
+   - `extension/src/background.ts` — added `REGISTER`, `SUBMIT_DNA`, `GET_DNA_STATUS` message handlers
+   - `popup.html` — 4 views: login, register, dna-setup, logged-in
+   - `popup.ts` — full view transition logic; DNA textarea splits on `---` separator; live sample count; auto-prompt after register; DNA trained badge when profile exists
+   - `popup.css` — styles for register form, DNA setup view, trained badge, prompt box
+   - Users can now sign up and train Writing Twin entirely from the extension popup
+   - Build: 69.8 KB, no errors
+
+---
+
+## ✅ Previously Completed Tasks (2026-05-31)
 
 1. **Sprint 4 — Writing DNA Engine** complete:
    - `POST /v1/dna/samples` — accepts 1–200 writing samples, fires background extraction
@@ -82,14 +95,14 @@
 
 ## 🔜 Next Task
 
-**Sprint 5 — Personalization (DNA + Memory + Cultural engines):**
-- Read `Vault/active/SPRINT_05_PERSONALIZATION.md`
-- Branch: `sprint-05-personalization`
-- Goal: Use extracted Writing DNA to personalize humanize output; add Communication Memory
+**Sprint 6 — AI Routing Hardening + Quality Retry:**
+- Read `Vault/core/04-SPRINT-PLAN.md` Sprint 6 section
+- Branch: `sprint-06-routing-hardening`
+- Goal: Fallback chains, circuit breakers, quality retry loop, cost guard
 
-**Before Sprint 5:**
-- Deploy Sprint 4 backend to VPS (run `./Vault/deploy/deploy.sh full`; adds `writing_profiles` table via migration)
-- Ensure Anthropic + Gemini API keys are set in VPS backend `.env`
+**Before Sprint 6:**
+- Deploy Sprint 5 to VPS: `./Vault/deploy/deploy.sh full` (VPS SSH was down; retry when available)
+  - Adds `locale` column to users + `communication_memory` table (migration 0004)
 
 ---
 
@@ -119,8 +132,8 @@
 | **S2** | Humanization API | 🟢 Done | `sprint-02-humanization-api` | `5408f75` |
 | **S3** | Chrome Extension MVP | 🟢 Done | `sprint-03-chrome-extension` | — |
 | **S4** | Writing DNA Engine | 🟢 Done | `sprint-04-writing-dna` | `7a06806` |
-| **S5** | Personalization (DNA + Memory + Cultural) | 🔵 Next | — | — |
-| **S6** | AI Routing Hardening + Quality Retry | ⚪ Locked | — | — |
+| **S5** | Personalization (DNA + Memory + Cultural) | 🟢 Done | `sprint-05-personalization` | `4955913` |
+| **S6** | AI Routing Hardening + Quality Retry | 🔵 Next | — | — |
 | **S7** | Billing + Auth Polish | ⚪ Locked | — | — |
 | **S8** | Frontend Dashboard | ⚪ Locked | — | — |
 | **S9** | Polish + Launch | ⚪ Locked | — | — |
