@@ -1,8 +1,9 @@
 import type { Tone, RewriteResponse } from '../lib/api';
 
-// Gmail's stable selectors (validated 2026)
-const COMPOSE_BODY_SEL = '[g_editable="true"]';
-const SEND_BUTTON_SEL = '[data-tooltip="Send"], [aria-label="Send"]';
+// Gmail selectors — use prefix/substring matches so locale variants still match
+// e.g. tooltip can be "Send", "Send ⌘Enter", "Send (Ctrl+Enter)"
+const COMPOSE_BODY_SEL = '[g_editable="true"], div[contenteditable="true"][aria-multiline="true"]';
+const SEND_BUTTON_SEL = '[data-tooltip^="Send"], [aria-label^="Send"]';
 const HOST_ATTR = 'data-wt-injected';
 
 // ── Tone config ────────────────────────────────────────────────────────────────
@@ -181,14 +182,6 @@ function inject(composeBody: Element): void {
     }
   }, true);
 
-  // Keyboard shortcut Cmd/Ctrl+Shift+H
-  document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'H') {
-      e.preventDefault();
-      btn.click();
-    }
-  });
-
   function positionPanel(): void {
     const rect = btn.getBoundingClientRect();
     panel.style.bottom = `${window.innerHeight - rect.top + 4}px`;
@@ -273,9 +266,10 @@ function inject(composeBody: Element): void {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function findSendButton(composeBody: Element): Element | null {
-  // Walk up a few levels to find the compose container that has the Send button
+  // Walk up the tree to find the compose container that holds the Send button.
+  // Gmail nests the toolbar deep — 25 levels is safe headroom.
   let el: Element | null = composeBody;
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 25; i++) {
     if (!el) break;
     const send = el.querySelector(SEND_BUTTON_SEL);
     if (send) return send;
@@ -321,3 +315,18 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 // Handle compose windows already open on load
 tryInject(document);
+
+// Global keyboard shortcut Cmd/Ctrl+Shift+H — clicks the first visible Humanize button
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'H') {
+    e.preventDefault();
+    // HOST_ATTR is on the toolbar div; the shadow host is the first span child we inserted
+    const toolbar = document.querySelector(`[${HOST_ATTR}]`);
+    if (toolbar) {
+      // Find our span host inside the toolbar (it has a shadowRoot)
+      const host = Array.from(toolbar.children).find(c => c.shadowRoot) as HTMLElement | undefined;
+      const btn = host?.shadowRoot?.getElementById('wt-btn') as HTMLButtonElement | null;
+      btn?.click();
+    }
+  }
+});
