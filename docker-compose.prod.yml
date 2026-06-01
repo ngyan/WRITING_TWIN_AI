@@ -62,6 +62,21 @@ services:
     networks:
       - wt_prod
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://api.writingtwinai.com
+        NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+        NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY: ${NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY:-}
+        NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY: ${NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY:-}
+    container_name: writing_twin_frontend
+    ports:
+      - "127.0.0.1:3011:3000"
+    restart: unless-stopped
+    networks:
+      - wt_prod
+
 networks:
   wt_prod:
     name: wt_prod
