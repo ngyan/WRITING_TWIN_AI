@@ -16,6 +16,7 @@ await esbuild.build({
     'content/outlook':     'src/content/outlook.ts',
     'content/linkedin':    'src/content/linkedin.ts',
     'content/reddit':      'src/content/reddit.ts',
+    'content/hiworks':     'src/content/hiworks.ts',
     'popup/popup':         'src/popup/popup.ts',
   },
   bundle: true,
@@ -40,6 +41,7 @@ const files = [
   `${outdir}/content/outlook.js`,
   `${outdir}/content/linkedin.js`,
   `${outdir}/content/reddit.js`,
+  `${outdir}/content/hiworks.js`,
   `${outdir}/popup/popup.js`,
 ];
 let total = 0;
