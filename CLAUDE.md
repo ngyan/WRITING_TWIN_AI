@@ -147,7 +147,7 @@ git commit -m "feat: [Sprint N] what was built"
 | Prompt engineering | `Vault/core/07-PROMPTS-LIBRARY.md` |
 | UI / design | `Vault/core/02-DESIGN-SYSTEM.md` |
 | Chrome extension | `Vault/growth/CHROME_EXTENSION_ROLLOUT.md` |
-| Strategic decision | `Vault/core/11-FOUNDING-CONSTITUTION.md` first, always |
+| Strategic decision | `Vault/core/11-FOUNDING-CONSTITUTION.md` + `Vault/core/12-PRODUCT-VISION-2.0.md` |
 | Pricing / billing | `Vault/business/MONETIZATION.md` |
 
 ## Skill routing
