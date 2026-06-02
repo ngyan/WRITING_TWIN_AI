@@ -1,7 +1,13 @@
-"""VoiceService — transcribe audio + generate DNA-aware draft via voice pipeline."""
-import io
+"""VoiceService — transcribe audio + generate DNA-aware draft via voice pipeline.
+
+Transcription: Gemini 1.5 Flash (multimodal audio inline via LiteLLM).
+Draft generation: LiteLLM router (Gemini Flash → Claude Haiku → Claude Sonnet by plan).
+No OpenAI dependency.
+"""
+import base64
 import time
 
+import litellm
 import structlog
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +21,8 @@ from app.services import personalization_service, router_service
 
 log = structlog.get_logger()
 
-MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB — safely under Whisper's 25 MB limit
+MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB
+_TRANSCRIBE_MODEL = "gemini/gemini-1.5-flash"
 
 
 async def create_draft(
@@ -26,7 +33,6 @@ async def create_draft(
     output_type: str,
 ) -> VoiceDraftResponse:
     """Entry point: accepts raw audio OR pre-transcribed text."""
-    # 1 — Transcribe if audio provided
     transcript = transcript_text
     audio_duration_sec: int | None = None
 
@@ -35,13 +41,14 @@ async def create_draft(
         if len(content) > MAX_AUDIO_BYTES:
             from fastapi import HTTPException
             raise HTTPException(status_code=413, detail="Audio file exceeds 24 MB limit")
-        transcript, audio_duration_sec = await _transcribe(content, audio.filename or "audio.webm")
+        mime = _guess_mime(audio.filename or "audio.webm")
+        transcript = await _transcribe(content, mime)
 
     if not transcript or not transcript.strip():
         from fastapi import HTTPException
         raise HTTPException(status_code=422, detail="No transcript available")
 
-    # 2 — Build DNA context (best-effort — no DNA is fine for v1)
+    # Build DNA context (best-effort)
     dna_block: str | None = None
     if settings.FEATURE_VOICE_TWIN and settings.FEATURE_WRITING_DNA:
         try:
@@ -51,17 +58,15 @@ async def create_draft(
         except Exception:
             pass
 
-    # 3 — Select model + build prompt
+    # Select model + draft
     mc = router_service.select_model(user.plan, "professional", None)
     messages = draft_v1.build_messages(transcript, output_type, dna_block)
 
-    # 4 — LLM call
     t0 = time.monotonic()
     output_text, in_tok, out_tok = await router_service.complete(mc, messages)
     latency_ms = int((time.monotonic() - t0) * 1000)
     cost_usd = router_service.compute_cost(mc, in_tok, out_tok)
 
-    # 5 — Persist
     row = await voice_repo.create(db, {
         "user_id": user.id,
         "transcript": transcript,
@@ -110,23 +115,53 @@ async def record_feedback(
     await voice_repo.update_feedback(db, row, accepted, edited_draft)
 
 
-async def _transcribe(audio_bytes: bytes, filename: str) -> tuple[str, int | None]:
-    """Transcribe audio via OpenAI Whisper. Returns (transcript, duration_seconds)."""
-    import openai
+async def _transcribe(audio_bytes: bytes, mime: str) -> str:
+    """Transcribe audio via Gemini 1.5 Flash multimodal.
 
-    client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-    audio_file = io.BytesIO(audio_bytes)
-    audio_file.name = filename
+    Sends audio as base64 inline data. LiteLLM maps data URIs to Gemini's
+    inlineData format using the mime type to distinguish audio from images.
+    """
+    b64 = base64.b64encode(audio_bytes).decode()
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": (
+                        "Transcribe the following audio exactly as spoken. "
+                        "Output only the raw transcript — no labels, no commentary, "
+                        "no timestamps. Preserve technical terms exactly."
+                    ),
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime};base64,{b64}"},
+                },
+            ],
+        }
+    ]
 
-    response = await client.audio.transcriptions.create(
-        model="whisper-1",
-        file=audio_file,
-        response_format="verbose_json",
+    response = await litellm.acompletion(
+        model=_TRANSCRIBE_MODEL,
+        messages=messages,
+        api_key=settings.GEMINI_API_KEY,
+        timeout=30,
     )
-    transcript = response.text.strip()
-    duration_sec: int | None = None
-    if hasattr(response, "duration") and response.duration:
-        duration_sec = int(response.duration)
+    transcript = response.choices[0].message.content or ""
+    transcript = transcript.strip()
+    log.info("gemini.transcribed", chars=len(transcript), model=_TRANSCRIBE_MODEL)
+    return transcript
 
-    log.info("whisper.transcribed", chars=len(transcript), duration_sec=duration_sec)
-    return transcript, duration_sec
+
+def _guess_mime(filename: str) -> str:
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webm"
+    return {
+        "webm": "audio/webm",
+        "mp3":  "audio/mp3",
+        "mp4":  "audio/mp4",
+        "m4a":  "audio/mp4",
+        "ogg":  "audio/ogg",
+        "wav":  "audio/wav",
+        "flac": "audio/flac",
+    }.get(ext, "audio/webm")
