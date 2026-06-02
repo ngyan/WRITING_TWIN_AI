@@ -21,6 +21,13 @@ class DNASamplesResponse(BaseModel):
     extraction_status: str
 
 
+class LearningStatsResponse(BaseModel):
+    patterns_learned_this_week: int
+    total_learnings: int
+    cringe_phrases: list[str]
+    profile_version: int
+
+
 class WritingProfileRead(BaseModel):
     model_config = {"from_attributes": True}
 

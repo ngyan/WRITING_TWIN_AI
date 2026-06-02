@@ -134,3 +134,18 @@ export async function submitDnaSamples(rawTexts: string[]): Promise<void> {
     body: JSON.stringify({ samples }),
   });
 }
+
+export interface LearningStats {
+  patterns_learned_this_week: number;
+  total_learnings: number;
+  cringe_phrases: string[];
+  profile_version: number;
+}
+
+export async function getLearningStats(): Promise<LearningStats | null> {
+  try {
+    return await request<LearningStats>("/v1/dna/learning-stats");
+  } catch {
+    return null;
+  }
+}

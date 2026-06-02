@@ -16,6 +16,7 @@ from app.services import (
     context_service,
     cost_guard_service,
     cultural_service,
+    dna_learning_service,
     memory_service,
     personalization_service,
     quality_service,
@@ -183,6 +184,20 @@ async def record_feedback(
                 tone=row.tone,
                 context=row.context_detected,
             )
+        )
+
+    # DNA Learning Engine — extract phrase patterns from edited rewrites
+    if (
+        settings.FEATURE_DNA_LEARNING
+        and req.action == "edited"
+        and req.edit_text
+    ):
+        dna_learning_service.schedule_learning(
+            user_id=user.id,
+            rewrite_id=row.id,
+            original_output=row.output_text,
+            final_text=req.edit_text,
+            tone=row.tone,
         )
 
 

@@ -66,7 +66,7 @@ async def create_checkout_session(
         allow_promotion_codes=True,
     )
     log.info("billing.checkout_created", user_id=str(user.id), session_id=session.id)
-    return session.url
+    return session.url or ""
 
 
 async def create_portal_session(db: AsyncSession, user: User, return_url: str) -> str:

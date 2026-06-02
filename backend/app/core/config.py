@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     FEATURE_EXTENSION_BETA: bool = False
     FEATURE_COMMUNICATION_MEMORY: bool = False
     FEATURE_VOICE_TWIN: bool = False
+    FEATURE_DNA_LEARNING: bool = True
 
 
 settings = Settings()
