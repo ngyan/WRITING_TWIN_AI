@@ -83,9 +83,16 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 6. Submit for review
 7. After approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS in `backend/app/main.py`
 
-### If starting Sprint 11:
-- Read `Vault/PROJECT_STATUS.md` → candidates: Google OAuth, email verification, LinkedIn extension, referral system
-- Branch: `sprint-11-<name>`
+### If starting Phase 2 (Sprint 11+):
+- Read `Vault/core/12-PRODUCT-VISION-2.0.md` → Digital Communication Twin vision
+- Read `Vault/product/ROADMAP.md` → Phase 2 sprint breakdown
+- **Recommended sprint order:**
+  - Sprint 11: Twin Score + Cringe Detector
+  - Sprint 12: Context Twins + Communication Graph
+  - Sprint 13: LinkedIn + Slack + Outlook extension content scripts
+  - Sprint 14: Auto Draft Engine
+  - Sprint 15: Voice Twin (Speech-to-Writing)
+  - Sprint 16: Meeting Intelligence
 
 ---
 

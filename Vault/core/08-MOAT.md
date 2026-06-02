@@ -5,7 +5,9 @@
 
 ---
 
-## 🏰 The Five Moats (Ranked by Defensibility)
+## 🏰 The Seven Moats (Ranked by Defensibility)
+
+> Updated for WritingTwinAI 2.0 — Digital Communication Twin vision.
 
 ### 1. The Writing DNA Data Flywheel — STRONGEST
 The longer a user uses Writing Twin, the more their DNA profile diverges from any competitor's generic style model. **Switching cost = years of accumulated samples + refinements.** A new user at competitor X starts from zero. A 6-month Writing Twin user has a high-fidelity profile that can't be exported (intentionally — see Trust moat below).
@@ -39,13 +41,53 @@ Grammarly is weak in Korean, Hindi, Indonesian, Vietnamese, Japanese. We can dom
 - Hire creator partners in Korea (LinkedIn Korea is growing fast), India, SEA
 - Localized landing pages by month 6
 
-### 5. Trust (Privacy + Zero-Retention Mode)
+### 5. Communication Graph — HIGH (Phase 2+)
+The user's relationship registry is not just a contact list — it is a record of how they communicate differently with each person. Customer vs. manager vs. engineer vs. LinkedIn audience. This relationship-context data cannot be reconstructed by a new entrant. It takes months of real communication to build and becomes the foundation for Context Twins and Behavioral Intelligence.
+
+**How to deepen:**
+- Auto-detect relationship type from domain, platform, and thread history
+- Let users tag and rate relationship quality
+- Surface "communication health" scores per relationship
+
+### 6. Behavioral Intelligence — HIGHEST LONG-TERM (Phase 3+)
+Most competitors stop at vocabulary and tone. WritingTwinAI will learn decision style: how the user agrees, disagrees, escalates, requests action, handles conflict, and handles uncertainty. This is harder to copy than writing style because it requires longitudinal behavioral data across many interactions.
+
+**How to deepen:**
+- Extract behavioral signals from accepted vs. edited vs. rejected drafts
+- Classify: agreement pattern, escalation pattern, uncertainty framing
+- Voice Twin sessions (Phase 3) provide the richest behavioral data — natural speech is less filtered
+
+### 7. Trust (Privacy + Zero-Retention Mode)
 Reading someone's emails is a trust act. We default to PII redaction in logs and offer Enterprise on-prem (Ollama) for regulated industries. Grammarly had its 2018 breach. ChatGPT can't credibly promise non-retention. We can.
 
 **How to deepen:**
 - Day-1 audit log for every read of user data
 - SOC 2 Type I by month 9, Type II by month 18
 - "Zero-retention mode" toggle per user — drafts never leave their device unencrypted
+
+---
+
+---
+
+## 🔒 The Compound Moat (Why 2.0 Is Defensible)
+
+Competitors can copy:
+- ✅ Prompt templates
+- ✅ UI/UX patterns
+- ✅ Tone pickers
+- ✅ Chrome extension structure
+
+Competitors **cannot easily copy:**
+- ❌ User's writing history (years of accepted drafts)
+- ❌ Communication Graph (who they write to and how)
+- ❌ Voice history (speech patterns from Voice Twin sessions)
+- ❌ Behavioral patterns (how they escalate, agree, disagree)
+- ❌ Learning memory (every edit as a training event)
+- ❌ Relationship context (6+ context twins diverging per user)
+
+Each layer compounds. A user who has been on WritingTwinAI for 12 months has a profile that a competitor cannot reconstruct in under 6 months — even if the user handed over all their emails. The behavioral and relational layers are only learnable from observed interactions, not from static data export.
+
+This is the moat. Build it deliberately.
 
 ---
 

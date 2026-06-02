@@ -1,184 +1,280 @@
-# Writing Twin AI — Product Roadmap
+# Writing Twin AI — Product Roadmap v2.0
 
-> Aligned with `core/11-FOUNDING-CONSTITUTION.md` → The Product Pyramid.
-> **Rule:** Each phase is only built once the phase below is loved by users. Do not skip layers.
-> **Last Updated:** 2026-05-30
-
----
-
-## Phase 1 — MVP: Rewrite + Humanize (Sprints 1–3)
-
-**Goal:** A working Chrome Extension that rewrites selected text via the backend API, feels magical, and returns output in < 3 seconds.
-
-**Pyramid Layers Delivered:** L1 (Rewrite) + L2 (Humanize)
-
-### Deliverables
-- [x] Vault + architecture documentation
-- [ ] FastAPI backend with JWT auth
-- [ ] Rewrite API endpoint (`POST /v1/rewrite`)
-- [ ] Humanization pipeline (context detection + AI routing)
-- [ ] Semantic cache (Redis — avoids duplicate LLM calls)
-- [ ] Chrome Extension MV3 — inject rewrite button on Gmail, LinkedIn, Slack
-- [ ] Extension OAuth login (Google)
-- [ ] Basic user account (settings, usage counter)
-- [ ] Docker Compose dev + production setup
-
-### Acceptance Criteria
-- User selects text in Gmail, clicks "Rewrite" → gets rewritten output in < 3s
-- Output does NOT trip common AI detectors (GPTZero, Originality.ai)
-- Extension installs without error in Chrome
-- `pytest -q` passes 30+ tests
-- Health check green: `GET /v1/health → {"status":"ok"}`
-
-### Risks
-- LLM latency > 3s on complex rewrites (mitigation: streaming response, Gemini Flash first)
-- Chrome Web Store review delay (mitigation: start review submission by Sprint 2 end)
-
-### Success Metrics
-- 200 extension installs within 2 weeks of launch
-- 40% D7 retention (users return within 7 days)
-- Avg rewrite latency < 2s
+> **North Star:** The world's first Digital Communication Twin. Every professional has a replica of their communication identity that writes, responds, and drafts across every channel — in their voice.
+>
+> **Prime metric:** % of generated drafts sent without significant edits. Target: 80%+.
+>
+> **Rule:** Each phase only starts when the phase below is loved. Do not skip layers.
+>
+> **Last Updated:** 2026-06-02
 
 ---
 
-## Phase 2 — Write Like Me: Writing DNA (Sprint 4)
+## Current State — Phase 1 Complete ✅
 
-**Goal:** The system learns how the user writes and injects their voice into every rewrite. This is the first moat layer.
+**Writing Twin MVP is live.** Gmail extension, Writing DNA, billing, dashboard, and Web Store packaging are done. The foundation is in place.
 
-**Pyramid Layer Delivered:** L3 (Write Like Me)
-
-### Deliverables
-- [ ] Writing sample upload (`POST /v1/dna/samples`)
-- [ ] DNA extraction pipeline (`dna.extract.v1` prompt — vocabulary, rhythm, warmth, etc.)
-- [ ] Qdrant `user_dna` collection — store embeddings per user
-- [ ] DNA-aware rewrite endpoint (`use_dna=true` flag)
-- [ ] DNA profile review UI in dashboard
-- [ ] Onboarding flow: 3-sample minimum before DNA is activated
-
-### Acceptance Criteria
-- User uploads 5 email samples → DNA profile visible in dashboard
-- Rewrite with `use_dna=true` produces output that a colleague would recognize as "sounds like them"
-- DNA extraction runs async (job queue) — does not block rewrite latency
-- `pytest -q` passes 50+ tests
-
-### Risks
-- DNA quality depends on sample quality — too-short samples produce weak DNA
-  (mitigation: minimum 100-word sample validation before acceptance)
-- Qdrant not tuned for cosine similarity on writing style embeddings
-  (mitigation: test with `text-embedding-3-small` + cosine, benchmark vs random)
-
-### Success Metrics
-- 60% of active users upload writing samples (DNA adoption)
-- DNA rewrites rated "sounds like me" by 70%+ of users (in-app rating)
-- D30 retention: DNA users 2x non-DNA users
+| Capability | Status |
+|---|---|
+| Gmail ✨ Humanize button | ✅ Live |
+| 6 rewrite tones | ✅ Live |
+| Writing DNA extraction (from samples) | ✅ Live |
+| Communication Memory (accept/edit feedback loop) | ✅ Live |
+| JWT auth + 15-min refresh rotation | ✅ Live |
+| Free plan (20 rewrites/mo) + Pro ($5/mo, 300/mo) | ✅ Live |
+| Stripe Checkout + Customer Portal | ✅ Live |
+| Next.js dashboard (usage, DNA status, upgrade) | ✅ Live |
+| PostHog analytics + funnel tracking | ✅ Live |
+| Chrome Web Store packaging | ✅ Ready to submit |
 
 ---
 
-## Phase 3 — Communication Memory (Sprint 5, partial)
+## Phase 2 — Communication Twin
 
-**Goal:** The system learns continuously from the user's accept/edit/reject decisions. Every interaction sharpens the twin.
+**Theme:** The user's twin understands context, not just style. It knows who they're writing to, flags language they'd never use, and learns continuously from every edit.
 
-**Pyramid Layer Delivered:** L4 (Communication Memory)
+**Gate:** ≥ 500 active extension users AND ≥ 60% send drafts without major edits.
 
-### Deliverables
-- [ ] Accept/reject/edit tracking on rewrite outputs
-- [ ] `CommunicationMemory` table + `MemoryService`
-- [ ] Qdrant `user_memory` collection — embed approved outputs
-- [ ] Memory-aware rewrite (inject similar past-approved phrasings)
-- [ ] Feedback loop: high edit-distance = strong negative signal
-- [ ] Privacy control: user can delete all memory data
+### 2A — Twin Score + Cringe Detector (Sprint 11)
 
-### Acceptance Criteria
-- After 20+ rewrites, output drift toward user preferences is measurable
-- Memory retrieval latency < 100ms (warm Qdrant cache)
-- User can view + delete their memory data in dashboard
+The user sees exactly how well their twin matched them — and gets flagged when AI-speak slips through.
 
-### Success Metrics
-- Edit distance on rewrites decreases 30% over first 30 interactions per user
-- Zero user complaints about "wrong voice" after 50+ interactions
+**Twin Score (visible to users):**
+- 0–100% per generated draft
+- Dimensions: Vocabulary Match / Sentence Rhythm / Formality / Decision Pattern
+- Displayed in extension panel after each rewrite
+- "Improve your twin" prompt when score < 75%
 
----
+**AI Cringe Detector:**
+- Flag phrases user would never write: "leverage", "thrilled", "synergy", "cutting-edge", "delighted to", "circling back", "world-class"
+- Auto-suggest replacement from user's actual vocabulary
+- User can add/remove words from their personal cringe list
 
-## Phase 4 — Personalization: DNA + Memory + Cultural (Sprint 5, remainder)
-
-**Goal:** All three Constitutional engines (DNA, Memory, Cultural Intelligence) fire together on every rewrite.
-
-**Pyramid Layer Delivered:** L4 fully + Cultural Intelligence Engine
-
-### Deliverables
-- [ ] Cultural Intelligence Engine (`CulturalService` — locale → politeness/directness/hierarchy rules)
-- [ ] `user.locale` detection (from account settings or browser `navigator.language`)
-- [ ] `cultural.adapt.v1` prompt block injected into personalized rewrites
-- [ ] Locale-specific golden test cases (en-US, ko-KR, hi-IN, ja-JP, de-DE)
-- [ ] Personalization service composing DNA + Memory + Cultural into single prompt
-
-### Acceptance Criteria
-- Korean user's rewrites are noticeably more formal/hierarchy-aware than US user's rewrites
-- Indian English idioms ("do the needful", "revert back") preserved when tone != `executive`
-- Cultural adaptation does NOT override user's DNA (DNA wins when they conflict)
-
-### Success Metrics
-- Non-native English professional NPS > 50
-- Tier-1 market (KR, IN, SEA) retention rate > 45% D30
+**Sprint 11 deliverables:**
+- `POST /v1/humanize` response includes `twin_score` object (vocabulary, rhythm, formality, decision_pattern, overall)
+- `GET /v1/dna/cringe-words` — user's personal cringe list
+- `POST /v1/dna/cringe-words` — add/remove
+- Cringe detection runs post-generation, flags replacements inline
+- Extension panel shows Twin Score badge after each rewrite
 
 ---
 
-## Phase 5 — AI Routing Hardening + Quality (Sprint 6)
+### 2B — Context Twins (Sprint 12)
 
-**Goal:** Every output passes quality thresholds before being shown to the user. The system retries automatically. Cost per rewrite is optimized.
+Every user communicates differently depending on who they're talking to. The twin must learn this.
 
-**Pyramid Layer Delivered:** AI Orchestration Layer + Quality Engine fully operational
+**Six context profiles, auto-selected:**
 
-### Deliverables
-- [ ] Quality Engine (`QualityService`) — score Human, Style Match, Readability, Confidence, Risk
-- [ ] Auto-retry loop (up to 2 retries before fallback to cheaper response)
-- [ ] Cost guardrails — daily/monthly token budget per user plan
-- [ ] Model routing by user plan (Free → Gemini Flash, Pro → Claude Haiku, Enterprise → Claude Sonnet)
-- [ ] LangFuse integration for LLM observability (token tracking, latency, cost per call)
+| Twin | Triggered when |
+|---|---|
+| **Technical Twin** | Writing to engineers, developers, data teams |
+| **Executive Twin** | Writing to C-suite, board, investors |
+| **Customer Twin** | Writing to clients, prospects, support |
+| **Manager Twin** | Writing to direct manager, skip-level |
+| **Team Twin** | Writing to colleagues, teammates |
+| **Social Twin** | Writing on LinkedIn, Twitter, public channels |
 
-### Acceptance Criteria
-- Zero sub-threshold rewrites shown to users (quality gate before response)
-- Cost per rewrite < $0.001 on Free tier, < $0.003 on Pro
-- LLM fallback tested: kill OpenAI in test → Claude Haiku serves response without user-visible error
+**How context is determined:**
+- User explicitly tags relationships in their Communication Graph
+- Auto-detected from recipient domain, thread history, platform (LinkedIn = Social Twin)
+- User can override context per message
 
-### Success Metrics
-- P95 rewrite latency < 3s (including quality retry)
-- Cost per MAU < $0.50/month on Pro plan (90% gross margin maintained)
-- LLM error rate < 0.1% (fallback absorbs the rest)
-
----
-
-## Phase 6 — Enterprise: SSO + Compliance + Scale (Post-PMF)
-
-**Goal:** Sell to corporate IT. Support teams of 20+ users with shared DNA templates, audit logs, SSO, and compliance exports.
-
-**Pyramid Layers Unlocked:** L5 (Communication Identity) + L6 (AI Communication OS) foundation
-
-### Deliverables (Future)
-- [ ] SAML/OIDC SSO (Okta, Azure AD, Google Workspace)
-- [ ] Audit log export (CSV/JSON, date range, per-user)
-- [ ] Team DNA templates (shared voice profiles for sales/support teams)
-- [ ] Admin dashboard (usage analytics, billing, user management)
-- [ ] GDPR export / right-to-erasure flow
-- [ ] SOC 2 Type II preparation
-- [ ] Local deployment option (on-prem Docker, air-gapped)
-- [ ] Outlook add-in (parallel to Chrome extension)
-
-### Gate
-**Do not build this until:** 1,000 paying users OR first $10k MRR, whichever comes first.
+**Sprint 12 deliverables:**
+- `communication_graph` table — user's relationship registry (name/domain, relationship_type, notes)
+- `POST /v1/graph/contacts` — add/update contact
+- `GET /v1/graph` — list contacts + relationship types
+- Context twin auto-selected in `POST /v1/humanize` via `context_twin` field (or auto-detect)
+- Each context twin has a separate DNA sub-profile that diverges over time
+- Extension: context indicator in the tone picker panel
 
 ---
 
-## Things That Will Tempt You (Resist)
+### 2C — Platform Expansion (Sprint 13)
 
-These are explicitly out of scope until Phase 6+ or post-PMF:
+Gmail is the wedge. Phase 2 plants the flag on three more surfaces.
+
+**LinkedIn:** content script injected into compose + comment boxes
+**Slack:** content script for message composer
+**Outlook (web):** content script for compose window
+
+**Sprint 13 deliverables:**
+- `extension/src/content/linkedin.ts` — inject button into LinkedIn post/comment compose
+- `extension/src/content/slack.ts` — inject button into Slack message input
+- `extension/src/content/outlook.ts` — inject button into Outlook Web App compose
+- Manifest updated with new host_permissions
+- Auto-selects Social Twin on LinkedIn, Team Twin on Slack
+
+---
+
+### 2D — Auto Draft Engine (Sprint 14)
+
+The user stops writing first drafts. They review, adjust, send.
+
+**How it works:**
+- User opens a reply thread → twin reads the incoming message → generates a draft in background
+- Draft appears in compose as a "suggestion" the user can accept, edit, or dismiss
+- Every acceptance/edit is a learning event
+
+**Sprint 14 deliverables:**
+- `POST /v1/humanize/auto-draft` — takes incoming message + thread context, returns draft
+- Content scripts detect new compose windows opened in reply-to context
+- Extension: "Twin drafted this" badge in compose
+- User can toggle Auto Draft on/off per platform in popup settings
+
+---
+
+## Phase 3 — Voice Twin
+
+**Theme:** The user speaks. The twin writes. Every meeting becomes a deliverable in the user's voice.
+
+**Gate:** ≥ 2,000 active users AND Twin Score ≥ 80% average across DNA-enabled users.
+
+**Why this matters:** Most competitors focus on writing. Voice-to-writing is a 10x workflow unlock. A 30-second voice note → a 3-paragraph email in the user's style is indistinguishable from magic.
+
+### 3A — Speech-to-Writing Twin (Sprint 15)
+
+**The pattern:**
+```
+User speaks: "The issue looks AMF related. Collect SCTP traces first."
+Twin writes: "Based on current observations, the issue appears to originate 
+             from the AMF side. It would be useful to collect additional SCTP 
+             traces to verify the behavior before proceeding."
+```
+
+The output sounds like the user wrote it carefully — not like a transcript.
+
+**Sprint 15 deliverables:**
+- `POST /v1/voice/transcribe-and-draft` — accepts audio blob, returns draft
+- Extension: microphone button added to toolbar (alongside ✨ Humanize)
+- Whisper API (or local) for transcription → passed through DNA-aware humanize pipeline
+- Voice note history in dashboard
+
+---
+
+### 3B — Meeting Intelligence (Sprint 16)
+
+Every meeting becomes structured output — in the user's style.
+
+**Supported outputs from a meeting transcript:**
+- Summary (bullet-point or paragraph, user's style)
+- Email update to stakeholders
+- Action items
+- Jira/Linear ticket drafts
+- Customer-facing update
+- LinkedIn post about the outcome
+
+**Sprint 16 deliverables:**
+- `POST /v1/meetings/process` — accepts transcript text, output_type, context
+- Web interface: upload transcript → choose output format → review in your voice
+- Meeting history in dashboard
+- Integration with calendar (optional — Phase 4)
+
+---
+
+## Phase 4 — Communication OS
+
+**Theme:** One place to manage, draft, and send everything. The twin operates proactively.
+
+**Gate:** ≥ 10,000 active users AND ≥ 5 platforms active per user on average.
+
+### 4A — Universal Inbox + Universal Drafting
+
+All communication surfaces unified. One queue. One drafting experience.
+
+- Incoming messages from Gmail, LinkedIn, Slack pulled into a single review UI
+- For each: twin has already prepared a draft
+- User reviews batch of 10 messages in 5 minutes instead of 45
+
+### 4B — Relationship Intelligence
+
+The Communication Graph becomes smart.
+
+- Track communication frequency with each contact
+- Surface: "You haven't responded to [Name] in 3 days — here's a draft"
+- Detect communication pattern changes: someone usually replies in 2h, now 48h → flag
+- Meeting prep: "You're meeting [Name] tomorrow — here's context + a pre-meeting note draft"
+
+### 4C — Cross-Platform Memory
+
+One DNA profile, coherent across all platforms.
+
+- LinkedIn post, Slack message, email, Jira comment — all feel like the same person wrote them
+- Memory updates from any platform strengthen the same core profile
+- Behavioral patterns (how user escalates, requests, disagrees) extracted across channels
+
+---
+
+## Phase 5 — Digital Executive Assistant
+
+**Theme:** The twin prepares communication before the user asks. The user only approves.
+
+**Gate:** ≥ $1M ARR AND ≥ 20% of users on team/enterprise plans.
+
+### What the twin does proactively:
+
+- Morning brief: "Here are 7 messages that need a response. 5 are drafted."
+- Weekly update: auto-drafted based on calendar + Jira + Slack activity
+- Relationship health: "You haven't reached out to [Customer] in 6 weeks. Here's a check-in."
+- Decision prep: "Meeting tomorrow about X — here's a pre-read draft for stakeholders"
+
+The twin understands:
+- Who is communicating
+- Why they are communicating
+- What the user would likely say
+- What actions should be taken
+
+---
+
+## New Sprint Candidates (Post Phase 1)
+
+| Sprint | Feature | Phase |
+|---|---|---|
+| **S11** | Twin Score + Cringe Detector | 2A |
+| **S12** | Context Twins + Communication Graph | 2B |
+| **S13** | LinkedIn + Slack + Outlook extension | 2C |
+| **S14** | Auto Draft Engine | 2D |
+| **S15** | Speech-to-Writing Twin | 3A |
+| **S16** | Meeting Intelligence | 3B |
+| **S17** | Universal Inbox + Universal Drafting | 4A |
+| **S18** | Relationship Intelligence | 4B |
+| **S19** | Cross-Platform Memory | 4C |
+| **S20** | Digital Executive Assistant (beta) | 5 |
+
+---
+
+## Enterprise Gate (Phase 2+)
+
+Build this when Phase 2 is loved (≥ 2,000 users, ≥ $20k MRR):
+
+- SAML/OIDC SSO (Okta, Azure AD, Google Workspace)
+- Team Context Twin templates (shared voice for sales/support teams)
+- Admin dashboard (usage, billing, user management)
+- Audit log export (CSV/JSON)
+- GDPR right-to-erasure
+- SOC 2 Type II preparation
+- Local/on-prem deployment option
+
+---
+
+## What We Will NOT Build Until Phase 4+
 
 | Temptation | Why to Resist |
 |---|---|
-| iOS app | $99/yr Apple account, 2–4 week review cycle, 30% cut. Extension is the wedge. |
-| Voice input | Interesting, but the moat is writing — stay focused on writing |
-| AI email drafting from scratch | Scope creep — we rewrite + humanize, not generate from scratch |
-| Slack bot / Teams app | Phase 3+ platform. Chrome extension first. |
-| White-label for enterprises | Phase 6. Needs SSO + audit logs first. |
-| "AI writing coach" pivot | Grammarly's territory. Our moat is identity, not correction. |
-| Multi-language output | We write in the user's language, not translate. Don't conflate. |
+| iOS / Android native app | Extension is the wedge. Mobile is Phase 4. |
+| Standalone chat interface | We're not a chat tool — we're embedded everywhere. |
+| Ghostwriting from scratch (blog posts, full articles) | We humanize and draft. Not ghostwrite. |
+| Translation as primary feature | We write in the user's language, not translate. |
+| Grammar correction | That's Grammarly's territory. Our moat is identity, not correction. |
+| White-label before Phase 3 | Needs SSO + audit logs first. |
+
+---
+
+## The One Metric That Proves PMF
+
+> **"How often does the user send the draft without significant edits?"**
+>
+> Target: **80% acceptance rate.**
+
+When 8 in 10 generated drafts get sent with minimal changes, the twin has achieved product-market fit. Everything else — installs, revenue, NPS — is a lagging indicator of this.
+
+Track it. Ship to improve it. Don't ship features that don't move it.

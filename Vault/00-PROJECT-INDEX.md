@@ -1,7 +1,7 @@
 # Writing Twin AI — Master Index
 
-> **Last Updated:** 2026-05-30
-> **Status:** Pre-development — Vault initialized, Sprint 1 ready to execute
+> **Last Updated:** 2026-06-02
+> **Status:** Phase 1 complete — Chrome Web Store pending review. Phase 2 planning in progress.
 > **Project Path:** `/Users/gyanprakash/Gyan/Claud_Code/WRITING_TWIN_AI`
 > **Vault Path:** `/Users/gyanprakash/Gyan/Claud_Code/WRITING_TWIN_AI/Vault/`
 
@@ -36,6 +36,7 @@
 | `core/08-MOAT.md` | Why we win vs Grammarly / ChatGPT / Wordtune | Strategic decisions |
 | `core/09-GTM-STRATEGY.md` | ICP, pricing, channels, launch sequence | Marketing & growth work |
 | `core/10-DONE-LOG.md` | Completed sprint history | Every session end |
+| `core/12-PRODUCT-VISION-2.0.md` | **2.0 vision — Digital Communication Twin** | **Before Phase 2+ product decisions** |
 
 ### Subfolders
 | Folder | Contents |

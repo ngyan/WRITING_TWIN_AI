@@ -7,13 +7,23 @@
 
 ## 🎯 The Vision
 
-Writing Twin AI is not a rewriter. It is a **persistent AI communication identity** — your second writing brain, available everywhere you write.
+**Writing Twin AI is not an AI writer. It is a Digital Communication Twin.**
 
-The promise the user feels every time they click:
+A platform that learns how a person communicates across every channel and generates responses, emails, reports, messages, and documents that sound indistinguishable from that person.
 
-> *"This sounds exactly like me — but better."*
+The goal is not to write better. The goal is to **preserve and scale a person's communication identity.**
 
-Generic AI sounds like ChatGPT. Grammarly fixes grammar. We do something neither does: **preserve the user's voice while making them faster and more confident.**
+A user's communication style is a valuable asset built over years of experience. WritingTwinAI captures, learns, evolves, and deploys that communication identity across all platforms.
+
+The promise the user feels every time they read the output:
+
+> *"This sounds exactly like me."*
+
+Not: "This sounds like good writing." Not: "This sounds like AI." **Like me.**
+
+Current AI writes well. Writes fast. Sounds generic. WritingTwinAI learns continuously, preserves communication identity, and operates across every channel. The long-term destination is the world's first **Communication Operating System** — a living digital replica of how a person thinks, writes, and responds.
+
+**Primary value proposition:** *"AI that sounds like you everywhere."*
 
 ---
 
@@ -37,11 +47,13 @@ Generic AI sounds like ChatGPT. Grammarly fixes grammar. We do something neither
 
 | Phase | Product | Success Signal | Approx Timeline |
 |---|---|---|---|
-| **Phase 1: Email Rewriter** | Chrome extension + Humanize API + Gmail support | 1,000 WAU, 8% paid conversion | Month 0–3 |
-| **Phase 2: Writing DNA** | Profile extraction from past emails + personalized rewrites | 70% of Pro users complete DNA onboarding | Month 3–6 |
-| **Phase 3: Cross-Platform** | LinkedIn, Outlook, Slack, Notion, Gmail | 5,000 paid users, $50k MRR | Month 6–12 |
-| **Phase 4: Communication OS** | Standalone web app, mobile, voice draft | $250k MRR, 20% from teams | Year 2 |
-| **Phase 5: Enterprise Identity** | SSO, team voice guides, on-prem deployment | First $50k+ enterprise contract | Year 2–3 |
+| **Phase 1: Writing Twin MVP** ✅ | Gmail extension + DNA + billing + dashboard | 500 active users, 80% draft acceptance rate | Month 0–3 (DONE) |
+| **Phase 2: Communication Twin** | Twin Score, Cringe Detector, Context Twins, LinkedIn+Slack+Outlook, Auto Draft | 2,000 active users, $20k MRR | Month 3–9 |
+| **Phase 3: Voice Twin** | Speech-to-writing, meeting summaries, meeting-to-email/Jira/report | 10,000 users, $75k MRR | Month 9–18 |
+| **Phase 4: Communication OS** | Universal Inbox, Relationship Intelligence, cross-platform memory | $250k MRR, 20% team plans | Year 2 |
+| **Phase 5: Digital Executive Assistant** | Proactive drafting, meeting prep, morning brief | First $50k enterprise contract | Year 2–3 |
+
+**The prime metric across all phases:** % of generated drafts sent without significant edits. Target: 80%+.
 
 ---
 
@@ -100,15 +112,15 @@ Generic AI sounds like ChatGPT. Grammarly fixes grammar. We do something neither
 
 ---
 
-## 🚫 What We Will NOT Build (Phase 1)
+## 🚫 What We Will NOT Build (Phase 1–2)
 
 - ❌ Full Grammarly replacement (no spell check, no grammar suggestions)
-- ❌ Long-form ghostwriting (no blog posts > 500 words)
+- ❌ Long-form ghostwriting (no blog posts > 500 words — we humanize, not ghostwrite)
 - ❌ Image generation
 - ❌ Translation as a primary feature (it's a side effect)
-- ❌ Voice transcription
-- ❌ Native iOS / Android (mobile is Phase 4)
+- ❌ Native iOS / Android (mobile is Phase 4+)
 - ❌ Free unlimited tier (kills the cost model)
+- ✅ Voice transcription — **planned Phase 3** (Voice Twin is our key differentiator)
 
 ---
 
