@@ -18,6 +18,7 @@ dependencies = [
     "structlog",
     "httpx",
     "litellm>=1.40",
+    "openai>=1.14",
     "stripe>=7.0",
 ]
 

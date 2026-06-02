@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     FEATURE_QUALITY_RETRY: bool = False
     FEATURE_EXTENSION_BETA: bool = False
     FEATURE_COMMUNICATION_MEMORY: bool = False
+    FEATURE_VOICE_TWIN: bool = False
 
 
 settings = Settings()
