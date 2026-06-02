@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "AI that rewrites text to sound exactly like you — works in Gmail, LinkedIn, Slack, and Outlook.",
   "homepage_url": "https://writingtwinai.com",
-  "permissions": ["storage"],
+  "permissions": ["storage", "identity"],
   "host_permissions": [
     "https://mail.google.com/*",
     "https://outlook.live.com/*",

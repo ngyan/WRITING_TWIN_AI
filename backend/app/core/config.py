@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     LITELLM_BASE_URL: str = "http://localhost:4000"
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "https://api.writingtwinai.com/v1/auth/google/callback"
+    FRONTEND_URL: str = "https://writingtwinai.com"
+
     # Stripe
     STRIPE_API_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""

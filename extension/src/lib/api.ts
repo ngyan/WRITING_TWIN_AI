@@ -194,3 +194,10 @@ export async function submitVoiceFeedback(
     body: JSON.stringify({ accepted, edited_draft: editedDraft }),
   }, token);
 }
+
+export async function googleExchange(code: string, redirectUri: string): Promise<LoginResponse> {
+  return request<LoginResponse>('/auth/google/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ code, redirect_uri: redirectUri }),
+  });
+}

@@ -4,6 +4,10 @@ import { copyFileSync, mkdirSync, statSync } from 'fs';
 const isProd = process.argv.includes('--prod');
 const outdir = 'dist';
 
+// GOOGLE_CLIENT_ID is public (appears in redirect URLs) — safe to embed in extension JS.
+// Set via env var or leave empty for local dev without Google OAuth.
+const googleClientId = process.env.GOOGLE_CLIENT_ID ?? '';
+
 mkdirSync(outdir, { recursive: true });
 mkdirSync(`${outdir}/content`, { recursive: true });
 mkdirSync(`${outdir}/popup`, { recursive: true });
@@ -22,6 +26,9 @@ await esbuild.build({
   target: 'chrome120',
   minify: isProd,
   sourcemap: !isProd ? 'inline' : false,
+  define: {
+    '__GOOGLE_CLIENT_ID__': JSON.stringify(googleClientId),
+  },
 });
 
 copyFileSync('manifest.json', `${outdir}/manifest.json`);
