@@ -22,7 +22,7 @@ export function Nav() {
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-100 dark:bg-neutral-900/80 dark:border-neutral-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg text-ink dark:text-white">
-          <img src="/logo.svg" alt="Writing Twin AI" width={32} height={32} className="rounded-lg" />
+          <img src="/logo.png" alt="" width={28} height={28} />
           <span>Writing Twin</span>
         </Link>
 

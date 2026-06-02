@@ -46,7 +46,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex flex-col items-center justify-center px-4">
       <Link href="/" className="flex items-center gap-2 font-bold text-xl text-ink dark:text-white mb-8">
-        <img src="/logo.svg" alt="Writing Twin AI" width={32} height={32} className="rounded-lg" />
+        <img src="/logo.png" alt="Writing Twin AI" width={36} height={36} />
         Writing Twin
       </Link>
 

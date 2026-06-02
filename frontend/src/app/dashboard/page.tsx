@@ -230,7 +230,7 @@ export default function DashboardPage() {
         {/* Empty state — first rewrite */}
         {usage && usage.monthly_count === 0 && (
           <div className="mt-8 card p-8 text-center">
-            <img src="/logo.svg" alt="" width={48} height={48} className="rounded-xl mx-auto mb-3" />
+            <img src="/logo.png" alt="" width={48} height={48} className="mx-auto mb-3" />
             <h3 className="font-semibold text-ink dark:text-white mb-2">Make your first rewrite</h3>
             <p className="text-sm text-neutral-500 mb-5 max-w-sm mx-auto leading-relaxed">
               Install the extension, open Gmail, and click the Humanize button in any compose window.

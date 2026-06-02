@@ -19,17 +19,26 @@ export const metadata: Metadata = {
   title: "Writing Twin AI — Write Like Yourself. Not Like AI.",
   description:
     "AI writing assistant that learns your voice and rewrites text to sound exactly like you. Works in Gmail, LinkedIn, Slack, and Outlook.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     title: "Writing Twin AI",
     description: "Write Like Yourself. Not Like AI.",
     url: "https://writingtwinai.com",
     siteName: "Writing Twin AI",
+    images: [{ url: "/icons/icon-black-512.png", width: 512, height: 512 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Writing Twin AI",
     description: "Write Like Yourself. Not Like AI.",
+    images: ["/icons/icon-black-512.png"],
   },
 };
 
