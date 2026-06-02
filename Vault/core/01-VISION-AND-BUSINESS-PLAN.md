@@ -23,7 +23,7 @@ Not: "This sounds like good writing." Not: "This sounds like AI." **Like me.**
 
 Current AI writes well. Writes fast. Sounds generic. WritingTwinAI learns continuously, preserves communication identity, and operates across every channel. The long-term destination is the world's first **Communication Operating System** — a living digital replica of how a person thinks, writes, and responds.
 
-**Primary value proposition:** *"AI that sounds like you everywhere."*
+**Primary value proposition:** *"Speak naturally. Your twin handles the writing."*
 
 ---
 
@@ -39,7 +39,8 @@ Current AI writes well. Writes fast. Sounds generic. WritingTwinAI learns contin
 | **Customer support teams** | Empathic but on-brand replies at scale | **VERY HIGH** ($25-75/seat) | Outbound to CS Ops leaders |
 | **Enterprise comms teams** | Voice consistency across 100s of writers | **EXTREME** ($50-150/seat + setup fee) | Direct sales, 6-month cycles |
 
-**Tonight's bet:** Start with **Non-native English professionals (Korean, Indian, Japanese markets)** + **LinkedIn creators**. They have the strongest emotional pain, the lowest CAC via creator partnerships, and they evangelize.
+**Revised ICP priority (founder-validated):**
+The founder IS the primary ICP: technical professional, non-native English, heavy Outlook + LinkedIn + Reddit user. Start there — find 10 people with the exact same profile. Do not spread acquisition until the product works at 80%+ acceptance rate for this persona first.
 
 ---
 

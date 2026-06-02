@@ -1,290 +1,193 @@
 # Writing Twin AI 2.0 — Digital Communication Twin
 
-> **This is the founding vision for WritingTwinAI 2.0.**
-> Read before any strategic product decision. Read alongside `11-FOUNDING-CONSTITUTION.md`.
-> **Date:** 2026-06-02
+> **Read before any product or sprint decision.**
+> Read alongside `11-FOUNDING-CONSTITUTION.md` and `13-EXECUTION-PLAN.md`.
+> **Revised:** 2026-06-02
 
 ---
 
-## The Vision
+## The Vision (Revised)
 
-WritingTwinAI is not an AI writer.
+WritingTwinAI is not an AI writer. It is not Grammarly. It is not ChatGPT.
 
-WritingTwinAI is a **Digital Communication Twin** that learns how a person communicates across every channel and can generate responses, emails, reports, messages, and documents that sound indistinguishable from that person.
+**WritingTwinAI is a Digital Communication Twin.**
 
-The goal is not to write better.
+Its job is four things:
 
-**The goal is to preserve and scale a person's communication identity.**
+1. **Listen** like the user
+2. **Learn** like the user
+3. **Write** like the user
+4. **Respond** like the user
 
-A user's communication style is a valuable asset built over years of experience. WritingTwinAI captures, learns, evolves, and deploys that communication identity across all platforms.
+The product promise is one sentence:
 
----
+> *"Speak naturally. Your twin handles the writing."*
 
-## Core Mission
+The goal is not better writing. The goal is **no writing** — where the user's voice, spoken naturally and quickly, becomes a polished, send-ready communication that sounds indistinguishable from them at their best.
 
-| Current AI | WritingTwinAI |
-|---|---|
-| Writes well | Writes like the user |
-| Writes fast | Learns continuously |
-| Sounds generic | Preserves communication identity |
-| — | Operates across all channels |
-
-**Primary value proposition:** *"AI that sounds like you everywhere."*
+Saving time is the primary value. Sounding like yourself is what makes it irreplaceable.
 
 ---
 
-## Long-Term Vision
+## Revised Core Thesis
 
-Create the world's first **Communication Operating System.**
+### What we are NOT building
+- ❌ A writing scorer (Twin Score is not the product)
+- ❌ A writing coach (we are not Grammarly)
+- ❌ A general AI assistant (we are not ChatGPT)
+- ❌ A communication dashboard with graphs and gamification
 
-A platform that understands:
-- How users write
-- How users speak
-- How users respond
-- How users make decisions
-- How users communicate with different audiences
-
-The system becomes a living communication twin.
-
----
-
-## Communication Twin Architecture
-
-### Layer 1 — Writing DNA
-*Sprint 4 — Live*
-
-**Collect:** emails, reports, documents, chat messages, notes
-
-**Learn:** vocabulary, tone, sentence structure, technical depth, formality, signature phrases
-
-**Output:** Writing Identity Profile
+### What we ARE building
+- ✅ Voice → communication-ready output in the user's voice
+- ✅ Context-aware drafting (platform and audience detected automatically)
+- ✅ Continuous learning from every edit
+- ✅ Outlook-first for professional/enterprise users, Gmail for scale
 
 ---
 
-### Layer 2 — Communication Graph
-*Sprint 12 — Phase 2*
+## Founder-Validated ICP
 
-Learn relationships. The same user communicates differently with:
-- Customer
-- Manager
-- Colleague
-- Friend / Family
-- LinkedIn Audience
+The founder is user zero. His profile validates the most valuable ICP:
 
-The twin must understand relationship context. This is not a contact list — it is a relationship communication map.
+**Technical Professional, Non-native English, Heavy Outlook + LinkedIn + Reddit user**
 
----
+- Telecom Validation Engineer
+- Communicates in technical language (acronyms, domain vocabulary, complex dependencies)
+- Writes in English as a second language — fluent but effortful
+- Uses Outlook (not Gmail) for professional communication
+- Uses LinkedIn for professional presence
+- Uses Reddit for community engagement
+- Uses WhatsApp for team/informal communication
+- Pain: "Writing takes too long and I sound less sharp than I think."
+- Goal: Speak for 30 seconds → receive a send-ready email/reply/update
 
-### Layer 3 — Behavioral Intelligence
-*Sprint 12–14 — Phase 2/3*
+**This user does not want a score. They want time back.**
 
-Learn:
-- How user agrees
-- How user disagrees
-- How user escalates
-- How user requests action
-- How user handles conflict
-- How user handles uncertainty
-
-**This is more valuable than vocabulary.** Most competitors stop at writing style. WritingTwinAI learns decision style.
+Other high-value ICPs:
+1. Non-native English professionals (same pain at scale — 1B+ users globally)
+2. B2B sales reps (50+ personalized emails/day)
+3. Engineers writing customer updates and Jira tickets
+4. Founders writing investor updates, customer updates, hiring messages
 
 ---
 
-### Layer 4 — Memory Layer
-*Sprint 5 — Partially live*
+## Voice-First Architecture
 
-Remember:
-- Preferred phrases
-- Preferred structure
-- Previous edits
-- Communication history
-- Writing habits
-
-The profile evolves continuously. Every edit is a training event.
-
----
-
-### Layer 5 — Communication Twin
-*Phase 4 — complete digital replica*
-
-**Input:** Incoming communication
-
-**Output:** Response that sounds like the user.
-
----
-
-## Voice Twin Strategy
-
-**This is the most important differentiator.**
-
-Most competitors focus on writing. WritingTwinAI will focus on **Speech-to-Writing Intelligence.**
-
-**Example:**
-
-User speaks naturally:
-> "The issue looks AMF related. Let's collect SCTP traces first."
-
-System converts into:
-> "Based on the current observations, the issue appears to be originating from the AMF side. It would be useful to collect additional SCTP traces to verify the behavior before proceeding further."
-
-The user does not need to type. The user only speaks. The twin writes.
-
-**Future outputs from a single meeting:**
-- Meeting Summary
-- Email to stakeholders
-- Action Items
-- Customer Update
-- Jira Ticket
-- LinkedIn Post
-
-All in the user's style.
-
----
-
-## Auto Draft Engine
-
-The platform automatically prepares drafts. The user reviews and approves.
-
-**Supported Channels:**
-
-| Communication | Productivity | Code |
-|---|---|---|
-| Gmail / Outlook | Notion | Jira |
-| Teams / Slack | Google Docs | Confluence |
-| WhatsApp / Telegram | Word | GitHub / GitLab |
-| LinkedIn | — | — |
-| Discord / SMS | — | — |
-
-**Goal:** Reduce communication effort by 80%.
-
----
-
-## Twin Score
-
-Every generated response receives a **Twin Match Score (0–100%).**
-
-**Example: 94% Match**
-
-| Dimension | Score |
-|---|---|
-| Vocabulary Match | 98% |
-| Sentence Rhythm | 95% |
-| Formality | 93% |
-| Decision Pattern | 90% |
-| **Overall** | **94%** |
-
-Users should continuously improve their twin. The score is a motivation mechanic and a quality signal.
-
----
-
-## AI Cringe Detector
-
-Detect phrases the user would never write. Flag automatically. Replace with user-authentic language.
-
-**Phrases to detect (defaults):**
-- Leverage / Leverage synergies
-- Thrilled / Delighted
-- Synergy / Synergize
-- Cutting-edge / World-class
-- Circle back / Loop in
-- Moving forward
-- At the end of the day
-- Value-add
-
-User can build their own cringe list. Every flagged replacement is a learning event.
-
----
-
-## Context Twins
-
-Every user has multiple communication identities:
-
-| Twin | Context |
-|---|---|
-| **Technical Twin** | Writing to engineers, developers |
-| **Executive Twin** | Writing to C-suite, board, investors |
-| **Customer Twin** | Writing to clients, prospects, support |
-| **Manager Twin** | Writing to manager, skip-level |
-| **Team Twin** | Writing to teammates, colleagues |
-| **Social Twin** | LinkedIn, Twitter, public channels |
-
-The system automatically selects the correct twin. The user can override.
-
----
-
-## Continuous Learning Engine
+Voice is the interface. Writing is the output.
 
 ```
-Generated Draft
-      ↓
-User Correction
-      ↓
- Learning Event
-      ↓
- Profile Update
+User speaks (30 seconds)
+         ↓
+Voice Twin transcribes
+         ↓
+Context Engine detects: platform + audience + intent
+         ↓
+DNA Engine injects: vocabulary + rhythm + formality + technical depth
+         ↓
+Output: send-ready email / reply / Jira / LinkedIn / report
+         ↓
+User reviews → sends or edits
+         ↓
+Edit → Learning Event → DNA Profile Update
 ```
 
-The twin never stops learning. Every edit sharpens the profile. Every accepted draft confirms the model. Every rejection is negative signal.
+The loop is complete. Every send makes the next draft better.
 
 ---
 
-## Multi-LLM Architecture
+## Context Engine V1 (Auto-Inferred, No Manual Tagging)
 
-Do not depend on a single model provider.
+Context is inferred automatically. No setup required.
 
-**WritingTwinAI = Intelligence Layer. LLMs = Inference Engines.**
-
-| Control Layer (us) | Inference Layer (them) |
+| Signal | Inferred Twin |
 |---|---|
-| Memory | OpenAI |
-| Style | Anthropic |
-| Context | Google |
-| Learning | Meta |
-| Identity | Mistral / DeepSeek |
+| Outlook compose window | Professional Twin |
+| Gmail compose window | Professional Twin |
+| LinkedIn post / comment | Social Twin |
+| Reddit reply box | Community Twin |
+| WhatsApp Web | Casual Twin |
+| Recipient domain matches known customer | Customer Twin |
+| Recipient is manager (inferred from org signals) | Manager Twin |
+| Jira / Confluence | Technical Twin |
 
-The user should not care which model generated the response. This prevents platform dependency risk and means we benefit when any provider improves.
+User can override context per message. Over time, corrections teach the engine.
 
----
-
-## The Business Moat
-
-Competitors can copy prompts. Competitors can copy UI.
-
-**Competitors cannot copy:**
-- User Communication Graph
-- Writing History
-- Voice History
-- Behavioral Patterns
-- Learning Memory
-- Relationship Context
-
-This becomes the moat. It deepens with every interaction. It cannot be exported or replicated.
+**Manual Communication Graph comes later (Sprint 17).** V1 is purely inferred.
 
 ---
 
-## Success Metric
+## Outlook-First Platform Priority
 
-**Not:** words generated. **Not:** documents created.
+The founder uses Outlook. The most valuable enterprise segment uses Outlook.
 
-**Success metric:** *"How often does the user send the draft without significant edits?"*
-
-**Target: 80%+ acceptance rate.**
-
-When users regularly send generated responses with minimal changes, the twin has achieved product-market fit.
-
----
-
-## Ultimate Vision
-
-Every professional should have a Digital Communication Twin.
-
-The twin becomes:
-- Personal communication memory
-- Personal communication assistant
-- Personal communication operating system
-
-The long-term goal is to create the world's most accurate digital communication replica while keeping the **human fully in control of what gets sent.**
+**Platform priority order:**
+1. Gmail (Phase 1 — live)
+2. Outlook Web App (Sprint 12)
+3. LinkedIn (Sprint 16)
+4. Reddit (Sprint 16)
+5. WhatsApp Web (Sprint 16+)
+6. Slack / Teams (Phase 3)
 
 ---
 
-*Filed: 2026-06-02. Read alongside `01-VISION-AND-BUSINESS-PLAN.md`, `08-MOAT.md`, `11-FOUNDING-CONSTITUTION.md`.*
+## What Users Pay For
+
+Rank-ordered by willingness to pay:
+
+1. **"I spoke 30 seconds and got an Outlook email to my client that sounds exactly like me."** — HIGH willingness to pay
+2. **"It drafted my reply before I even started typing."** — HIGH
+3. **"My technical reports now sound professional without extra effort."** — HIGH
+4. **"It learned my voice from my emails and gets better every week."** — MEDIUM (retention driver, not acquisition driver)
+5. **"My Twin Score improved from 72% to 91%."** — LOW (does not drive payment)
+
+The first two are the product. Everything else supports the first two.
+
+---
+
+## Communication Twin Architecture (Revised)
+
+### Layer 1 — Writing DNA (Live — Sprint 4)
+Extract vocabulary, rhythm, formality, technical depth, signature phrases from user's writing samples.
+
+### Layer 2 — Voice DNA (Sprint 11)
+Extract the same signals from spoken input. Natural speech is less filtered — richer signal than written samples.
+
+### Layer 3 — Context Engine (Sprint 13)
+Auto-infer audience and platform. Adjust output without user input.
+
+### Layer 4 — Behavioral Learning (Sprint 14)
+Every edit → training event. The profile drifts toward actual user preferences, not initial samples.
+
+### Layer 5 — Communication Graph (Sprint 17)
+Relationship registry, inferred from observed patterns. Confirms and deepens context engine accuracy.
+
+### Layer 6 — Meeting Intelligence (Sprint 18)
+Full meeting → multiple outputs. The most powerful time-saver for technical professionals.
+
+---
+
+## The Prime Metric
+
+> **"How often does the user send the draft without significant edits?"**
+>
+> **Target: 80% acceptance rate.**
+
+Not installs. Not sessions. Not scores. The percentage of generated outputs that reach the recipient without major changes. That is the only metric that proves the twin is working.
+
+---
+
+## What Is Deliberately Excluded (Phase 2)
+
+| Excluded | Why |
+|---|---|
+| Twin Score dashboard | Does not save time. Users don't pay for scores. |
+| DNA Strength gamification | Vanity metric. Reduces to a number what should be a feeling. |
+| Communication Graph visualization | Too complex for Phase 2. Manual tagging is friction. |
+| Writing coach suggestions | That's Grammarly. Not our job. |
+| Multi-language translation | Side effect, not the product. |
+| iOS / Android | Phase 4. Extension is the wedge. |
+
+---
+
+*Filed: 2026-06-02. Revised from 2.0 draft to reflect founder-first, voice-first strategy.*
+*Read alongside: `13-EXECUTION-PLAN.md`, `08-MOAT.md`, `ROADMAP.md`*

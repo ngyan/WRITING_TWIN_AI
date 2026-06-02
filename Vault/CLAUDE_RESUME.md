@@ -84,15 +84,18 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 7. After approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS in `backend/app/main.py`
 
 ### If starting Phase 2 (Sprint 11+):
-- Read `Vault/core/12-PRODUCT-VISION-2.0.md` → Digital Communication Twin vision
-- Read `Vault/product/ROADMAP.md` → Phase 2 sprint breakdown
-- **Recommended sprint order:**
-  - Sprint 11: Twin Score + Cringe Detector
-  - Sprint 12: Context Twins + Communication Graph
-  - Sprint 13: LinkedIn + Slack + Outlook extension content scripts
-  - Sprint 14: Auto Draft Engine
-  - Sprint 15: Voice Twin (Speech-to-Writing)
-  - Sprint 16: Meeting Intelligence
+- Read `Vault/core/12-PRODUCT-VISION-2.0.md` → voice-first, context-aware, Outlook-first vision
+- Read `Vault/core/13-EXECUTION-PLAN.md` → solo founder execution plan + reality check + build/cut matrix
+- Read `Vault/product/ROADMAP.md` → full sprint specs (goal, DB, API, UI, success metric per sprint)
+- **Revised sprint order (founder-validated):**
+  - Sprint 11: Voice Twin MVP (speak → send-ready email in your voice)
+  - Sprint 12: Outlook Extension (founder's primary platform)
+  - Sprint 13: Context Engine V1 (auto-infer platform/audience, no manual setup)
+  - Sprint 14: DNA Learning Engine (every edit sharpens the twin)
+  - Sprint 15: Auto Draft Engine (draft ready before you start typing)
+  - Sprint 16: LinkedIn + Reddit extension
+  - Sprint 17: Communication Graph (behavior-inferred, not manually tagged)
+  - Sprint 18: Meeting Intelligence (transcript → 5 deliverables)
 
 ---
 

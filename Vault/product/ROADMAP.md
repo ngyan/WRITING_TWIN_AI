@@ -1,280 +1,456 @@
-# Writing Twin AI — Product Roadmap v2.0
+# Writing Twin AI — Product Roadmap v2.1
 
-> **North Star:** The world's first Digital Communication Twin. Every professional has a replica of their communication identity that writes, responds, and drafts across every channel — in their voice.
+> **North Star:** Speak naturally. Your twin handles the writing.
 >
 > **Prime metric:** % of generated drafts sent without significant edits. Target: 80%+.
 >
-> **Rule:** Each phase only starts when the phase below is loved. Do not skip layers.
+> **Principle:** Every feature must save time immediately, improve output quality, learn user behavior, or increase switching costs. If it does none of these, cut it.
 >
 > **Last Updated:** 2026-06-02
 
 ---
 
-## Current State — Phase 1 Complete ✅
+## Phase 1 — Writing Twin MVP ✅ COMPLETE
 
-**Writing Twin MVP is live.** Gmail extension, Writing DNA, billing, dashboard, and Web Store packaging are done. The foundation is in place.
+Gmail extension, Writing DNA, billing, dashboard, Chrome Web Store packaging. Foundation live.
 
 | Capability | Status |
 |---|---|
-| Gmail ✨ Humanize button | ✅ Live |
-| 6 rewrite tones | ✅ Live |
-| Writing DNA extraction (from samples) | ✅ Live |
-| Communication Memory (accept/edit feedback loop) | ✅ Live |
-| JWT auth + 15-min refresh rotation | ✅ Live |
-| Free plan (20 rewrites/mo) + Pro ($5/mo, 300/mo) | ✅ Live |
-| Stripe Checkout + Customer Portal | ✅ Live |
-| Next.js dashboard (usage, DNA status, upgrade) | ✅ Live |
-| PostHog analytics + funnel tracking | ✅ Live |
-| Chrome Web Store packaging | ✅ Ready to submit |
+| Gmail ✨ Humanize button + 6 tones | ✅ Live |
+| Writing DNA extraction + onboarding | ✅ Live |
+| Communication Memory (feedback loop) | ✅ Live |
+| JWT auth + refresh rotation | ✅ Live |
+| Free (20/mo) + Pro ($5/mo, 300/mo) via Stripe | ✅ Live |
+| Next.js dashboard | ✅ Live |
+| PostHog analytics | ✅ Live |
+| Chrome Web Store ZIP ready | ✅ Ready to submit |
 
 ---
 
-## Phase 2 — Communication Twin
+## Phase 2 — Voice Twin + Platform Expansion
 
-**Theme:** The user's twin understands context, not just style. It knows who they're writing to, flags language they'd never use, and learns continuously from every edit.
+**Theme:** Voice becomes the primary input. Outlook joins Gmail. Context is inferred automatically. Every interaction sharpens the twin.
 
-**Gate:** ≥ 500 active extension users AND ≥ 60% send drafts without major edits.
-
-### 2A — Twin Score + Cringe Detector (Sprint 11)
-
-The user sees exactly how well their twin matched them — and gets flagged when AI-speak slips through.
-
-**Twin Score (visible to users):**
-- 0–100% per generated draft
-- Dimensions: Vocabulary Match / Sentence Rhythm / Formality / Decision Pattern
-- Displayed in extension panel after each rewrite
-- "Improve your twin" prompt when score < 75%
-
-**AI Cringe Detector:**
-- Flag phrases user would never write: "leverage", "thrilled", "synergy", "cutting-edge", "delighted to", "circling back", "world-class"
-- Auto-suggest replacement from user's actual vocabulary
-- User can add/remove words from their personal cringe list
-
-**Sprint 11 deliverables:**
-- `POST /v1/humanize` response includes `twin_score` object (vocabulary, rhythm, formality, decision_pattern, overall)
-- `GET /v1/dna/cringe-words` — user's personal cringe list
-- `POST /v1/dna/cringe-words` — add/remove
-- Cringe detection runs post-generation, flags replacements inline
-- Extension panel shows Twin Score badge after each rewrite
+**Gate to Phase 3:** 2,000 active users AND 70%+ draft acceptance rate.
 
 ---
 
-### 2B — Context Twins (Sprint 12)
+### Sprint 11 — Voice Twin MVP
 
-Every user communicates differently depending on who they're talking to. The twin must learn this.
+**Goal:** User speaks for 30 seconds → receives a send-ready email, reply, or update in their voice.
 
-**Six context profiles, auto-selected:**
+**User value:** Eliminates the blank-page problem entirely. Speak like you think, receive communication you'd actually send.
 
-| Twin | Triggered when |
-|---|---|
-| **Technical Twin** | Writing to engineers, developers, data teams |
-| **Executive Twin** | Writing to C-suite, board, investors |
-| **Customer Twin** | Writing to clients, prospects, support |
-| **Manager Twin** | Writing to direct manager, skip-level |
-| **Team Twin** | Writing to colleagues, teammates |
-| **Social Twin** | Writing on LinkedIn, Twitter, public channels |
+#### Technical Scope
+- `POST /v1/voice/draft` endpoint:
+  - Accepts: audio blob (WebM/MP3) OR pre-transcribed text + `output_type`
+  - Transcription: OpenAI Whisper API (`whisper-1`)
+  - Passes transcript through DNA-aware humanize pipeline with format context injected
+  - `output_type` options: `email`, `reply`, `customer_update`, `jira_ticket`, `technical_report`, `linkedin_comment`, `reddit_reply`
+  - Returns: `{ transcript, draft, output_type, twin_score_internal, rewrite_id }`
+- Extension: microphone button added to Gmail compose toolbar (shadow DOM injection)
+- Extension popup: Voice mode tab — record + output type selector + draft preview
 
-**How context is determined:**
-- User explicitly tags relationships in their Communication Graph
-- Auto-detected from recipient domain, thread history, platform (LinkedIn = Social Twin)
-- User can override context per message
-
-**Sprint 12 deliverables:**
-- `communication_graph` table — user's relationship registry (name/domain, relationship_type, notes)
-- `POST /v1/graph/contacts` — add/update contact
-- `GET /v1/graph` — list contacts + relationship types
-- Context twin auto-selected in `POST /v1/humanize` via `context_twin` field (or auto-detect)
-- Each context twin has a separate DNA sub-profile that diverges over time
-- Extension: context indicator in the tone picker panel
-
----
-
-### 2C — Platform Expansion (Sprint 13)
-
-Gmail is the wedge. Phase 2 plants the flag on three more surfaces.
-
-**LinkedIn:** content script injected into compose + comment boxes
-**Slack:** content script for message composer
-**Outlook (web):** content script for compose window
-
-**Sprint 13 deliverables:**
-- `extension/src/content/linkedin.ts` — inject button into LinkedIn post/comment compose
-- `extension/src/content/slack.ts` — inject button into Slack message input
-- `extension/src/content/outlook.ts` — inject button into Outlook Web App compose
-- Manifest updated with new host_permissions
-- Auto-selects Social Twin on LinkedIn, Team Twin on Slack
-
----
-
-### 2D — Auto Draft Engine (Sprint 14)
-
-The user stops writing first drafts. They review, adjust, send.
-
-**How it works:**
-- User opens a reply thread → twin reads the incoming message → generates a draft in background
-- Draft appears in compose as a "suggestion" the user can accept, edit, or dismiss
-- Every acceptance/edit is a learning event
-
-**Sprint 14 deliverables:**
-- `POST /v1/humanize/auto-draft` — takes incoming message + thread context, returns draft
-- Content scripts detect new compose windows opened in reply-to context
-- Extension: "Twin drafted this" badge in compose
-- User can toggle Auto Draft on/off per platform in popup settings
-
----
-
-## Phase 3 — Voice Twin
-
-**Theme:** The user speaks. The twin writes. Every meeting becomes a deliverable in the user's voice.
-
-**Gate:** ≥ 2,000 active users AND Twin Score ≥ 80% average across DNA-enabled users.
-
-**Why this matters:** Most competitors focus on writing. Voice-to-writing is a 10x workflow unlock. A 30-second voice note → a 3-paragraph email in the user's style is indistinguishable from magic.
-
-### 3A — Speech-to-Writing Twin (Sprint 15)
-
-**The pattern:**
-```
-User speaks: "The issue looks AMF related. Collect SCTP traces first."
-Twin writes: "Based on current observations, the issue appears to originate 
-             from the AMF side. It would be useful to collect additional SCTP 
-             traces to verify the behavior before proceeding."
+#### Database Changes
+```sql
+CREATE TABLE voice_sessions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  transcript TEXT,
+  output_type VARCHAR(50),
+  draft TEXT,
+  accepted BOOLEAN,
+  edited_draft TEXT,
+  audio_duration_sec INT,
+  created_at TIMESTAMPTZ
+);
 ```
 
-The output sounds like the user wrote it carefully — not like a transcript.
+#### API Changes
+- `POST /v1/voice/draft` — new endpoint
+- `POST /v1/voice/draft/{id}/feedback` — accept/edit signal (same pattern as humanize)
 
-**Sprint 15 deliverables:**
-- `POST /v1/voice/transcribe-and-draft` — accepts audio blob, returns draft
-- Extension: microphone button added to toolbar (alongside ✨ Humanize)
-- Whisper API (or local) for transcription → passed through DNA-aware humanize pipeline
-- Voice note history in dashboard
+#### UI Changes
+- Extension: mic icon button in compose toolbar (alongside ✨ Humanize)
+- Extension popup: Voice tab with record button + output type dropdown + draft display
+- Keyboard shortcut: `Cmd+Shift+V` (Mac) / `Ctrl+Shift+V` (Windows) to start recording
+
+#### Success Metric
+- User completes voice → draft → send in < 20 seconds
+- 50%+ of voice-generated drafts sent without major edits within 30 days of launch
+
+#### Complexity: Medium — 5–7 days
 
 ---
 
-### 3B — Meeting Intelligence (Sprint 16)
+### Sprint 12 — Outlook Extension
 
-Every meeting becomes structured output — in the user's style.
+**Goal:** Same Voice + Humanize experience inside Outlook Web App. The founder can use his own product daily.
 
-**Supported outputs from a meeting transcript:**
-- Summary (bullet-point or paragraph, user's style)
-- Email update to stakeholders
-- Action items
-- Jira/Linear ticket drafts
-- Customer-facing update
-- LinkedIn post about the outcome
+**User value:** Outlook is the primary tool for enterprise and technical professionals. Without Outlook support, the product is inaccessible to the highest-value users.
 
-**Sprint 16 deliverables:**
-- `POST /v1/meetings/process` — accepts transcript text, output_type, context
-- Web interface: upload transcript → choose output format → review in your voice
-- Meeting history in dashboard
-- Integration with calendar (optional — Phase 4)
+#### Technical Scope
+- `extension/src/content/outlook.ts` — content script for Outlook Web App
+  - Target: `https://outlook.live.com/*` and `https://outlook.office.com/*`
+  - Detect compose window (new email vs. reply vs. forward)
+  - Same Shadow DOM injection approach as Gmail
+  - Inject ✨ Humanize button + mic button into compose toolbar
+  - Read compose body for humanize input
+  - Handle Outlook's different DOM mutation patterns (polling + MutationObserver)
+- Manifest: add `outlook.live.com` and `outlook.office.com` to `host_permissions`
+- Auto-selects Professional Twin context
+
+#### Database Changes
+None.
+
+#### API Changes
+None — same `/v1/humanize` and `/v1/voice/draft` endpoints.
+
+#### UI Changes
+- Same extension shadow DOM UI, Outlook-specific selectors
+- Extension popup: shows "Outlook connected" status when on Outlook tab
+
+#### Success Metric
+- Founder uses in Outlook at least 3x per day within 1 week of shipping
+- Extension injects without errors across new/reply/forward compose types
+
+#### Complexity: Medium — 4–6 days
+
+---
+
+### Sprint 13 — Context Engine V1
+
+**Goal:** The right voice is selected automatically based on platform, recipient, and thread. Zero manual setup required.
+
+**User value:** User never thinks about which "mode" they're in. The twin already knows.
+
+#### Technical Scope
+- Context detection service (`backend/app/services/context_service.py`)
+  - Input: `platform`, `recipient_domain`, `thread_subject`, `thread_history_snippet`
+  - Output: `context_twin` enum (professional, social, community, casual, customer, manager, technical)
+  - Rules engine V1 (static rules, no ML):
+    - `platform=outlook` OR `platform=gmail` → `professional`
+    - `platform=linkedin` → `social`
+    - `platform=reddit` → `community`
+    - `platform=whatsapp` → `casual`
+    - `platform=jira` OR `platform=confluence` → `technical`
+    - Recipient domain in user's `customer_domains` list → `customer`
+    - Subject contains escalation keywords (incident, P1, urgent, SLA) → escalation variant
+- Extension: passes `platform` and available `recipient_domain` with every humanize/voice request
+- Context twin selection modifies system prompt in humanize pipeline (tone, formality, vocabulary constraints)
+- User can override context per message (dropdown in extension UI)
+- Every override is stored as a training signal for later learning
+
+#### Database Changes
+```sql
+ALTER TABLE users ADD COLUMN customer_domains TEXT[] DEFAULT '{}';
+CREATE TABLE context_overrides (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  detected_context VARCHAR(50),
+  selected_context VARCHAR(50),
+  platform VARCHAR(50),
+  recipient_domain VARCHAR(255),
+  created_at TIMESTAMPTZ
+);
+```
+
+#### API Changes
+- `POST /v1/humanize` — new optional fields: `platform`, `recipient_domain`, `thread_subject`
+- `POST /v1/context/customer-domains` — add/remove customer domains
+- `GET /v1/context/customer-domains`
+
+#### UI Changes
+- Extension: context indicator badge in toolbar (e.g., "Professional" / "Social")
+- Extension: click badge to override context for this message
+- Dashboard: simple list of customer domains to configure
+
+#### Success Metric
+- Auto-detected context is correct 85%+ of the time (measured by override rate < 15%)
+- Zero user confusion about "what mode am I in"
+
+#### Complexity: Low-Medium — 3–4 days
+
+---
+
+### Sprint 14 — DNA Learning Engine (Continuous)
+
+**Goal:** Every edit to a generated draft becomes a training event. The twin improves automatically without the user doing anything.
+
+**User value:** The product gets better the more they use it. Switching cost compounds every week.
+
+#### Technical Scope
+- Enhanced `POST /v1/humanize/{id}/feedback` endpoint:
+  - Accept `edited_draft` (the actual text the user sent)
+  - Calculate edit distance + change vectors (added/removed phrases, formality shifts)
+  - Fire async `learn_from_feedback` task (no latency impact on user)
+- `learn_from_feedback` task:
+  - Extract learning signals: new phrases added, AI phrases removed, tone adjustments
+  - Update `writing_profiles.qualitative` JSONB with new patterns
+  - Increment `profile_version`
+  - Store raw event in `dna_learning_events`
+- Cringe Detector (lightweight version):
+  - Maintain per-user list of phrases they consistently remove from drafts
+  - Auto-flag these in future drafts (highlight, not block)
+  - This builds naturally from edit history — no manual list required initially
+
+#### Database Changes
+```sql
+CREATE TABLE dna_learning_events (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  rewrite_id UUID REFERENCES rewrites(id),
+  original_draft TEXT,
+  edited_draft TEXT,
+  edit_distance INT,
+  extracted_signals JSONB,
+  applied_to_profile BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ
+);
+ALTER TABLE writing_profiles ADD COLUMN cringe_phrases TEXT[] DEFAULT '{}';
+ALTER TABLE writing_profiles ADD COLUMN preferred_phrases TEXT[] DEFAULT '{}';
+```
+
+#### API Changes
+- `POST /v1/humanize/{id}/feedback` — enhanced with `edited_draft` field
+- `GET /v1/dna/learned-patterns` — show what the system has learned (for transparency, not gamification)
+
+#### UI Changes
+- Subtle "Your twin updated" indicator in extension after significant edit (not a score)
+- Dashboard: "Patterns learned this week: 7" — one line, no charts
+
+#### Success Metric
+- Edit distance on drafts decreases 20% after 50 interactions per user
+- Cringe phrases detected and removed in future drafts automatically
+
+#### Complexity: Medium — 3–5 days
+
+---
+
+### Sprint 15 — Auto Draft Engine
+
+**Goal:** User opens a reply → the draft is already there, waiting for review.
+
+**User value:** The 80% time reduction promise becomes real. Review is faster than writing.
+
+#### Technical Scope
+- Content script enhancement for Gmail + Outlook:
+  - Detect when user opens a reply compose (vs. new email)
+  - Read incoming email body + sender info + thread subject
+  - Call `POST /v1/humanize/auto-draft` in background (non-blocking)
+  - When draft arrives, inject into compose as pre-filled text with "Twin drafted this ↑" banner
+  - User can: keep as-is, edit, or dismiss (×) to start blank
+- `POST /v1/humanize/auto-draft`:
+  - Takes `incoming_message`, `sender_domain`, `thread_context`, `platform`
+  - Returns draft in Professional Twin (or detected context) voice
+  - Skips cache (always fresh for replies)
+  - Marked as `auto_draft=true` in rewrites table for acceptance tracking
+
+#### Database Changes
+```sql
+ALTER TABLE rewrites ADD COLUMN auto_draft BOOLEAN DEFAULT FALSE;
+ALTER TABLE rewrites ADD COLUMN auto_draft_kept BOOLEAN;
+```
+
+#### API Changes
+- `POST /v1/humanize/auto-draft` — new endpoint
+
+#### UI Changes
+- Gmail + Outlook: "Twin drafted this ↑" dismissible banner above compose body
+- Extension popup: toggle to enable/disable Auto Draft per platform
+- Auto Draft enabled by default, dismissible
+
+#### Success Metric
+- 40%+ of auto-drafts kept without dismissal within 60 days of launch
+- No user complaints about unwanted text in compose
+
+#### Complexity: Medium-High — 5–7 days
+
+---
+
+### Sprint 16 — LinkedIn + Reddit Extension
+
+**Goal:** Same voice-first experience on the social platforms the founder uses daily.
+
+**User value:** LinkedIn comments and Reddit replies take 10 minutes. Voice Twin makes them take 30 seconds.
+
+#### Technical Scope
+- `extension/src/content/linkedin.ts`:
+  - Targets: `linkedin.com/feed`, `linkedin.com/in/*`, `linkedin.com/posts/*`
+  - Detect: post compose, comment box, reply box
+  - Auto-selects Social Twin context
+  - Inject ✨ Humanize + mic button
+- `extension/src/content/reddit.ts`:
+  - Targets: `reddit.com/*`, `old.reddit.com/*`
+  - Detect: reply box, post compose
+  - Auto-selects Community Twin context
+  - Inject ✨ Humanize + mic button
+- Manifest: add `linkedin.com` and `reddit.com` to `host_permissions`
+
+#### Database Changes
+None.
+
+#### API Changes
+None.
+
+#### UI Changes
+- Platform-specific shadow DOM injection per content script
+- Extension popup: shows active platforms in "Connected" list
+
+#### Success Metric
+- Founder uses for LinkedIn + Reddit at least 5x/week
+- No DOM injection errors on standard LinkedIn/Reddit pages
+
+#### Complexity: Low-Medium — 3–4 days per platform (6–8 days total)
+
+---
+
+## Phase 3 — Meeting Intelligence + Voice Scale
+
+**Gate to Phase 4:** 5,000 active users AND $30k MRR AND avg 3+ platforms per user.
+
+---
+
+### Sprint 17 — Communication Graph (Behavior-Inferred)
+
+**Goal:** The system learns relationship context from observed communication patterns — no manual tagging.
+
+**User value:** The twin gets smarter about who you're writing to without any effort from the user.
+
+#### Technical Scope
+- Observe: recipient domains, platforms, override patterns from context engine
+- Build: per-user contact graph from observed interactions
+- Infer: relationship type from domain + frequency + time-of-day + edit patterns
+- Present: simple list of "people you communicate with" + inferred relationship type
+- User confirms/corrects: one tap to confirm "yes, this is my customer"
+- Every confirmation trains the context engine
+
+#### Database Changes
+```sql
+CREATE TABLE communication_contacts (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  identifier VARCHAR(255),       -- email domain or LinkedIn handle
+  identifier_type VARCHAR(50),   -- domain, linkedin, reddit_user
+  inferred_relationship VARCHAR(50),
+  user_confirmed BOOLEAN DEFAULT FALSE,
+  interaction_count INT DEFAULT 0,
+  last_interaction_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ
+);
+```
+
+#### API Changes
+- `GET /v1/graph` — list inferred contacts + relationship types
+- `POST /v1/graph/{id}/confirm` — confirm/override inferred relationship
+
+#### UI Changes
+- Dashboard: "People you communicate with" — simple list, relationship badge, confirm button
+- NOT a visual graph (graph = vanity, list = utility)
+
+#### Success Metric
+- Relationship inferences correct 80%+ without user confirmation
+- Context engine accuracy improves 10%+ after graph data integrated
+
+#### Complexity: Medium — 5–6 days
+
+---
+
+### Sprint 18 — Meeting Intelligence
+
+**Goal:** Meeting transcript → 5 send-ready deliverables in under 2 minutes, all in the user's voice.
+
+**User value:** The highest time-cost communication in technical work is post-meeting output. One meeting = multiple required deliverables. This sprint eliminates that effort entirely.
+
+#### Technical Scope
+- Web interface: upload transcript text / audio recording
+- `POST /v1/meetings/process`:
+  - Input: `transcript`, `output_types[]`, `meeting_context` (who attended, what project)
+  - Runs parallel: summary, email, action items, jira_tickets[], technical_report, linkedin_post
+  - All outputs DNA-aware + context-aware (customer meeting → Customer Twin, team standup → Team Twin)
+  - Returns: `{ outputs: { summary, email, action_items, jira_tickets, report, linkedin } }`
+- Meeting history stored for reference
+
+#### Database Changes
+```sql
+CREATE TABLE meeting_sessions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  transcript TEXT,
+  meeting_context JSONB,
+  outputs JSONB,
+  output_types TEXT[],
+  created_at TIMESTAMPTZ
+);
+```
+
+#### API Changes
+- `POST /v1/meetings/process` — new endpoint
+- `GET /v1/meetings` — list past meeting sessions
+
+#### UI Changes
+- New web page: `/meetings` — upload transcript, select outputs, review and copy
+- Each output: expandable section, copy button, "Send via Gmail/Outlook" button (future)
+
+#### Success Metric
+- User turns a meeting transcript into 3+ deliverables in under 2 minutes
+- 60%+ of meeting outputs used without major edits
+
+#### Complexity: Medium — 5–7 days
 
 ---
 
 ## Phase 4 — Communication OS
 
-**Theme:** One place to manage, draft, and send everything. The twin operates proactively.
+**Gate:** 10,000 active users AND $75k MRR AND 5+ platforms per user average.
 
-**Gate:** ≥ 10,000 active users AND ≥ 5 platforms active per user on average.
-
-### 4A — Universal Inbox + Universal Drafting
-
-All communication surfaces unified. One queue. One drafting experience.
-
-- Incoming messages from Gmail, LinkedIn, Slack pulled into a single review UI
-- For each: twin has already prepared a draft
-- User reviews batch of 10 messages in 5 minutes instead of 45
-
-### 4B — Relationship Intelligence
-
-The Communication Graph becomes smart.
-
-- Track communication frequency with each contact
-- Surface: "You haven't responded to [Name] in 3 days — here's a draft"
-- Detect communication pattern changes: someone usually replies in 2h, now 48h → flag
-- Meeting prep: "You're meeting [Name] tomorrow — here's context + a pre-meeting note draft"
-
-### 4C — Cross-Platform Memory
-
-One DNA profile, coherent across all platforms.
-
-- LinkedIn post, Slack message, email, Jira comment — all feel like the same person wrote them
-- Memory updates from any platform strengthen the same core profile
-- Behavioral patterns (how user escalates, requests, disagrees) extracted across channels
+### Key Capabilities
+- Universal Inbox (Gmail + Outlook + LinkedIn DMs in one queue)
+- Proactive drafting (drafts ready before user opens inbox)
+- Cross-platform memory (one twin, consistent voice everywhere)
+- Relationship Intelligence (Communication Graph fully realized)
+- Morning Brief: "You have 9 messages. 7 are drafted."
 
 ---
 
 ## Phase 5 — Digital Executive Assistant
 
-**Theme:** The twin prepares communication before the user asks. The user only approves.
+**Gate:** $1M ARR AND 20%+ team/enterprise plans.
 
-**Gate:** ≥ $1M ARR AND ≥ 20% of users on team/enterprise plans.
-
-### What the twin does proactively:
-
-- Morning brief: "Here are 7 messages that need a response. 5 are drafted."
-- Weekly update: auto-drafted based on calendar + Jira + Slack activity
-- Relationship health: "You haven't reached out to [Customer] in 6 weeks. Here's a check-in."
-- Decision prep: "Meeting tomorrow about X — here's a pre-read draft for stakeholders"
-
-The twin understands:
-- Who is communicating
-- Why they are communicating
-- What the user would likely say
-- What actions should be taken
+### Key Capabilities
+- Twin prepares communication before the user asks
+- Understands who is communicating, why, what the user would say
+- Meeting prep: pre-read draft for tomorrow's stakeholder meeting
+- Weekly update: auto-drafted from calendar + Jira + Slack activity
+- "You haven't contacted [customer] in 6 weeks. Here's a check-in."
 
 ---
 
-## New Sprint Candidates (Post Phase 1)
+## Sprint Summary Table
 
-| Sprint | Feature | Phase |
-|---|---|---|
-| **S11** | Twin Score + Cringe Detector | 2A |
-| **S12** | Context Twins + Communication Graph | 2B |
-| **S13** | LinkedIn + Slack + Outlook extension | 2C |
-| **S14** | Auto Draft Engine | 2D |
-| **S15** | Speech-to-Writing Twin | 3A |
-| **S16** | Meeting Intelligence | 3B |
-| **S17** | Universal Inbox + Universal Drafting | 4A |
-| **S18** | Relationship Intelligence | 4B |
-| **S19** | Cross-Platform Memory | 4C |
-| **S20** | Digital Executive Assistant (beta) | 5 |
+| Sprint | Feature | Phase | Days | Dependencies |
+|---|---|---|---|---|
+| **S11** | Voice Twin MVP | 2 | 5–7 | Whisper API key |
+| **S12** | Outlook Extension | 2 | 4–6 | Outlook Web DOM research |
+| **S13** | Context Engine V1 | 2 | 3–4 | S11+S12 for platform signals |
+| **S14** | DNA Learning Engine | 2 | 3–5 | Feedback endpoint (exists) |
+| **S15** | Auto Draft Engine | 2 | 5–7 | S13 context engine |
+| **S16** | LinkedIn + Reddit | 2 | 6–8 | LinkedIn/Reddit DOM research |
+| **S17** | Communication Graph | 3 | 5–6 | S13 context data |
+| **S18** | Meeting Intelligence | 3 | 5–7 | Voice pipeline (S11) |
 
----
-
-## Enterprise Gate (Phase 2+)
-
-Build this when Phase 2 is loved (≥ 2,000 users, ≥ $20k MRR):
-
-- SAML/OIDC SSO (Okta, Azure AD, Google Workspace)
-- Team Context Twin templates (shared voice for sales/support teams)
-- Admin dashboard (usage, billing, user management)
-- Audit log export (CSV/JSON)
-- GDPR right-to-erasure
-- SOC 2 Type II preparation
-- Local/on-prem deployment option
+**Total Phase 2:** ~31–47 days of focused solo development.
 
 ---
 
-## What We Will NOT Build Until Phase 4+
+## What Will Never Be Built
 
-| Temptation | Why to Resist |
+| Feature | Reason |
 |---|---|
-| iOS / Android native app | Extension is the wedge. Mobile is Phase 4. |
-| Standalone chat interface | We're not a chat tool — we're embedded everywhere. |
-| Ghostwriting from scratch (blog posts, full articles) | We humanize and draft. Not ghostwrite. |
-| Translation as primary feature | We write in the user's language, not translate. |
-| Grammar correction | That's Grammarly's territory. Our moat is identity, not correction. |
-| White-label before Phase 3 | Needs SSO + audit logs first. |
-
----
-
-## The One Metric That Proves PMF
-
-> **"How often does the user send the draft without significant edits?"**
->
-> Target: **80% acceptance rate.**
-
-When 8 in 10 generated drafts get sent with minimal changes, the twin has achieved product-market fit. Everything else — installs, revenue, NPS — is a lagging indicator of this.
-
-Track it. Ship to improve it. Don't ship features that don't move it.
+| Twin Score dashboard | Does not save time. Users don't pay for scores. |
+| DNA Strength gamification | Vanity. Reduces identity to a number. |
+| Standalone chat interface | We're not a chat tool. We're embedded everywhere. |
+| Full grammar correction | That's Grammarly. Not our territory. |
+| Long-form ghostwriting (blog posts) | We humanize and draft. Not ghostwrite. |
+| Native iOS / Android (Phase 1–3) | Extension is the wedge. Mobile is Phase 4. |
+| Translation as primary feature | Side effect, not the product. |
