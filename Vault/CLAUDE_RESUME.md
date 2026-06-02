@@ -1,7 +1,7 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-06-01
+> **Last Updated:** 2026-06-02
 
 ---
 
@@ -17,32 +17,39 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Last Sprint** | Sprint 10 — Chrome Web Store Packaging |
-| **Branch** | `sprint-10-webstore` (PR #10 open — merge it) |
+| **Last Sprint** | Sprint 16 — LinkedIn + Reddit Extension |
+| **Branch** | `sprint-16-linkedin-reddit` (PR #16 merged → `2.0`) |
 | **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt (SSL exp 2026-08-28) |
 | **Backend API** | ✅ Live — `https://api.writingtwinai.com/v1/health` |
 | **Frontend Dashboard** | ✅ Live — `https://writingtwinai.com` (Next.js 14 on VPS) |
-| **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (31 KB, 10 files) |
+| **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (32 KB — Gmail, Outlook, LinkedIn, Reddit) |
 | **Chrome Web Store** | 🔴 Not yet submitted — user action required |
 | **Billing** | ✅ Stripe Checkout + Customer Portal live |
-| **Writing DNA** | ✅ Training API live + extension popup onboarding |
+| **Writing DNA** | ✅ Training API + DNA Learning Engine live (cringe phrase detection) |
+| **Voice Twin** | ✅ Live — speak → send-ready draft in your voice |
+| **Context Engine** | ✅ Live — auto-infers platform/audience |
+| **Auto Draft** | ✅ Live (FEATURE_AUTO_DRAFT=False by default — flip to enable) |
 | **PostHog Analytics** | ✅ Live — pageview + funnel events tracking |
 | **Privacy / Terms** | ✅ `/privacy` + `/terms` pages live |
 | **SEO** | ✅ robots.txt + sitemap.xml live |
+| **DB Migrations** | ✅ Up to 0009 (auto_drafts) |
 
 ---
 
 ## 🏗️ Architecture (TL;DR)
 
 ```
-Chrome Extension (gmail.js + background.js + popup)
+Chrome Extension (gmail.js + outlook.js + linkedin.js + reddit.js + background.js + popup)
          ↓ JWT Bearer (auto-refresh on 401)
 FastAPI Backend (api.writingtwinai.com)
-    ├── /v1/auth/*          → JWT + refresh rotation
-    ├── /v1/humanize        → DNA injection + LiteLLM routing + monthly limit gate
-    ├── /v1/dna/*           → Writing DNA samples + background extraction
-    ├── /v1/billing/*       → Stripe Checkout / Portal / Webhook
-    └── /v1/health          → DB + Redis liveness check
+    ├── /v1/auth/*                   → JWT + refresh rotation
+    ├── /v1/humanize                 → DNA injection + LiteLLM routing + monthly limit gate
+    ├── /v1/humanize/auto-draft      → Auto Draft Engine (Gmail reply detection)
+    ├── /v1/dna/*                    → Writing DNA samples + learning stats
+    ├── /v1/voice/*                  → Voice Twin (speech → draft)
+    ├── /v1/context/*                → Context Engine (platform/audience inference)
+    ├── /v1/billing/*                → Stripe Checkout / Portal / Webhook
+    └── /v1/health                   → DB + Redis liveness check
          ↓                           ↓
    PostgreSQL 16             Qdrant (vector DB)
    Redis 7 (cache)           LiteLLM → Gemini Flash / Claude Haiku / Sonnet
@@ -74,28 +81,16 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 
 ## 🔜 What To Do Next Session
 
-### If continuing Web Store launch:
-1. Merge PR #10 on GitHub
-2. Create Chrome Web Store developer account ($5 fee)
-3. Upload `extension/writing-twin-ai-extension.zip`
-4. Fill listing from `extension/WEBSTORE_LISTING.md`
-5. Take 3 screenshots (1280×800) of the extension in Gmail
-6. Submit for review
-7. After approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS in `backend/app/main.py`
+### Immediate (user actions required)
+1. **Chrome Web Store** — upload updated `extension/writing-twin-ai-extension.zip` (32 KB, 4 platforms)
+2. **After Web Store approval** — add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS
+3. **Enable Auto Draft on VPS** — `FEATURE_AUTO_DRAFT=True` in `backend/.env` when ready
 
-### If starting Phase 2 (Sprint 11+):
-- Read `Vault/core/12-PRODUCT-VISION-2.0.md` → voice-first, context-aware, Outlook-first vision
-- Read `Vault/core/13-EXECUTION-PLAN.md` → solo founder execution plan + reality check + build/cut matrix
-- Read `Vault/product/ROADMAP.md` → full sprint specs (goal, DB, API, UI, success metric per sprint)
-- **Revised sprint order (founder-validated):**
-  - Sprint 11: Voice Twin MVP (speak → send-ready email in your voice)
-  - Sprint 12: Outlook Extension (founder's primary platform)
-  - Sprint 13: Context Engine V1 (auto-infer platform/audience, no manual setup)
-  - Sprint 14: DNA Learning Engine (every edit sharpens the twin)
-  - Sprint 15: Auto Draft Engine (draft ready before you start typing)
-  - Sprint 16: LinkedIn + Reddit extension
-  - Sprint 17: Communication Graph (behavior-inferred, not manually tagged)
-  - Sprint 18: Meeting Intelligence (transcript → 5 deliverables)
+### Next Sprint (Sprint 17 candidates)
+- **Sprint 17 — Slack Extension**: inject into Slack compose (`div[data-lexical-editor]`)
+- **Sprint 17a — Communication Graph**: behavior-inferred relationship context
+- **Sprint 17b — Meeting Intelligence**: transcript → 5 deliverables
+- **Sprint 17c — Google OAuth**: wire up `/v1/auth/google` stub
 
 ---
 

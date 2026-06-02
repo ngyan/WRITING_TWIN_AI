@@ -8,7 +8,7 @@
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** Sprint 16 ✅ Code complete, PR #16 open → base `2.0` branch
+**Current Sprint:** Sprint 16 ✅ Merged + deployed
 **Next Sprint:** Sprint 17 — Slack Extension
 **Branch strategy:** All Phase 2 work branches from `2.0` and PRs target `2.0`
 
@@ -19,7 +19,7 @@
 | Dimension | % | Notes |
 |---|---|---|
 | **MVP Readiness** | 95% | All core features live — billing, DNA, extension, dashboard |
-| **Production Readiness** | 85% | VPS fully live; extension awaiting Web Store approval |
+| **Production Readiness** | 88% | VPS fully live; 4-platform extension awaiting Web Store approval |
 | **Test Coverage** | 30% | 48 tests passing (auth + humanize + dna + personalization + routing + billing) |
 | **Documentation** | 95% | Vault complete, WEBSTORE_LISTING.md ready |
 | **Business Model** | 80% | Free (20/mo) + Pro ($5/mo, 300/mo) live via Stripe |
@@ -46,7 +46,7 @@
 | **S13** | Context Engine V1 | `sprint-13-context-engine` | #13 ✅ Merged | 🟢 Done |
 | **S14** | DNA Learning Engine | `sprint-14-dna-learning` | #14 ✅ Merged | 🟢 Done |
 | **S15** | Auto Draft Engine | `sprint-15-auto-draft` | #15 🔵 Open | 🔵 Pending merge → `2.0` |
-| **S16** | LinkedIn + Reddit Extension | `sprint-16-linkedin-reddit` | #16 🔵 Open | 🔵 Pending merge → `2.0` |
+| **S16** | LinkedIn + Reddit Extension | `sprint-16-linkedin-reddit` | #16 ✅ Merged | 🟢 Done |
 
 ---
 
