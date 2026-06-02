@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
 import {
   DnaProfile,
+  LearningStats,
   MeResponse,
   UsageResponse,
   createPortal,
   getDnaProfile,
+  getLearningStats,
   getMe,
   getToken,
   getUsage,
@@ -95,6 +97,7 @@ export default function DashboardPage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [usage, setUsage] = useState<UsageResponse | null>(null);
   const [dna, setDna] = useState<DnaProfile | null>(null);
+  const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
@@ -102,10 +105,11 @@ export default function DashboardPage() {
       router.replace("/login?next=/dashboard");
       return;
     }
-    Promise.all([getMe(), getUsage(), getDnaProfile()]).then(([m, u, d]) => {
+    Promise.all([getMe(), getUsage(), getDnaProfile(), getLearningStats()]).then(([m, u, d, ls]) => {
       setMe(m);
       setUsage(u);
       setDna(d);
+      setLearningStats(ls);
     });
   }, [router]);
 
@@ -207,6 +211,40 @@ export default function DashboardPage() {
             <Link href="/onboarding/dna" className={dnaTrained ? "btn-ghost text-sm px-0" : "btn-secondary text-sm"}>
               {dnaTrained ? "Add more samples →" : "Train my writing voice"}
             </Link>
+          </div>
+
+          {/* DNA Learning */}
+          <div className="card p-6">
+            <h2 className="text-sm font-semibold text-ink dark:text-white mb-2">What your twin learned</h2>
+            {learningStats ? (
+              <>
+                <p className="text-sm text-neutral-500 mb-3 leading-relaxed">
+                  {learningStats.patterns_learned_this_week > 0
+                    ? `Your twin learned ${learningStats.patterns_learned_this_week} new ${learningStats.patterns_learned_this_week === 1 ? "pattern" : "patterns"} this week.`
+                    : "Edit a rewrite to start teaching your twin your style."}
+                  {learningStats.total_learnings > 0 && ` ${learningStats.total_learnings} patterns total.`}
+                </p>
+                {learningStats.cringe_phrases.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">
+                      Phrases your twin avoids
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {learningStats.cringe_phrases.slice(0, 8).map((p) => (
+                        <span
+                          key={p}
+                          className="text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-pill"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="h-10 bg-neutral-100 dark:bg-neutral-700 rounded animate-pulse" />
+            )}
           </div>
 
           {/* Chrome Extension */}

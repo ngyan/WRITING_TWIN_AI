@@ -25,6 +25,9 @@ class WritingProfile(Base):
     warmth_score: Mapped[float | None]
     directness_score: Mapped[float | None]
 
+    # Learned patterns (updated incrementally from user edits)
+    cringe_phrases: Mapped[Any] = mapped_column(JSONB, nullable=True)
+
     # Qualitative DNA (JSONB — flexible lists/dicts)
     common_phrases: Mapped[Any] = mapped_column(JSONB, nullable=True)
     greeting_styles: Mapped[Any] = mapped_column(JSONB, nullable=True)

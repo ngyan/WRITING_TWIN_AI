@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.models.audit_log  # noqa: F401
 import app.models.communication_memory  # noqa: F401
 import app.models.context_override  # noqa: F401
+import app.models.dna_learning  # noqa: F401
 import app.models.feature_flag  # noqa: F401
 import app.models.rewrite  # noqa: F401
 import app.models.subscription  # noqa: F401
