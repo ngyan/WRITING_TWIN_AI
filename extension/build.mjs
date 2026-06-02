@@ -11,9 +11,10 @@ mkdirSync(`${outdir}/icons`, { recursive: true });
 
 await esbuild.build({
   entryPoints: {
-    'background': 'src/background.ts',
-    'content/gmail': 'src/content/gmail.ts',
-    'popup/popup': 'src/popup/popup.ts',
+    'background':       'src/background.ts',
+    'content/gmail':    'src/content/gmail.ts',
+    'content/outlook':  'src/content/outlook.ts',
+    'popup/popup':      'src/popup/popup.ts',
   },
   bundle: true,
   outdir,
@@ -34,6 +35,7 @@ for (const size of [16, 32, 48, 128]) {
 const files = [
   `${outdir}/background.js`,
   `${outdir}/content/gmail.js`,
+  `${outdir}/content/outlook.js`,
   `${outdir}/popup/popup.js`,
 ];
 let total = 0;

@@ -4,6 +4,30 @@
 
 ---
 
+## [2026-06-02] Sprint 12 — Outlook Extension
+
+- Files created:
+  - `extension/src/content/outlook.ts` — full content script for Outlook Web App
+- Files modified:
+  - `extension/manifest.json` — added host_permissions + content_scripts for outlook.live.com, outlook.office.com, outlook.office365.com
+  - `extension/build.mjs` — added content/outlook entry point + size reporting
+  - `extension/writing-twin-ai-extension.zip` — rebuilt (21 KB, now includes outlook.js)
+- No backend changes — same /v1/humanize and /v1/voice/draft endpoints
+- Quality: tsc ✅  build ✅ (34.6 KB prod total)
+- Key decisions:
+  - Detect compose body via `role="textbox" + aria-multiline="true"` (locale-safe, not aria-label text)
+  - Walk UP 30 levels from compose body to find ancestor containing Send button (handles Outlook's React tree structure where toolbar is in sibling subtree)
+  - Inject into `closest('[role="toolbar"]') || closest('[role="group"]') || sendBtn.parentElement`
+  - MutationObserver + 1 s polling fallback — Outlook's React re-renders are aggressive
+  - `data-wt-ol-injected` attribute guards against double-injection
+  - office365.com added to host_permissions (same OWA, different domain for some orgs)
+- Branch: `sprint-12-outlook-extension`
+- Commit: `1e8407f`
+- PR: #12 → base `2.0` — https://github.com/ngyan/WRITING_TWIN_AI/pull/12
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## [2026-06-02] Sprint 11 — Voice Twin MVP
 
 - Files created:
