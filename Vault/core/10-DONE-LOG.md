@@ -4,6 +4,42 @@
 
 ---
 
+## [2026-06-02] Sprint 15 — Auto Draft Engine
+
+- Files created:
+  - `backend/app/prompts/auto_draft_v1.py` — system + user prompt: generate reply from incoming email context + DNA
+  - `backend/app/models/auto_draft.py` — AutoDraft ORM model
+  - `backend/app/repositories/auto_draft_repo.py` — create, get_by_id, update_kept
+  - `backend/app/services/auto_draft_service.py` — create_draft (context + DNA-aware), record_feedback
+  - `backend/alembic/versions/0009_auto_drafts.py` — migration: auto_drafts table
+- Files modified:
+  - `backend/app/routers/humanize.py` — POST /v1/humanize/auto-draft + POST /v1/humanize/auto-draft/{id}/feedback
+  - `backend/app/schemas/humanize.py` — AutoDraftRequest, AutoDraftResponse, AutoDraftFeedbackRequest
+  - `backend/app/main.py` — registered auto_draft model
+  - `backend/app/core/config.py` — added FEATURE_AUTO_DRAFT: bool = False
+  - `extension/src/lib/api.ts` — AutoDraftResponse interface + autoDraft() + submitAutoDraftFeedback()
+  - `extension/src/background.ts` — AUTO_DRAFT + AUTO_DRAFT_FEEDBACK message handlers
+  - `extension/src/content/gmail.ts` — tryAutoDraft(), findIncomingMessageEl(), extractIncomingText(), showAutoDraftBanner()
+  - `extension/writing-twin-ai-extension.zip` — rebuilt (95 KB)
+- Migration: `0009_auto_drafts`
+- Quality: ruff ✅  mypy ✅  pytest ✅ (48 tests)  tsc ✅  extension build ✅
+- Key decisions:
+  - 2s hard timeout via Promise.race — never blocks user if backend is slow
+  - Only fires when compose body is EMPTY — won't clobber work in progress
+  - Auto-dismiss if user starts typing; 30s auto-dismiss if no interaction
+  - FEATURE_AUTO_DRAFT=False by default — flip on VPS when ready
+  - kept/dismissed tracked per draft row for future learning signal
+  - Incoming email read via .a3s.aiL → .ii.gt → .adn (fallback chain, first 500 words)
+- Deploy steps:
+  1. `alembic upgrade head` (migration 0009)
+  2. Add `FEATURE_AUTO_DRAFT=True` to VPS `.env` when ready to enable
+- Branch: `sprint-15-auto-draft`
+- Commit: `4ed5f5d`
+- PR: #15 → base `2.0`
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## [2026-06-02] Sprint 14 — DNA Learning Engine
 
 - Files created:

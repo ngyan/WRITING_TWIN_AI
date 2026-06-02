@@ -39,3 +39,25 @@ class FeedbackRequest(BaseModel):
     action: Literal["accepted", "rejected", "edited"]
     thumb: Literal[1, -1] | None = None
     edit_text: str | None = None
+
+
+class AutoDraftRequest(BaseModel):
+    incoming_text: str = Field(min_length=10, max_length=6000)
+    tone: Literal["casual", "professional", "executive", "friendly", "direct", "diplomatic"] = (
+        "professional"
+    )
+    platform: str | None = Field(default=None, max_length=50)
+    recipient_domain: str | None = Field(default=None, max_length=255)
+    thread_subject: str | None = Field(default=None, max_length=500)
+
+
+class AutoDraftResponse(BaseModel):
+    id: str
+    draft: str
+    model: str
+    latency_ms: int
+    cost_usd: float
+
+
+class AutoDraftFeedbackRequest(BaseModel):
+    kept: bool

@@ -1,10 +1,12 @@
-import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse, HumanizeContext } from '../lib/api';
+import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse, HumanizeContext, AutoDraftResponse } from '../lib/api';
 
 // Gmail selectors — use prefix/substring matches so locale variants still match
 // e.g. tooltip can be "Send", "Send ⌘Enter", "Send (Ctrl+Enter)"
 const COMPOSE_BODY_SEL = '[g_editable="true"], div[contenteditable="true"][aria-multiline="true"]';
 const SEND_BUTTON_SEL = '[data-tooltip^="Send"], [aria-label^="Send"]';
 const HOST_ATTR = 'data-wt-injected';
+const AUTO_DRAFT_TIMEOUT_MS = 2000;
+const AUTO_DRAFT_DEFAULT_TONE: Tone = 'professional';
 
 // ── Tone config ────────────────────────────────────────────────────────────────
 
@@ -626,6 +628,9 @@ function inject(composeBody: Element): void {
 
   // Inject mic button immediately after
   injectMicButton(toolbar, composeBody);
+
+  // Auto-draft: fire after 500ms to let compose fully mount
+  setTimeout(() => tryAutoDraft(composeBody), 500);
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -659,6 +664,185 @@ function sendToBackground<T>(message: object): Promise<T> {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage(message, resolve);
   });
+}
+
+// ── Auto Draft — detect reply, read incoming email, inject banner ─────────────
+
+/**
+ * Walk up from composeBody to find a thread container that holds message rows
+ * (.gs elements). Returns the last .gs before the compose area, or null if
+ * this looks like a new-compose (not a reply).
+ */
+function findIncomingMessageEl(composeBody: Element): Element | null {
+  let el: Element | null = composeBody;
+  let threadContainer: Element | null = null;
+  for (let i = 0; i < 20; i++) {
+    if (!el) break;
+    if (el.querySelectorAll('.gs').length > 0) { threadContainer = el; break; }
+    el = el.parentElement;
+  }
+  if (!threadContainer) return null;
+
+  // Walk message rows — find the last .gs that doesn't contain the compose body
+  const rows = Array.from(threadContainer.querySelectorAll('.gs'));
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (!rows[i].contains(composeBody)) return rows[i];
+  }
+  return null;
+}
+
+function extractIncomingText(msgEl: Element): string | null {
+  // Try standard Gmail message body selectors in priority order
+  const bodyEl = (
+    msgEl.querySelector('.a3s.aiL') ??
+    msgEl.querySelector('.ii.gt') ??
+    msgEl.querySelector('.adn')
+  ) as HTMLElement | null;
+  if (!bodyEl) return null;
+  const text = bodyEl.innerText.trim();
+  if (text.length < 20) return null;
+  // First 500 words only
+  return text.split(/\s+/).slice(0, 500).join(' ');
+}
+
+const AUTO_DRAFT_ATTR = 'data-wt-autodraft';
+
+async function tryAutoDraft(composeBody: Element): Promise<void> {
+  // Guard: only fire once per compose window
+  if (composeBody.hasAttribute(AUTO_DRAFT_ATTR)) return;
+  composeBody.setAttribute(AUTO_DRAFT_ATTR, '1');
+
+  // Only fire if compose body is empty (user hasn't started typing)
+  if ((composeBody as HTMLElement).innerText.trim() !== '') return;
+
+  const incomingEl = findIncomingMessageEl(composeBody);
+  if (!incomingEl) return; // new compose — skip
+
+  const incomingText = extractIncomingText(incomingEl);
+  if (!incomingText) return;
+
+  const ctx = buildGmailContext(composeBody);
+
+  // 2s AbortController timeout — never block the user
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AUTO_DRAFT_TIMEOUT_MS);
+
+  let result: AutoDraftResponse;
+  try {
+    const resp = await Promise.race([
+      sendToBackground<{ result: AutoDraftResponse } | { error: string }>({
+        type: 'AUTO_DRAFT',
+        payload: {
+          incomingText,
+          tone: AUTO_DRAFT_DEFAULT_TONE,
+          ctx,
+        },
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), AUTO_DRAFT_TIMEOUT_MS)
+      ),
+    ]);
+    clearTimeout(timeoutId);
+    if ('error' in resp) return;
+    result = resp.result;
+  } catch {
+    clearTimeout(timeoutId);
+    return;
+  }
+
+  // Only inject if compose is still empty (user may have started typing during the wait)
+  if ((composeBody as HTMLElement).innerText.trim() !== '') return;
+
+  showAutoDraftBanner(composeBody, result);
+}
+
+function showAutoDraftBanner(composeBody: Element, result: AutoDraftResponse): void {
+  // Remove any existing banner
+  document.getElementById('wt-auto-draft-banner')?.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'wt-auto-draft-banner';
+  banner.style.cssText = `
+    position: fixed; z-index: 9998;
+    background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 10px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #312E81; box-shadow: 0 4px 16px rgba(79,70,229,0.12);
+    max-width: 420px;
+  `;
+
+  const label = document.createElement('span');
+  label.style.cssText = 'font-weight: 600; white-space: nowrap;';
+  label.textContent = '✦ Draft ready';
+
+  const useBtn = document.createElement('button');
+  useBtn.style.cssText = `
+    height: 28px; padding: 0 12px; border-radius: 9999px; border: none;
+    background: #4F46E5; color: #fff; font: 600 12px/1 inherit;
+    cursor: pointer; white-space: nowrap;
+  `;
+  useBtn.textContent = 'Use draft';
+
+  const dismissBtn = document.createElement('button');
+  dismissBtn.style.cssText = `
+    height: 24px; width: 24px; border-radius: 9999px; border: none;
+    background: transparent; color: #6366F1; font-size: 16px; line-height: 1;
+    cursor: pointer; margin-left: auto; display: flex; align-items: center; justify-content: center;
+  `;
+  dismissBtn.title = 'Dismiss';
+  dismissBtn.textContent = '✕';
+
+  banner.append(label, useBtn, dismissBtn);
+  document.body.appendChild(banner);
+
+  // Position banner above the compose body
+  function positionBanner(): void {
+    const rect = composeBody.getBoundingClientRect();
+    banner.style.top = `${Math.max(rect.top - 52, 60)}px`;
+    banner.style.left = `${Math.min(rect.left, window.innerWidth - 440)}px`;
+  }
+  positionBanner();
+  window.addEventListener('resize', positionBanner, { passive: true });
+
+  function removeBanner(): void {
+    banner.remove();
+    window.removeEventListener('resize', positionBanner);
+  }
+
+  // "Use draft" — fill compose and record kept=true
+  useBtn.addEventListener('click', () => {
+    setComposeText(composeBody as HTMLElement, result.draft);
+    sendToBackground({
+      type: 'AUTO_DRAFT_FEEDBACK',
+      payload: { draftId: result.id, kept: true },
+    });
+    removeBanner();
+  });
+
+  // "✕ Dismiss" — record kept=false
+  dismissBtn.addEventListener('click', () => {
+    sendToBackground({
+      type: 'AUTO_DRAFT_FEEDBACK',
+      payload: { draftId: result.id, kept: false },
+    });
+    removeBanner();
+  });
+
+  // Auto-dismiss if user starts typing
+  const typingListener = (): void => {
+    if ((composeBody as HTMLElement).innerText.trim() !== '') {
+      sendToBackground({
+        type: 'AUTO_DRAFT_FEEDBACK',
+        payload: { draftId: result.id, kept: false },
+      });
+      removeBanner();
+      composeBody.removeEventListener('input', typingListener);
+    }
+  };
+  composeBody.addEventListener('input', typingListener);
+
+  // Auto-dismiss after 30s if no interaction
+  setTimeout(removeBanner, 30_000);
 }
 
 // ── MutationObserver — watch for new compose windows ──────────────────────────
