@@ -245,3 +245,34 @@ export async function submitVoiceFeedback(
     body: JSON.stringify({ accepted, edited_draft: editedDraft }),
   }, token);
 }
+
+export interface AutoDraftResponse {
+  id: string;
+  draft: string;
+  model: string;
+  latency_ms: number;
+  cost_usd: number;
+}
+
+export async function autoDraft(
+  incomingText: string,
+  tone: Tone,
+  token: string,
+  ctx?: { platform?: string; recipient_domain?: string; thread_subject?: string },
+): Promise<AutoDraftResponse> {
+  return request<AutoDraftResponse>('/humanize/auto-draft', {
+    method: 'POST',
+    body: JSON.stringify({ incoming_text: incomingText, tone, ...ctx }),
+  }, token);
+}
+
+export async function submitAutoDraftFeedback(
+  draftId: string,
+  kept: boolean,
+  token: string,
+): Promise<void> {
+  await request<void>(`/humanize/auto-draft/${draftId}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ kept }),
+  }, token);
+}

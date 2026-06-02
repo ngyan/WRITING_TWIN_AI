@@ -2,6 +2,7 @@ import { getTokens, setTokens, clearTokens, type AuthTokens } from './lib/auth';
 import {
   login, register, humanize, submitFeedback, submitDnaSamples, getDnaProfile,
   voiceDraft, submitVoiceFeedback, detectContext, recordContextOverride,
+  autoDraft, submitAutoDraftFeedback,
   type Tone, type VoiceOutputType, type HumanizeContext,
 } from './lib/api';
 
@@ -17,15 +18,18 @@ type Message =
   | { type: 'VOICE_DRAFT'; payload: { audioData: string; mimeType: string; outputType: VoiceOutputType } }
   | { type: 'VOICE_FEEDBACK'; payload: { sessionId: string; accepted: boolean; editedDraft: string | null } }
   | { type: 'DETECT_CONTEXT'; payload: { platform?: string; recipient_domain?: string; thread_subject?: string } }
-  | { type: 'CONTEXT_OVERRIDE'; payload: { detected_context: string; selected_context: string; platform?: string; recipient_domain?: string } };
+  | { type: 'CONTEXT_OVERRIDE'; payload: { detected_context: string; selected_context: string; platform?: string; recipient_domain?: string } }
+  | { type: 'AUTO_DRAFT'; payload: { incomingText: string; tone: Tone; ctx?: HumanizeContext } }
+  | { type: 'AUTO_DRAFT_FEEDBACK'; payload: { draftId: string; kept: boolean } };
 
-import type { DnaProfileResponse, VoiceDraftResponse, ContextDetectResponse } from './lib/api';
+import type { DnaProfileResponse, VoiceDraftResponse, ContextDetectResponse, AutoDraftResponse } from './lib/api';
 
 type MessageResponse =
   | { success: true; tokens?: AuthTokens; authenticated?: boolean; dnaProfile?: DnaProfileResponse | null }
   | { success: true; result: Awaited<ReturnType<typeof humanize>> }
   | { success: true; result: VoiceDraftResponse }
   | { success: true; result: ContextDetectResponse }
+  | { success: true; result: AutoDraftResponse }
   | { success: true }
   | { error: string };
 
@@ -152,6 +156,26 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
         msg.payload.editedDraft,
         tokens.access_token,
       );
+      return { success: true };
+    }
+
+    case 'AUTO_DRAFT': {
+      const tokens = await getTokens();
+      if (!tokens) throw new Error('Not logged in. Please log in via the extension popup.');
+      const result = await autoDraft(
+        msg.payload.incomingText,
+        msg.payload.tone,
+        tokens.access_token,
+        msg.payload.ctx,
+      );
+      return { success: true, result };
+    }
+
+    case 'AUTO_DRAFT_FEEDBACK': {
+      const tokens = await getTokens();
+      if (!tokens) return { success: true };
+      submitAutoDraftFeedback(msg.payload.draftId, msg.payload.kept, tokens.access_token)
+        .catch(() => {}); // fire-and-forget
       return { success: true };
     }
 
