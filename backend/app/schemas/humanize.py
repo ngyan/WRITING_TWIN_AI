@@ -11,6 +11,11 @@ class HumanizeRequest(BaseModel):
     context_hint: str | None = None
     use_dna: bool = True
     target_language: str | None = None
+    # Context Engine V1 — optional fields from extension
+    platform: str | None = Field(default=None, max_length=50)
+    recipient_domain: str | None = Field(default=None, max_length=255)
+    thread_subject: str | None = Field(default=None, max_length=500)
+    context_twin_override: str | None = Field(default=None, max_length=50)
 
 
 class RewriteResponse(BaseModel):

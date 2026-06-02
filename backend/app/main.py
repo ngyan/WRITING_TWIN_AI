@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Ensure all ORM models are registered with Base.metadata before alembic / test DB setup
 import app.models.audit_log  # noqa: F401
 import app.models.communication_memory  # noqa: F401
+import app.models.context_override  # noqa: F401
 import app.models.feature_flag  # noqa: F401
 import app.models.rewrite  # noqa: F401
 import app.models.subscription  # noqa: F401
@@ -18,6 +19,7 @@ import app.models.writing_profile  # noqa: F401
 from app.core.config import settings
 from app.routers import auth, health
 from app.routers import billing as billing_router
+from app.routers import context as context_router
 from app.routers import dna as dna_router
 from app.routers import humanize as humanize_router
 from app.routers import voice as voice_router
@@ -72,6 +74,7 @@ def create_app() -> FastAPI:
     application.include_router(dna_router.router)
     application.include_router(billing_router.router)
     application.include_router(voice_router.router)
+    application.include_router(context_router.router)
     return application
 
 

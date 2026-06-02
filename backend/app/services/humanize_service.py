@@ -9,10 +9,11 @@ from app.core.config import settings
 from app.models.user import User
 from app.prompts import context_intent, humanize_base
 from app.prompts.humanize import dna_v1
-from app.repositories import rewrite_repo
+from app.repositories import context_repo, rewrite_repo
 from app.schemas.humanize import FeedbackRequest, HumanizeRequest, RewriteResponse
 from app.services import (
     cache_service,
+    context_service,
     cost_guard_service,
     cultural_service,
     memory_service,
@@ -42,7 +43,26 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         log.info("cache.semantic.hit", user_id=str(user.id))
         return RewriteResponse.model_validate({**semantic, "cache_hit": True})
 
-    # 4 — Personalization context (DNA + memory + cultural) — best-effort
+    # 4a — Context Engine V1 (if fields provided by extension)
+    context_twin: str = "professional"
+    context_guidance: str | None = None
+    context_fields = (
+        req.platform or req.recipient_domain or req.thread_subject or req.context_twin_override
+    )
+    if settings.FEATURE_CONTEXT_ENGINE and context_fields:
+        if req.context_twin_override:
+            context_twin = req.context_twin_override
+        else:
+            customer_domains = await context_repo.get_customer_domains(db, user.id)
+            context_twin = context_service.detect(
+                platform=req.platform,
+                recipient_domain=req.recipient_domain,
+                thread_subject=req.thread_subject,
+                customer_domains=customer_domains,
+            )
+        context_guidance = context_service.apply_to_prompt_context(context_twin)["tone_guidance"]
+
+    # 4b — Personalization context (DNA + memory + cultural) — best-effort
     dna_block: str | None = None
     memory_examples: list[str] = []
     profile_version_used: int | None = None
@@ -60,10 +80,13 @@ async def humanize(db: AsyncSession, user: User, req: HumanizeRequest) -> Rewrit
         mc = router_service.MODELS["gemini-flash"]
     if dna_block:
         messages = dna_v1.build_messages(
-            req.tone, req.text, dna_block, memory_examples, cultural_block
+            req.tone, req.text, dna_block, memory_examples, cultural_block,
+            context_guidance=context_guidance,
         )
     else:
-        messages = humanize_base.build_messages(req.tone, req.text)
+        messages = humanize_base.build_messages(
+            req.tone, req.text, context_guidance=context_guidance
+        )
 
     # 6 — Call LLM (with quality retry when flag enabled)
     t0 = time.monotonic()

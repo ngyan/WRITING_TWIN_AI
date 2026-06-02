@@ -5,7 +5,7 @@
  * Outlook uses React so the DOM mutates heavily and asynchronously.
  * Strategy: MutationObserver (primary) + 1 s polling interval (fallback).
  */
-import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse } from '../lib/api';
+import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse, HumanizeContext } from '../lib/api';
 
 // ── Selectors ──────────────────────────────────────────────────────────────────
 //
@@ -173,6 +173,47 @@ const BASE_CSS = `
   .wt-va.reject { border-color: #A4262C; color: #A4262C; }
 `;
 
+// ── Context helpers ────────────────────────────────────────────────────────────
+
+function buildOutlookContext(composeBody: Element): HumanizeContext {
+  // Walk up to find the compose container, then read To field and Subject
+  let el: Element | null = composeBody;
+  let container: Element | null = null;
+  for (let i = 0; i < 25; i++) {
+    if (!el) break;
+    // Outlook To field contains a div with role="list" (recipient chips)
+    if (el.querySelector('[role="list"][aria-label*="To" i], input[aria-label*="To" i]')) {
+      container = el; break;
+    }
+    el = el.parentElement;
+  }
+
+  let recipientDomain: string | undefined;
+  let threadSubject: string | undefined;
+
+  if (container) {
+    // Recipient chip: Outlook renders recipient as a button with data-email or similar
+    const chip = container.querySelector<HTMLElement>(
+      '[data-email], [title*="@"], [aria-label*="@"]'
+    );
+    if (chip) {
+      const email =
+        chip.getAttribute('data-email') ??
+        chip.getAttribute('title') ??
+        chip.getAttribute('aria-label') ?? '';
+      if (email.includes('@')) recipientDomain = email.split('@')[1].split('>')[0].toLowerCase().trim();
+    }
+
+    // Subject input
+    const subjectEl = container.querySelector<HTMLInputElement>(
+      'input[aria-label*="Subject" i], input[placeholder*="Subject" i]'
+    );
+    if (subjectEl?.value) threadSubject = subjectEl.value;
+  }
+
+  return { platform: 'outlook', recipient_domain: recipientDomain, thread_subject: threadSubject };
+}
+
 // ── Main injection ─────────────────────────────────────────────────────────────
 
 function inject(composeBody: Element): void {
@@ -196,6 +237,8 @@ function inject(composeBody: Element): void {
   let panelOpen = false;
   let voicePanelOpen = false;
   let selectedOutputType: VoiceOutputType = 'reply';
+  let detectedContextTwin = 'professional';
+  let contextOverride: string | undefined;
   let recorder: MediaRecorder | null = null;
   let recording = false;
   let audioChunks: BlobPart[] = [];
@@ -204,9 +247,19 @@ function inject(composeBody: Element): void {
   let originalVoiceText = '';
 
   shadow.innerHTML = `
-    <style>${BASE_CSS}</style>
+    <style>${BASE_CSS}
+    #wt-ctx-badge {
+      display: inline-flex; align-items: center;
+      height: 18px; padding: 0 7px; border-radius: 9999px;
+      background: #EEF2FF; color: #4338CA; font-size: 10px; font-weight: 600;
+      margin-left: 4px; cursor: pointer; white-space: nowrap; transition: background 0.1s;
+    }
+    #wt-ctx-badge:hover { background: #E0E7FF; }
+    #wt-ctx-badge.hidden { display: none; }
+    </style>
 
     <button id="wt-btn" title="Humanize with Writing Twin AI (Ctrl+Shift+H)">✨ Humanize</button>
+    <span id="wt-ctx-badge" class="hidden" title="Detected context — click to override"></span>
     <button id="wt-mic-btn" title="Voice Twin — speak your email (Ctrl+Shift+V)">🎙</button>
 
     <div id="wt-panel" class="wt-panel">
@@ -244,7 +297,8 @@ function inject(composeBody: Element): void {
   `;
 
   // ── Element refs ────────────────────────────────────────────────────────────
-  const btn        = shadow.getElementById('wt-btn')        as HTMLButtonElement;
+  const btn        = shadow.getElementById('wt-btn')         as HTMLButtonElement;
+  const ctxBadge   = shadow.getElementById('wt-ctx-badge')   as HTMLSpanElement;
   const micBtn     = shadow.getElementById('wt-mic-btn')    as HTMLButtonElement;
   const panel      = shadow.getElementById('wt-panel')      as HTMLDivElement;
   const voicePanel = shadow.getElementById('wt-voice-panel') as HTMLDivElement;
@@ -280,6 +334,39 @@ function inject(composeBody: Element): void {
       shadow.querySelectorAll('.wt-otype').forEach(b => b.classList.remove('active'));
       ob.classList.add('active');
       selectedOutputType = ob.dataset.type as VoiceOutputType;
+    });
+  });
+
+  // ── Context badge ───────────────────────────────────────────────────────────
+  setTimeout(() => {
+    const ctx = buildOutlookContext(composeBody);
+    sendToBackground<{ result?: { context_twin: string } } | { error: string }>({
+      type: 'DETECT_CONTEXT',
+      payload: ctx,
+    }).then((resp) => {
+      if ('result' in resp && resp.result?.context_twin) {
+        detectedContextTwin = resp.result.context_twin;
+        const label = detectedContextTwin.charAt(0).toUpperCase() + detectedContextTwin.slice(1);
+        ctxBadge.textContent = label;
+        ctxBadge.classList.remove('hidden');
+      }
+    }).catch(() => {});
+  }, 800);
+
+  const CONTEXT_CYCLE = ['professional', 'customer', 'technical', 'escalation', 'casual'];
+  ctxBadge.addEventListener('click', () => {
+    const current = contextOverride ?? detectedContextTwin;
+    const idx = CONTEXT_CYCLE.indexOf(current);
+    contextOverride = CONTEXT_CYCLE[(idx + 1) % CONTEXT_CYCLE.length];
+    const label = contextOverride.charAt(0).toUpperCase() + contextOverride.slice(1);
+    ctxBadge.textContent = label;
+    sendToBackground({
+      type: 'CONTEXT_OVERRIDE',
+      payload: {
+        detected_context: detectedContextTwin,
+        selected_context: contextOverride,
+        platform: 'outlook',
+      },
     });
   });
 
@@ -323,9 +410,10 @@ function inject(composeBody: Element): void {
     setStatus('Rewriting…'); actionsEl.classList.remove('visible');
 
     try {
+      const baseCtx = buildOutlookContext(composeBody);
       const resp = await sendToBackground<{ result: RewriteResponse } | { error: string }>({
         type: 'HUMANIZE',
-        payload: { text, tone: selectedTone },
+        payload: { text, tone: selectedTone, ctx: { ...baseCtx, context_twin_override: contextOverride } },
       });
       if ('error' in resp) throw new Error(String(resp.error));
       lastRewriteId = resp.result.id;

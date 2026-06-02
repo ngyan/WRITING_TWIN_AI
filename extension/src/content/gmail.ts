@@ -1,4 +1,4 @@
-import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse } from '../lib/api';
+import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse, HumanizeContext } from '../lib/api';
 
 // Gmail selectors — use prefix/substring matches so locale variants still match
 // e.g. tooltip can be "Send", "Send ⌘Enter", "Send (Ctrl+Enter)"
@@ -369,6 +369,39 @@ function injectMicButton(toolbar: Element, composeBody: Element): void {
   }
 }
 
+// ── Context helpers ────────────────────────────────────────────────────────────
+
+function buildGmailContext(composeBody: Element): HumanizeContext {
+  // Walk up to compose container and read To field + Subject
+  let el: Element | null = composeBody;
+  let container: Element | null = null;
+  for (let i = 0; i < 20; i++) {
+    if (!el) break;
+    if (el.querySelector('[data-hovercard-id], [email]')) { container = el; break; }
+    el = el.parentElement;
+  }
+
+  let recipientDomain: string | undefined;
+  let threadSubject: string | undefined;
+
+  if (container) {
+    // Recipient email chip: [email="user@domain.com"] or data-hovercard-id
+    const chip = container.querySelector<HTMLElement>('[email], [data-hovercard-id]');
+    const email = chip?.getAttribute('email') ?? chip?.getAttribute('data-hovercard-id') ?? '';
+    if (email.includes('@')) recipientDomain = email.split('@')[1].toLowerCase();
+
+    // Subject input
+    const subjectEl = container.querySelector<HTMLInputElement>('input[name="subjectbox"]');
+    if (subjectEl?.value) threadSubject = subjectEl.value;
+  }
+
+  return {
+    platform: 'gmail',
+    recipient_domain: recipientDomain,
+    thread_subject: threadSubject,
+  };
+}
+
 // ── Inject Humanize button into a compose window ────────────────────────────────
 
 function inject(composeBody: Element): void {
@@ -389,10 +422,23 @@ function inject(composeBody: Element): void {
   let selectedTone: Tone | null = null;
   let lastRewriteId: string | null = null;
   let panelOpen = false;
+  let detectedContextTwin = 'professional';
+  let contextOverride: string | undefined;
 
   shadow.innerHTML = `
-    <style>${BUTTON_CSS}</style>
+    <style>${BUTTON_CSS}
+    #wt-ctx-badge {
+      display: inline-flex; align-items: center;
+      height: 18px; padding: 0 7px; border-radius: 9999px;
+      background: #EEF2FF; color: #4338CA; font-size: 10px; font-weight: 600;
+      margin-left: 5px; cursor: pointer; white-space: nowrap;
+      transition: background 0.1s;
+    }
+    #wt-ctx-badge:hover { background: #E0E7FF; }
+    #wt-ctx-badge.hidden { display: none; }
+    </style>
     <button id="wt-btn" title="Humanize with Writing Twin AI (Cmd+Shift+H)">✨ Humanize</button>
+    <span id="wt-ctx-badge" class="hidden" title="Detected context — click to override"></span>
     <div id="wt-panel">
       <p class="wt-title">Rewrite tone</p>
       <div class="wt-tones">
@@ -411,8 +457,9 @@ function inject(composeBody: Element): void {
     </div>
   `;
 
-  const btn = shadow.getElementById('wt-btn') as HTMLButtonElement;
-  const panel = shadow.getElementById('wt-panel') as HTMLDivElement;
+  const btn      = shadow.getElementById('wt-btn')       as HTMLButtonElement;
+  const ctxBadge = shadow.getElementById('wt-ctx-badge') as HTMLSpanElement;
+  const panel    = shadow.getElementById('wt-panel')     as HTMLDivElement;
   const rewriteBtn = shadow.getElementById('wt-rewrite') as HTMLButtonElement;
   const statusEl = shadow.getElementById('wt-status') as HTMLDivElement;
   const limitEl = shadow.getElementById('wt-limit') as HTMLDivElement;
@@ -433,6 +480,47 @@ function inject(composeBody: Element): void {
       statusEl.className = '';
       limitEl.classList.remove('visible');
       actionsEl.classList.remove('visible');
+    });
+  });
+
+  // Detect context on first open (fire-and-forget)
+  setTimeout(() => refreshContextBadge(), 800);
+
+  function refreshContextBadge(): void {
+    const ctx = buildGmailContext(composeBody);
+    sendToBackground<{ result?: { context_twin: string } } | { error: string }>({
+      type: 'DETECT_CONTEXT',
+      payload: ctx,
+    }).then((resp) => {
+      if ('result' in resp && resp.result?.context_twin) {
+        detectedContextTwin = resp.result.context_twin;
+        showContextBadge(detectedContextTwin);
+      }
+    }).catch(() => { /* best-effort */ });
+  }
+
+  function showContextBadge(twin: string): void {
+    const label = twin.charAt(0).toUpperCase() + twin.slice(1);
+    ctxBadge.textContent = label;
+    ctxBadge.classList.remove('hidden');
+  }
+
+  // Badge click: cycle through context overrides
+  const CONTEXT_CYCLE = ['professional', 'customer', 'technical', 'escalation', 'casual'];
+  ctxBadge.addEventListener('click', () => {
+    const current = contextOverride ?? detectedContextTwin;
+    const idx = CONTEXT_CYCLE.indexOf(current);
+    const next = CONTEXT_CYCLE[(idx + 1) % CONTEXT_CYCLE.length];
+    contextOverride = next;
+    showContextBadge(next);
+    // Record override signal
+    sendToBackground({
+      type: 'CONTEXT_OVERRIDE',
+      payload: {
+        detected_context: detectedContextTwin,
+        selected_context: next,
+        platform: 'gmail',
+      },
     });
   });
 
@@ -476,9 +564,14 @@ function inject(composeBody: Element): void {
     actionsEl.classList.remove('visible');
 
     try {
+      const baseCtx = buildGmailContext(composeBody);
       const resp = await sendToBackground<{ result: RewriteResponse }>({
         type: 'HUMANIZE',
-        payload: { text, tone: selectedTone },
+        payload: {
+          text,
+          tone: selectedTone,
+          ctx: { ...baseCtx, context_twin_override: contextOverride },
+        },
       });
 
       if ('error' in resp) throw new Error(String(resp.error));

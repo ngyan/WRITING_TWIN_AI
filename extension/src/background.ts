@@ -1,8 +1,8 @@
 import { getTokens, setTokens, clearTokens, type AuthTokens } from './lib/auth';
 import {
   login, register, humanize, submitFeedback, submitDnaSamples, getDnaProfile,
-  voiceDraft, submitVoiceFeedback,
-  type Tone, type VoiceOutputType,
+  voiceDraft, submitVoiceFeedback, detectContext, recordContextOverride,
+  type Tone, type VoiceOutputType, type HumanizeContext,
 } from './lib/api';
 
 type Message =
@@ -10,19 +10,23 @@ type Message =
   | { type: 'REGISTER'; payload: { email: string; password: string } }
   | { type: 'LOGOUT' }
   | { type: 'GET_AUTH_STATE' }
-  | { type: 'HUMANIZE'; payload: { text: string; tone: Tone } }
+  | { type: 'HUMANIZE'; payload: { text: string; tone: Tone; ctx?: HumanizeContext } }
   | { type: 'FEEDBACK'; payload: { rewriteId: string; action: 'accepted' | 'rejected' } }
   | { type: 'SUBMIT_DNA'; payload: { samples: string[] } }
   | { type: 'GET_DNA_STATUS' }
   | { type: 'VOICE_DRAFT'; payload: { audioData: string; mimeType: string; outputType: VoiceOutputType } }
-  | { type: 'VOICE_FEEDBACK'; payload: { sessionId: string; accepted: boolean; editedDraft: string | null } };
+  | { type: 'VOICE_FEEDBACK'; payload: { sessionId: string; accepted: boolean; editedDraft: string | null } }
+  | { type: 'DETECT_CONTEXT'; payload: { platform?: string; recipient_domain?: string; thread_subject?: string } }
+  | { type: 'CONTEXT_OVERRIDE'; payload: { detected_context: string; selected_context: string; platform?: string; recipient_domain?: string } };
 
-import type { DnaProfileResponse, VoiceDraftResponse } from './lib/api';
+import type { DnaProfileResponse, VoiceDraftResponse, ContextDetectResponse } from './lib/api';
 
 type MessageResponse =
   | { success: true; tokens?: AuthTokens; authenticated?: boolean; dnaProfile?: DnaProfileResponse | null }
   | { success: true; result: Awaited<ReturnType<typeof humanize>> }
   | { success: true; result: VoiceDraftResponse }
+  | { success: true; result: ContextDetectResponse }
+  | { success: true }
   | { error: string };
 
 chrome.runtime.onMessage.addListener(
@@ -74,7 +78,9 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
     case 'HUMANIZE': {
       const tokens = await getTokens();
       if (!tokens) throw new Error('Not logged in. Please log in via the extension popup.');
-      const result = await humanize(msg.payload.text, msg.payload.tone, tokens.access_token);
+      const result = await humanize(
+        msg.payload.text, msg.payload.tone, tokens.access_token, msg.payload.ctx
+      );
       return { success: true, result };
     }
 
@@ -110,6 +116,31 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       const blob = new Blob([bytes], { type: mimeType });
       const result = await voiceDraft(blob, outputType, tokens.access_token);
       return { success: true, result };
+    }
+
+    case 'DETECT_CONTEXT': {
+      const tokens = await getTokens();
+      if (!tokens) return { success: true, result: { context_twin: 'professional', tone_guidance: '' } };
+      const result = await detectContext(
+        msg.payload.platform ?? 'unknown',
+        msg.payload.recipient_domain ?? null,
+        msg.payload.thread_subject ?? null,
+        tokens.access_token,
+      );
+      return { success: true, result };
+    }
+
+    case 'CONTEXT_OVERRIDE': {
+      const tokens = await getTokens();
+      if (!tokens) return { success: true };
+      recordContextOverride(
+        msg.payload.detected_context,
+        msg.payload.selected_context,
+        msg.payload.platform,
+        msg.payload.recipient_domain,
+        tokens.access_token,
+      ).catch(() => {}); // fire-and-forget
+      return { success: true };
     }
 
     case 'VOICE_FEEDBACK': {

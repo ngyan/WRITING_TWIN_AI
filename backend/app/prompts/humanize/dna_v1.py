@@ -87,6 +87,7 @@ def build_messages(
     dna_block: str,
     memory_examples: list[str],
     cultural_block: str | None,
+    context_guidance: str | None = None,
 ) -> list[dict]:
     memory_section = ""
     if memory_examples:
@@ -97,16 +98,17 @@ def build_messages(
     if cultural_block:
         cultural_section = f"\n{cultural_block}\n"
 
+    user_content = USER_TEMPLATE.format(
+        dna_block=dna_block,
+        memory_section=memory_section,
+        tone=tone,
+        cultural_section=cultural_section,
+        text=text,
+    )
+    if context_guidance:
+        user_content = f"Context guidance: {context_guidance}\n\n{user_content}"
+
     return [
         {"role": "system", "content": SYSTEM},
-        {
-            "role": "user",
-            "content": USER_TEMPLATE.format(
-                dna_block=dna_block,
-                memory_section=memory_section,
-                tone=tone,
-                cultural_section=cultural_section,
-                text=text,
-            ),
-        },
+        {"role": "user", "content": user_content},
     ]

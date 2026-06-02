@@ -4,6 +4,44 @@
 
 ---
 
+## [2026-06-02] Sprint 13 — Context Engine V1
+
+- Files created:
+  - `backend/alembic/versions/0007_context_engine.py` — migration: `customer_domains TEXT[]` on users + `context_overrides` table
+  - `backend/app/models/context_override.py` — ContextOverride ORM model
+  - `backend/app/repositories/context_repo.py` — get/set customer_domains, save_override
+  - `backend/app/routers/context.py` — POST /v1/context/detect, GET/POST/DELETE /v1/context/customer-domains, POST /v1/context/override
+  - `backend/app/schemas/context.py` — DetectContextRequest/Response, CustomerDomainsResponse, AddDomainRequest, RemoveDomainRequest, OverrideContextRequest
+  - `backend/app/services/context_service.py` — static rules engine: 7 context twins, priority-ordered
+- Files modified:
+  - `backend/app/models/user.py` — added `customer_domains: Mapped[list[str]]` (ARRAY(String))
+  - `backend/app/schemas/humanize.py` — added platform, recipient_domain, thread_subject, context_twin_override to HumanizeRequest
+  - `backend/app/prompts/humanize_base.py` — added optional context_guidance param
+  - `backend/app/prompts/humanize/dna_v1.py` — added optional context_guidance param
+  - `backend/app/services/humanize_service.py` — step 4a: context detection before personalization; passes context_guidance to prompt builders
+  - `backend/app/main.py` — registered context_override model + context router
+  - `extension/src/lib/api.ts` — detectContext(), recordContextOverride(), HumanizeContext interface, humanize() ctx param
+  - `extension/src/background.ts` — DETECT_CONTEXT + CONTEXT_OVERRIDE handlers; HUMANIZE passes ctx
+  - `extension/src/content/gmail.ts` — context badge (indigo pill), buildGmailContext(), CONTEXT_CYCLE cycling, badge click override
+  - `extension/src/content/outlook.ts` — same context badge + CONTEXT_CYCLE as Gmail
+- Migration: `0007_context_engine`
+- Quality: ruff ✅  mypy ✅  pytest ✅ (48 tests)  tsc ✅  extension build ✅ (38.6 KB prod)
+- Key decisions:
+  - Static rules engine (no LLM call) — deterministic, zero cost, <1 ms
+  - 7 context twins: professional, customer, technical, escalation, social, community, casual
+  - Escalation keywords always win (P1/P0/incident/urgent/SLA/outage/blocker/etc.)
+  - Context badge cycles through CONTEXT_CYCLE array on click; override sent to backend for learning
+  - FEATURE_CONTEXT_ENGINE=True by default (safe — only activates if context fields are present)
+- Deploy steps:
+  1. `alembic upgrade head` (migration 0007)
+  2. FEATURE_CONTEXT_ENGINE=True is already the default in Settings
+- Branch: `sprint-13-context-engine`
+- Commit: `9720d37`
+- PR: #13 → base `2.0` — https://github.com/ngyan/WRITING_TWIN_AI/pull/13
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## [2026-06-02] Sprint 12 — Outlook Extension
 
 - Files created:

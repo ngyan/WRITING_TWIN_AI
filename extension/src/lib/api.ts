@@ -136,10 +136,43 @@ export async function getDnaProfile(token: string): Promise<DnaProfileResponse |
   }
 }
 
-export async function humanize(text: string, tone: Tone, token: string): Promise<RewriteResponse> {
+export interface HumanizeContext {
+  platform?: string;
+  recipient_domain?: string;
+  thread_subject?: string;
+  context_twin_override?: string;
+}
+
+export interface ContextDetectResponse {
+  context_twin: string;
+  tone_guidance: string;
+}
+
+export async function humanize(
+  text: string,
+  tone: Tone,
+  token: string,
+  ctx?: HumanizeContext,
+): Promise<RewriteResponse> {
   return request<RewriteResponse>('/humanize', {
     method: 'POST',
-    body: JSON.stringify({ text, tone }),
+    body: JSON.stringify({ text, tone, ...ctx }),
+  }, token);
+}
+
+export async function detectContext(
+  platform: string,
+  recipientDomain: string | null,
+  threadSubject: string | null,
+  token: string,
+): Promise<ContextDetectResponse> {
+  return request<ContextDetectResponse>('/context/detect', {
+    method: 'POST',
+    body: JSON.stringify({
+      platform,
+      recipient_domain: recipientDomain,
+      thread_subject: threadSubject,
+    }),
   }, token);
 }
 
@@ -181,6 +214,24 @@ export async function voiceDraft(
     throw new Error(err.detail);
   }
   return res.json() as Promise<VoiceDraftResponse>;
+}
+
+export async function recordContextOverride(
+  detectedContext: string,
+  selectedContext: string,
+  platform: string | undefined,
+  recipientDomain: string | undefined,
+  token: string,
+): Promise<void> {
+  await request<void>('/context/override', {
+    method: 'POST',
+    body: JSON.stringify({
+      detected_context: detectedContext,
+      selected_context: selectedContext,
+      platform,
+      recipient_domain: recipientDomain,
+    }),
+  }, token);
 }
 
 export async function submitVoiceFeedback(
