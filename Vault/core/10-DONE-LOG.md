@@ -4,6 +4,41 @@
 
 ---
 
+## [2026-06-02] Sprint 14 — DNA Learning Engine
+
+- Files created:
+  - `backend/app/models/dna_learning.py` — DNALearning ORM model
+  - `backend/app/repositories/dna_learning_repo.py` — create, count_this_week, count_total, get_removed_phrase_counts (uses SQL unnest)
+  - `backend/app/services/dna_learning_service.py` — extract_phrases (2/3-gram diff), compute_formality_delta, process_edit, get_stats, schedule_learning
+  - `backend/alembic/versions/0008_dna_learning.py` — migration: dna_learnings table + cringe_phrases JSONB on writing_profiles
+  - `Vault/active/SPRINT_14_DNA_LEARNING.md` — sprint spec
+- Files modified:
+  - `backend/app/models/writing_profile.py` — added cringe_phrases JSONB column
+  - `backend/app/core/config.py` — added FEATURE_DNA_LEARNING: bool = True
+  - `backend/app/services/humanize_service.py` — hook into record_feedback for edited action → schedule_learning
+  - `backend/app/routers/dna.py` — added GET /v1/dna/learning-stats
+  - `backend/app/schemas/dna.py` — added LearningStatsResponse
+  - `backend/app/main.py` — registered dna_learning model
+  - `frontend/src/lib/api.ts` — LearningStats interface + getLearningStats()
+  - `frontend/src/app/dashboard/page.tsx` — "What your twin learned" card with cringe phrase tags
+  - `backend/app/services/billing_service.py` — fixed pre-existing mypy str|None return type
+- Migration: `0008_dna_learning`
+- Quality: ruff ✅  mypy ✅  pytest ✅ (48 tests)  tsc ✅
+- Key decisions:
+  - Minimum 5-word symmetric diff gate prevents noise from trivial reformatting
+  - Cringe threshold = 3 removals (configurable constant in service)
+  - Uses SQL unnest() to count individual phrase occurrences across ARRAY rows efficiently
+  - FEATURE_DNA_LEARNING=True by default — safe, only fires on explicit user edits
+- Deploy steps:
+  1. `alembic upgrade head` (migration 0008)
+  2. No new env vars needed
+- Branch: `sprint-14-dna-learning`
+- Commit: `e706650`
+- PR: #14 → base `2.0` — https://github.com/ngyan/WRITING_TWIN_AI/pull/14
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## [2026-06-02] Sprint 13 — Context Engine V1
 
 - Files created:
