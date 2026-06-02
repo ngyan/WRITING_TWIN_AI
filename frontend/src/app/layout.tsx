@@ -16,6 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://writingtwinai.com"),
   title: "Writing Twin AI — Write Like Yourself. Not Like AI.",
   description:
     "AI writing assistant that learns your voice and rewrites text to sound exactly like you. Works in Gmail, LinkedIn, Slack, and Outlook.",
