@@ -4,6 +4,38 @@
 
 ---
 
+## [2026-06-03] Sprint 17a — Google OAuth
+
+- Files created:
+  - `frontend/src/app/auth/callback/page.tsx` — receives tokens from OAuth redirect, stores in localStorage, redirects to /dashboard
+  - `backend/alembic/versions/0007_audit_autodrafts_context.py` — recovered missing migration
+  - `backend/alembic/versions/0008_dna_learnings_feature_flags.py` — recovered missing migration
+  - `backend/alembic/versions/0009_usage_events.py` — recovered missing migration
+- Files modified:
+  - `backend/app/core/config.py` — added GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, FRONTEND_URL
+  - `backend/app/repositories/user_repo.py` — added get_by_google_id, create_google_user, link_google_id
+  - `backend/app/services/auth_service.py` — added google_oauth_login (find → link → create) + _fetch_google_userinfo
+  - `backend/app/routers/auth.py` — replaced 501 stub with GET /google, GET /google/callback, POST /google/exchange
+  - `backend/app/schemas/auth.py` — added GoogleExchangeRequest schema
+  - `extension/manifest.json` — added "identity" permission
+  - `extension/build.mjs` — added esbuild define for GOOGLE_CLIENT_ID (public value, safe to embed)
+  - `extension/src/background.ts` — added GOOGLE_AUTH_EXTENSION handler using chrome.identity.launchWebAuthFlow
+  - `extension/src/lib/api.ts` — added googleExchange() function
+  - `extension/src/popup/popup.html` — added Google Sign-In buttons + dividers to login + register views
+  - `extension/src/popup/popup.css` — added .btn-google and .divider styles
+  - `extension/src/popup/popup.ts` — added handleGoogleAuth() + button event listeners
+  - `frontend/src/app/login/page.tsx` — added "Continue with Google" button
+  - `frontend/src/app/register/page.tsx` — added "Continue with Google" button
+- Auth flow:
+  - Web: GET /v1/auth/google → Google consent → GET /v1/auth/google/callback → redirect to /auth/callback?access_token=&refresh_token=
+  - Extension: GOOGLE_AUTH_EXTENSION message → chrome.identity.launchWebAuthFlow → POST /v1/auth/google/exchange → JWT pair in chrome.storage.local
+- Quality: ruff ✅  mypy ✅ (5 new files)  tsc ✅  48 tests ✅  build ✅  deployed ✅
+- Branch: `sprint-17a-google-oauth`
+- PR: #18 — merged to main
+- Status: ✅ Live — requires GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in VPS .env to activate
+
+---
+
 ## [2026-06-02] Sprint 12 — Outlook Extension
 
 - Files created:

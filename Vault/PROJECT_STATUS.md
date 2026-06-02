@@ -8,9 +8,9 @@
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** Sprint 12 ✅ Code complete, PR #12 open → base `2.0` branch
-**Next Sprint:** Sprint 13 — Context Engine V1
-**Branch strategy:** All Phase 2 work branches from `2.0` and PRs target `2.0`
+**Current Sprint:** Sprint 17a ✅ Google OAuth — merged + deployed
+**Next Sprint:** Sprint 18 — Slack Integration (Compose Detection Engine reuse)
+**Branch strategy:** All Phase 2 work branches from `main`; Sprint 17/17a merged to `main`
 
 ---
 
@@ -43,6 +43,8 @@
 | **S10** | Chrome Web Store Packaging | `sprint-10-webstore` | #10 ✅ Merged | 🟢 Done |
 | **S11** | Voice Twin MVP | `sprint-11-voice-twin` | #11 🔵 Open | 🔵 Pending merge → `2.0` |
 | **S12** | Outlook Extension | `sprint-12-outlook-extension` | #12 🔵 Open | 🔵 Pending merge → `2.0` |
+| **S17** | HiWorks Email + Compose Detection Engine | `sprint-17-hiworks` | — | 🟢 Done |
+| **S17a** | Google OAuth (web + extension) | `sprint-17a-google-oauth` | #18 ✅ Merged | 🟢 Done |
 
 ---
 
@@ -50,13 +52,14 @@
 
 ### Immediate (user actions required)
 
-1. **Merge PR #10** — https://github.com/ngyan/WRITING_TWIN_AI/pull/10
+1. **Google OAuth setup** (required before Google login works):
+   - Go to [Google Cloud Console](https://console.cloud.google.com) (personal Gmail)
+   - Create OAuth 2.0 Client ID (Web): redirect URI = `https://api.writingtwinai.com/v1/auth/google/callback`
+   - On VPS add to `backend/.env`: `GOOGLE_CLIENT_ID=...` and `GOOGLE_CLIENT_SECRET=...`
+   - Load extension unpacked → note Extension ID → add `https://<ext-id>.chromiumapp.org/` as redirect URI
+   - Rebuild extension: `GOOGLE_CLIENT_ID=... node build.mjs --prod`
 2. **Chrome Web Store developer account** — https://chrome.google.com/webstore/devconsole ($5 one-time)
-3. **Upload ZIP** — `extension/writing-twin-ai-extension.zip` (31 KB, ready)
-4. **Fill listing** — copy from `extension/WEBSTORE_LISTING.md`
-5. **Take 3 screenshots** (1280×800): Gmail compose with button, tone picker, before/after rewrite
-6. **Submit for review** — Google takes 1–7 business days
-7. **After approval**: add `EXTENSION_ORIGIN=chrome-extension://YOUR_ID` to VPS `backend/.env` → update CORS
+3. **Upload ZIP** — `extension/writing-twin-ai-extension.zip`
 
 ### Next Sprint candidates
 
