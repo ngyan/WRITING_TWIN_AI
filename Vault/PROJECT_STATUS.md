@@ -8,8 +8,8 @@
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** Sprint 15 ✅ Code complete, PR #15 open → base `2.0` branch
-**Next Sprint:** Sprint 16 — LinkedIn + Reddit
+**Current Sprint:** Sprint 16 ✅ Code complete, PR #16 open → base `2.0` branch
+**Next Sprint:** Sprint 17 — Slack Extension
 **Branch strategy:** All Phase 2 work branches from `2.0` and PRs target `2.0`
 
 ---
@@ -46,6 +46,7 @@
 | **S13** | Context Engine V1 | `sprint-13-context-engine` | #13 ✅ Merged | 🟢 Done |
 | **S14** | DNA Learning Engine | `sprint-14-dna-learning` | #14 ✅ Merged | 🟢 Done |
 | **S15** | Auto Draft Engine | `sprint-15-auto-draft` | #15 🔵 Open | 🔵 Pending merge → `2.0` |
+| **S16** | LinkedIn + Reddit Extension | `sprint-16-linkedin-reddit` | #16 🔵 Open | 🔵 Pending merge → `2.0` |
 
 ---
 
@@ -53,20 +54,16 @@
 
 ### Immediate (user actions required)
 
-1. **Merge PR #10** — https://github.com/ngyan/WRITING_TWIN_AI/pull/10
-2. **Chrome Web Store developer account** — https://chrome.google.com/webstore/devconsole ($5 one-time)
-3. **Upload ZIP** — `extension/writing-twin-ai-extension.zip` (31 KB, ready)
-4. **Fill listing** — copy from `extension/WEBSTORE_LISTING.md`
-5. **Take 3 screenshots** (1280×800): Gmail compose with button, tone picker, before/after rewrite
-6. **Submit for review** — Google takes 1–7 business days
-7. **After approval**: add `EXTENSION_ORIGIN=chrome-extension://YOUR_ID` to VPS `backend/.env` → update CORS
+1. **Upload new ZIP to Web Store** — `extension/writing-twin-ai-extension.zip` (32 KB) — now includes LinkedIn + Reddit
+2. **After approval**: add `EXTENSION_ORIGIN=chrome-extension://YOUR_ID` to VPS `backend/.env` → update CORS
+3. **No backend deploy needed for Sprint 16** — extension-only sprint
 
 ### Next Sprint candidates
 
-- **Sprint 11a — Google OAuth**: wire up `/v1/auth/google` (stub already exists in `auth.py`)
-- **Sprint 11b — Email verification**: wire up `/v1/auth/verify-email` (stub exists)
-- **Sprint 11c — LinkedIn/Slack extension**: new content scripts for additional platforms
-- **Sprint 11d — Referral + growth**: referral code system, viral hooks
+- **Sprint 17 — Slack Extension**: inject into `div[data-lexical-editor]` or `div.ql-editor` in Slack compose
+- **Sprint 17a — Google OAuth**: wire up `/v1/auth/google` (stub already exists in `auth.py`)
+- **Sprint 17b — Email verification**: wire up `/v1/auth/verify-email` (stub exists)
+- **Sprint 17c — Referral + growth**: referral code system, viral hooks
 
 ---
 
@@ -86,7 +83,7 @@
 | Google OAuth not wired (stub only at `/v1/auth/google`) | Low | Sprint 11a |
 | Email verification not implemented (stub only) | Low | Sprint 11b |
 | No Sentry error tracking | Medium | Sprint 11 |
-| LinkedIn / Slack extension support | Medium | Sprint 11c |
+| Slack extension support | Medium | Sprint 17 |
 | Rate limiting at NGINX layer (currently only app-layer) | Low | Sprint 12 |
 
 ---

@@ -4,6 +4,30 @@
 
 ---
 
+## [2026-06-02] Sprint 16 — LinkedIn + Reddit Extension
+
+- Files created:
+  - `extension/src/content/linkedin.ts` — full LinkedIn content script (Humanize + Voice Twin, LinkedIn blue theme, Social Twin context, Quill editor support)
+  - `extension/src/content/reddit.ts` — Reddit content script (Humanize + Voice Twin, Reddit orange theme, Community Twin context, old + new Reddit support)
+- Files modified:
+  - `extension/manifest.json` — host_permissions + content_scripts for LinkedIn (`*.linkedin.com`) and Reddit (`*.reddit.com`, `old.reddit.com`)
+  - `extension/build.mjs` — added `content/linkedin` + `content/reddit` entry points + size reporting
+  - `extension/writing-twin-ai-extension.zip` — rebuilt (32 KB)
+- Quality: tsc ✅  extension build ✅
+- Key decisions:
+  - LinkedIn: `div.ql-editor[contenteditable="true"]` — works for both post compose and comment boxes
+  - Reddit: dual selector — `textarea[name="text"]` (old Reddit) + contenteditable (new Reddit/Slate)
+  - Old Reddit textarea uses `.value` + input/change events; new Reddit uses execCommand for Slate compatibility
+  - `FIXED_CONTEXT_OVERRIDE = 'social'` for LinkedIn; `'community'` for Reddit — auto-selects correct Twin
+  - Shadow DOM injection with wrapper div keeps buttons outside platform's managed editor DOM
+  - Both scripts use MutationObserver for dynamic page navigation (SPAs)
+- Deploy: no backend changes, no migrations — extension-only sprint
+- Branch: `sprint-16-linkedin-reddit`
+- PR: #16 → base `2.0`
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## [2026-06-02] Sprint 15 — Auto Draft Engine
 
 - Files created:

@@ -11,10 +11,12 @@ mkdirSync(`${outdir}/icons`, { recursive: true });
 
 await esbuild.build({
   entryPoints: {
-    'background':       'src/background.ts',
-    'content/gmail':    'src/content/gmail.ts',
-    'content/outlook':  'src/content/outlook.ts',
-    'popup/popup':      'src/popup/popup.ts',
+    'background':          'src/background.ts',
+    'content/gmail':       'src/content/gmail.ts',
+    'content/outlook':     'src/content/outlook.ts',
+    'content/linkedin':    'src/content/linkedin.ts',
+    'content/reddit':      'src/content/reddit.ts',
+    'popup/popup':         'src/popup/popup.ts',
   },
   bundle: true,
   outdir,
@@ -36,6 +38,8 @@ const files = [
   `${outdir}/background.js`,
   `${outdir}/content/gmail.js`,
   `${outdir}/content/outlook.js`,
+  `${outdir}/content/linkedin.js`,
+  `${outdir}/content/reddit.js`,
   `${outdir}/popup/popup.js`,
 ];
 let total = 0;
