@@ -3,11 +3,11 @@ import type { Tone, RewriteResponse, VoiceOutputType, VoiceDraftResponse } from 
 // Old Reddit: plain textarea; New Reddit: Slate-based contenteditable
 const OLD_REDDIT_SEL = 'textarea[name="text"], textarea.usertext-edit textarea';
 const NEW_REDDIT_SEL = 'div[contenteditable="true"][data-testid], div.DraftEditor-editorContainer [contenteditable="true"], .editor-container [contenteditable="true"]';
+const COMPOSE_SEL = `${OLD_REDDIT_SEL}, ${NEW_REDDIT_SEL}`;
 const HOST_ATTR = 'data-wt-rd-injected';
 
 // Reddit is Community context by default
 const FIXED_CONTEXT_OVERRIDE = 'community';
-const DEFAULT_TONE: Tone = 'casual';
 
 const TONES: { key: Tone; label: string; color: string }[] = [
   { key: 'casual',       label: 'Casual',       color: '#FF4500' },
@@ -150,6 +150,26 @@ const MIC_CSS = `
   .wt-va.reject { border-color: #EF4444; color: #EF4444; }
 `;
 
+// ── Module-level panel manager (single delegated click listener) ──────────────
+
+let openPanel: { host: Element; close: () => void } | null = null;
+
+document.addEventListener('click', (e) => {
+  if (openPanel && !openPanel.host.contains(e.target as Node)) {
+    openPanel.close();
+    openPanel = null;
+  }
+}, true);
+
+function openPanelFor(host: Element, close: () => void): void {
+  if (openPanel && openPanel.host !== host) openPanel.close();
+  openPanel = { host, close };
+}
+
+function clearOpenPanel(host: Element): void {
+  if (openPanel?.host === host) openPanel = null;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function sendToBackground<T>(message: object): Promise<T> {
@@ -236,17 +256,17 @@ function injectMicButton(container: Element, composeBody: Element): void {
   });
 
   micBtn.addEventListener('click', () => {
-    panelOpen = !panelOpen;
-    panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!micHost.contains(e.target as Node) && panelOpen) {
+    if (panelOpen) {
       panelOpen = false;
       panel.classList.remove('open');
+      clearOpenPanel(micHost);
+    } else {
+      panelOpen = true;
+      panel.classList.add('open');
+      positionPanel();
+      openPanelFor(micHost, () => { panelOpen = false; panel.classList.remove('open'); });
     }
-  }, true);
+  });
 
   function positionPanel(): void {
     const rect = micBtn.getBoundingClientRect();
@@ -295,10 +315,7 @@ function injectMicButton(container: Element, composeBody: Element): void {
   async function submitVoice(blob: Blob): Promise<void> {
     try {
       const buf = await blob.arrayBuffer();
-      const u8 = new Uint8Array(buf);
-      let bin = '';
-      for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
-      const audioData = btoa(bin);
+      const audioData = btoa(Array.from(new Uint8Array(buf), b => String.fromCharCode(b)).join(''));
       originalText = getComposeText(composeBody);
       const resp = await sendToBackground<{ result: VoiceDraftResponse } | { error: string }>({
         type: 'VOICE_DRAFT',
@@ -320,6 +337,7 @@ function injectMicButton(container: Element, composeBody: Element): void {
     if (lastSessionId) sendToBackground({ type: 'VOICE_FEEDBACK', payload: { sessionId: lastSessionId, accepted: true, editedDraft: null } });
     actionsEl.classList.remove('visible');
     panelOpen = false; panel.classList.remove('open');
+    clearOpenPanel(micHost);
     setVStatus('');
   });
 
@@ -408,16 +426,17 @@ function inject(composeBody: Element): void {
   });
 
   btn.addEventListener('click', () => {
-    panelOpen = !panelOpen;
-    panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!host.contains(e.target as Node) && panelOpen) {
-      panelOpen = false; panel.classList.remove('open');
+    if (panelOpen) {
+      panelOpen = false;
+      panel.classList.remove('open');
+      clearOpenPanel(host);
+    } else {
+      panelOpen = true;
+      panel.classList.add('open');
+      positionPanel();
+      openPanelFor(host, () => { panelOpen = false; panel.classList.remove('open'); });
     }
-  }, true);
+  });
 
   function positionPanel(): void {
     const rect = btn.getBoundingClientRect();
@@ -467,6 +486,7 @@ function inject(composeBody: Element): void {
     if (lastRewriteId) sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'accepted' } });
     actionsEl.classList.remove('visible');
     panelOpen = false; panel.classList.remove('open');
+    clearOpenPanel(host);
     setStatus('');
   });
 
@@ -491,8 +511,7 @@ function inject(composeBody: Element): void {
 const seen = new WeakSet<Element>();
 
 function tryInject(root: Element | Document): void {
-  const combined = `${OLD_REDDIT_SEL}, ${NEW_REDDIT_SEL}`;
-  root.querySelectorAll<Element>(combined).forEach((body) => {
+  root.querySelectorAll<Element>(COMPOSE_SEL).forEach((body) => {
     if (!seen.has(body)) {
       seen.add(body);
       inject(body);
@@ -500,9 +519,9 @@ function tryInject(root: Element | Document): void {
   });
 }
 
-const observer = new MutationObserver(() => tryInject(document));
+const observer = new MutationObserver(() => {
+  requestIdleCallback(() => tryInject(document), { timeout: 500 });
+});
 observer.observe(document.body, { childList: true, subtree: true });
 tryInject(document);
 
-// Unused but satisfies TypeScript about DEFAULT_TONE being referenced
-void DEFAULT_TONE;

@@ -6,7 +6,6 @@ const HOST_ATTR = 'data-wt-li-injected';
 
 // LinkedIn is Social context by default
 const FIXED_CONTEXT_OVERRIDE = 'social';
-const DEFAULT_TONE: Tone = 'professional';
 
 const TONES: { key: Tone; label: string; color: string }[] = [
   { key: 'professional', label: 'Professional', color: '#0A66C2' },
@@ -150,6 +149,26 @@ const MIC_CSS = `
   .wt-va.reject { border-color: #EF4444; color: #EF4444; }
 `;
 
+// ── Module-level panel manager (single delegated click listener) ──────────────
+
+let openPanel: { host: Element; close: () => void } | null = null;
+
+document.addEventListener('click', (e) => {
+  if (openPanel && !openPanel.host.contains(e.target as Node)) {
+    openPanel.close();
+    openPanel = null;
+  }
+}, true);
+
+function openPanelFor(host: Element, close: () => void): void {
+  if (openPanel && openPanel.host !== host) openPanel.close();
+  openPanel = { host, close };
+}
+
+function clearOpenPanel(host: Element): void {
+  if (openPanel?.host === host) openPanel = null;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function sendToBackground<T>(message: object): Promise<T> {
@@ -168,20 +187,10 @@ function setComposeText(el: HTMLElement, text: string): void {
   }
 }
 
-// Find a nearby action bar / button row relative to the compose body
-function findToolbar(composeBody: Element): Element | null {
-  // Walk up looking for a footer/actions container near the compose
-  let el: Element | null = composeBody.parentElement;
-  for (let i = 0; i < 8; i++) {
-    if (!el) break;
-    // LinkedIn action bars often have data-control-name or role="toolbar"
-    const bar = el.querySelector(
-      '[role="toolbar"], .editor-toolbar, .comments-comment-box__form-actions, .share-creation-state__footer, .social-reshare__footer, .feed-shared-update-v2__footer-actions'
-    );
-    if (bar) return bar;
-    el = el.parentElement;
-  }
-  return null;
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function getComposeText(el: Element): string {
+  return (el as HTMLElement).innerText.trim();
 }
 
 // ── Mic button (Voice Twin) ────────────────────────────────────────────────────
@@ -236,17 +245,17 @@ function injectMicButton(container: Element, composeBody: Element): void {
   });
 
   micBtn.addEventListener('click', () => {
-    panelOpen = !panelOpen;
-    panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!micHost.contains(e.target as Node) && panelOpen) {
+    if (panelOpen) {
       panelOpen = false;
       panel.classList.remove('open');
+      clearOpenPanel(micHost);
+    } else {
+      panelOpen = true;
+      panel.classList.add('open');
+      positionPanel();
+      openPanelFor(micHost, () => { panelOpen = false; panel.classList.remove('open'); });
     }
-  }, true);
+  });
 
   function positionPanel(): void {
     const rect = micBtn.getBoundingClientRect();
@@ -295,11 +304,8 @@ function injectMicButton(container: Element, composeBody: Element): void {
   async function submitVoice(blob: Blob): Promise<void> {
     try {
       const buf = await blob.arrayBuffer();
-      const u8 = new Uint8Array(buf);
-      let bin = '';
-      for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
-      const audioData = btoa(bin);
-      originalText = (composeBody as HTMLElement).innerText.trim();
+      const audioData = btoa(Array.from(new Uint8Array(buf), b => String.fromCharCode(b)).join(''));
+      originalText = getComposeText(composeBody);
       const resp = await sendToBackground<{ result: VoiceDraftResponse } | { error: string }>({
         type: 'VOICE_DRAFT',
         payload: { audioData, mimeType: 'audio/webm', outputType: selectedType },
@@ -320,6 +326,7 @@ function injectMicButton(container: Element, composeBody: Element): void {
     if (lastSessionId) sendToBackground({ type: 'VOICE_FEEDBACK', payload: { sessionId: lastSessionId, accepted: true, editedDraft: null } });
     actionsEl.classList.remove('visible');
     panelOpen = false; panel.classList.remove('open');
+    clearOpenPanel(micHost);
     setVStatus('');
   });
 
@@ -410,16 +417,17 @@ function inject(composeBody: Element): void {
   });
 
   btn.addEventListener('click', () => {
-    panelOpen = !panelOpen;
-    panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel();
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!host.contains(e.target as Node) && panelOpen) {
-      panelOpen = false; panel.classList.remove('open');
+    if (panelOpen) {
+      panelOpen = false;
+      panel.classList.remove('open');
+      clearOpenPanel(host);
+    } else {
+      panelOpen = true;
+      panel.classList.add('open');
+      positionPanel();
+      openPanelFor(host, () => { panelOpen = false; panel.classList.remove('open'); });
     }
-  }, true);
+  });
 
   function positionPanel(): void {
     const rect = btn.getBoundingClientRect();
@@ -469,6 +477,7 @@ function inject(composeBody: Element): void {
     if (lastRewriteId) sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'accepted' } });
     actionsEl.classList.remove('visible');
     panelOpen = false; panel.classList.remove('open');
+    clearOpenPanel(host);
     setStatus('');
   });
 
@@ -502,6 +511,8 @@ function tryInject(root: Element | Document): void {
   });
 }
 
-const observer = new MutationObserver(() => tryInject(document));
+const observer = new MutationObserver(() => {
+  requestIdleCallback(() => tryInject(document), { timeout: 500 });
+});
 observer.observe(document.body, { childList: true, subtree: true });
 tryInject(document);

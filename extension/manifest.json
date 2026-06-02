@@ -10,8 +10,9 @@
     "https://outlook.live.com/*",
     "https://outlook.office.com/*",
     "https://outlook.office365.com/*",
-    "https://*.linkedin.com/*",
-    "https://*.reddit.com/*",
+    "https://www.linkedin.com/*",
+    "https://www.reddit.com/*",
+    "https://old.reddit.com/*",
     "https://api.writingtwinai.com/*"
   ],
   "icons": {
@@ -39,12 +40,12 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.linkedin.com/*"],
+      "matches": ["https://www.linkedin.com/*"],
       "js": ["content/linkedin.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.reddit.com/*", "https://old.reddit.com/*"],
+      "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
       "js": ["content/reddit.js"],
       "run_at": "document_idle"
     }
