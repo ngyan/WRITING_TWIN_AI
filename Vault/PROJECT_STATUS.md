@@ -8,8 +8,8 @@
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** Sprint 16 ✅ Merged + deployed
-**Next Sprint:** Sprint 17 — Slack Extension
+**Current Sprint:** Sprint 17 🔵 Open PR #17
+**Next Sprint:** Sprint 18 — Slack Extension
 **Branch strategy:** All Phase 2 work branches from `2.0` and PRs target `2.0`
 
 ---
@@ -47,6 +47,7 @@
 | **S14** | DNA Learning Engine | `sprint-14-dna-learning` | #14 ✅ Merged | 🟢 Done |
 | **S15** | Auto Draft Engine | `sprint-15-auto-draft` | #15 🔵 Open | 🔵 Pending merge → `2.0` |
 | **S16** | LinkedIn + Reddit Extension | `sprint-16-linkedin-reddit` | #16 ✅ Merged | 🟢 Done |
+| **S17** | HiWorks Email + Compose Detection Engine | `sprint-17-hiworks-compose-engine` | #17 🔵 Open | 🔵 Pending merge → `2.0` |
 
 ---
 
@@ -54,16 +55,19 @@
 
 ### Immediate (user actions required)
 
-1. **Upload new ZIP to Web Store** — `extension/writing-twin-ai-extension.zip` (32 KB) — now includes LinkedIn + Reddit
-2. **After approval**: add `EXTENSION_ORIGIN=chrome-extension://YOUR_ID` to VPS `backend/.env` → update CORS
-3. **No backend deploy needed for Sprint 16** — extension-only sprint
+1. **Merge PR #17** (`sprint-17-hiworks-compose-engine` → `2.0`)
+2. **Upload ZIP to Web Store** — `extension/writing-twin-ai-extension.zip` (135 KB, 5 platforms)
+3. **After approval**: add `EXTENSION_ORIGIN=chrome-extension://YOUR_ID` to VPS `backend/.env` → update CORS
+4. **HiWorks selector check** — set `DEBUG=true` in `hiworks.ts` if button doesn't appear; update `hiworks-adapter.ts`
+5. **No backend deploy needed for Sprint 17** — extension-only sprint
 
 ### Next Sprint candidates
 
-- **Sprint 17 — Slack Extension**: inject into `div[data-lexical-editor]` or `div.ql-editor` in Slack compose
-- **Sprint 17a — Google OAuth**: wire up `/v1/auth/google` (stub already exists in `auth.py`)
+- **Sprint 18 — Slack Extension**: `slack-adapter.ts` exists; write `slack.ts` + manifest entry
+- **Sprint 19 — Microsoft Teams**: `teams-adapter.ts` exists; same pattern
+- **Sprint 17a — Google OAuth**: wire up `/v1/auth/google` (stub exists in `auth.py`)
 - **Sprint 17b — Email verification**: wire up `/v1/auth/verify-email` (stub exists)
-- **Sprint 17c — Referral + growth**: referral code system, viral hooks
+- **Sprint 17c — Referral + growth**: referral codes + viral hooks
 
 ---
 

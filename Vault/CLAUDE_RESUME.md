@@ -1,7 +1,7 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-06-02
+> **Last Updated:** 2026-06-03
 
 ---
 
@@ -17,12 +17,12 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Last Sprint** | Sprint 16 — LinkedIn + Reddit Extension |
-| **Branch** | `sprint-16-linkedin-reddit` (PR #16 merged → `2.0`) |
+| **Last Sprint** | Sprint 17 — HiWorks Email + Compose Detection Engine |
+| **Branch** | `sprint-17-hiworks-compose-engine` (PR #17 open → `2.0`) |
 | **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt (SSL exp 2026-08-28) |
 | **Backend API** | ✅ Live — `https://api.writingtwinai.com/v1/health` |
 | **Frontend Dashboard** | ✅ Live — `https://writingtwinai.com` (Next.js 14 on VPS) |
-| **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (32 KB — Gmail, Outlook, LinkedIn, Reddit) |
+| **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (135 KB — Gmail, Outlook, HiWorks, LinkedIn, Reddit) |
 | **Chrome Web Store** | 🔴 Not yet submitted — user action required |
 | **Billing** | ✅ Stripe Checkout + Customer Portal live |
 | **Writing DNA** | ✅ Training API + DNA Learning Engine live (cringe phrase detection) |
@@ -39,7 +39,9 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 ## 🏗️ Architecture (TL;DR)
 
 ```
-Chrome Extension (gmail.js + outlook.js + linkedin.js + reddit.js + background.js + popup)
+Chrome Extension (gmail.js + outlook.js + hiworks.js + linkedin.js + reddit.js + background.js + popup)
+    lib/compose-detector.ts   ← generic detection engine (confidence scoring)
+    adapters/                 ← platform hints: gmail, outlook, hiworks, linkedin, reddit, slack, teams
          ↓ JWT Bearer (auto-refresh on 401)
 FastAPI Backend (api.writingtwinai.com)
     ├── /v1/auth/*                   → JWT + refresh rotation
@@ -82,15 +84,17 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 ## 🔜 What To Do Next Session
 
 ### Immediate (user actions required)
-1. **Chrome Web Store** — upload updated `extension/writing-twin-ai-extension.zip` (32 KB, 4 platforms)
-2. **After Web Store approval** — add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS
-3. **Enable Auto Draft on VPS** — `FEATURE_AUTO_DRAFT=True` in `backend/.env` when ready
+1. **Merge PR #17** → `2.0` after review
+2. **Chrome Web Store** — upload `extension/writing-twin-ai-extension.zip` (135 KB, 5 platforms: Gmail/Outlook/HiWorks/LinkedIn/Reddit)
+3. **After Web Store approval** — add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS
+4. **HiWorks selector validation** — if Humanize button doesn't appear in HiWorks, set `DEBUG=true` in `hiworks.ts`, reload, check console logs → update `src/adapters/hiworks-adapter.ts` composeHints
+5. **Enable Auto Draft on VPS** — `FEATURE_AUTO_DRAFT=True` in `backend/.env` when ready
 
-### Next Sprint (Sprint 17 candidates)
-- **Sprint 17 — Slack Extension**: inject into Slack compose (`div[data-lexical-editor]`)
-- **Sprint 17a — Communication Graph**: behavior-inferred relationship context
-- **Sprint 17b — Meeting Intelligence**: transcript → 5 deliverables
-- **Sprint 17c — Google OAuth**: wire up `/v1/auth/google` stub
+### Next Sprint (Sprint 18)
+- **Sprint 18 — Slack Extension**: `slack-adapter.ts` already created; write thin `slack.ts` content script + update manifest
+- **Sprint 19 — Microsoft Teams**: `teams-adapter.ts` already created; same pattern
+- **Sprint 17a — Google OAuth**: wire up `/v1/auth/google` stub (low friction signup)
+- **Sprint 17b — Email verification**: wire up `/v1/auth/verify-email` stub
 
 ---
 
