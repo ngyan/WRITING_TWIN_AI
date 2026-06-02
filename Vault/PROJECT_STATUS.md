@@ -8,8 +8,8 @@
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** Sprint 12 ✅ Code complete, PR #12 open → base `2.0` branch
-**Next Sprint:** Sprint 13 — Context Engine V1
+**Current Sprint:** Sprint 13 ✅ Code complete, PR #13 open → base `2.0` branch
+**Next Sprint:** Sprint 14 — DNA Learning Engine
 **Branch strategy:** All Phase 2 work branches from `2.0` and PRs target `2.0`
 
 ---
@@ -42,7 +42,8 @@
 | **S9** | Polish + Launch Readiness | `sprint-09-polish-launch` | #9 | 🟢 Done |
 | **S10** | Chrome Web Store Packaging | `sprint-10-webstore` | #10 ✅ Merged | 🟢 Done |
 | **S11** | Voice Twin MVP | `sprint-11-voice-twin` | #11 🔵 Open | 🔵 Pending merge → `2.0` |
-| **S12** | Outlook Extension | `sprint-12-outlook-extension` | #12 🔵 Open | 🔵 Pending merge → `2.0` |
+| **S12** | Outlook Extension | `sprint-12-outlook-extension` | #12 ✅ Merged | 🟢 Done |
+| **S13** | Context Engine V1 | `sprint-13-context-engine` | #13 🔵 Open | 🔵 Pending merge → `2.0` |
 
 ---
 
