@@ -1,5 +1,9 @@
 import { getTokens, setTokens, clearTokens, type AuthTokens } from './lib/auth';
-import { login, register, humanize, submitFeedback, submitDnaSamples, getDnaProfile, type Tone } from './lib/api';
+import {
+  login, register, humanize, submitFeedback, submitDnaSamples, getDnaProfile,
+  voiceDraft, submitVoiceFeedback,
+  type Tone, type VoiceOutputType,
+} from './lib/api';
 
 type Message =
   | { type: 'LOGIN'; payload: { email: string; password: string } }
@@ -9,13 +13,16 @@ type Message =
   | { type: 'HUMANIZE'; payload: { text: string; tone: Tone } }
   | { type: 'FEEDBACK'; payload: { rewriteId: string; action: 'accepted' | 'rejected' } }
   | { type: 'SUBMIT_DNA'; payload: { samples: string[] } }
-  | { type: 'GET_DNA_STATUS' };
+  | { type: 'GET_DNA_STATUS' }
+  | { type: 'VOICE_DRAFT'; payload: { audioData: string; mimeType: string; outputType: VoiceOutputType } }
+  | { type: 'VOICE_FEEDBACK'; payload: { sessionId: string; accepted: boolean; editedDraft: string | null } };
 
-import type { DnaProfileResponse } from './lib/api';
+import type { DnaProfileResponse, VoiceDraftResponse } from './lib/api';
 
 type MessageResponse =
   | { success: true; tokens?: AuthTokens; authenticated?: boolean; dnaProfile?: DnaProfileResponse | null }
   | { success: true; result: Awaited<ReturnType<typeof humanize>> }
+  | { success: true; result: VoiceDraftResponse }
   | { error: string };
 
 chrome.runtime.onMessage.addListener(
@@ -90,6 +97,31 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       if (!tokens) return { success: true, dnaProfile: null };
       const profile = await getDnaProfile(tokens.access_token);
       return { success: true, dnaProfile: profile };
+    }
+
+    case 'VOICE_DRAFT': {
+      const tokens = await getTokens();
+      if (!tokens) throw new Error('Not logged in. Please log in via the extension popup.');
+      // Reconstruct Blob from base64 data URL passed from content script
+      const { audioData, mimeType, outputType } = msg.payload;
+      const binary = atob(audioData);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mimeType });
+      const result = await voiceDraft(blob, outputType, tokens.access_token);
+      return { success: true, result };
+    }
+
+    case 'VOICE_FEEDBACK': {
+      const tokens = await getTokens();
+      if (!tokens) throw new Error('Not authenticated');
+      await submitVoiceFeedback(
+        msg.payload.sessionId,
+        msg.payload.accepted,
+        msg.payload.editedDraft,
+        tokens.access_token,
+      );
+      return { success: true };
     }
 
     default:
