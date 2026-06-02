@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "description": "AI that rewrites text to sound exactly like you — works in Gmail, LinkedIn, Slack, and Outlook.",
   "homepage_url": "https://writingtwinai.com",
-  "permissions": ["storage"],
+  "permissions": ["storage", "identity"],
   "host_permissions": [
     "https://mail.google.com/*",
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.office365.com/*",
     "https://api.writingtwinai.com/*"
   ],
   "icons": {
@@ -22,6 +25,15 @@
     {
       "matches": ["https://mail.google.com/*"],
       "js": ["content/gmail.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*"
+      ],
+      "js": ["content/outlook.js"],
       "run_at": "document_idle"
     }
   ],

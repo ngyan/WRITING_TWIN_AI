@@ -5,6 +5,11 @@ const viewRegister = document.getElementById('view-register')!;
 const viewDnaSetup = document.getElementById('view-dna-setup')!;
 const viewLoggedIn = document.getElementById('view-logged-in')!;
 
+const googleLoginBtn = document.getElementById('google-login-btn') as HTMLButtonElement;
+const googleLoginError = document.getElementById('google-login-error')!;
+const googleRegisterBtn = document.getElementById('google-register-btn') as HTMLButtonElement;
+const googleRegisterError = document.getElementById('google-register-error')!;
+
 const loginForm = document.getElementById('login-form') as HTMLFormElement;
 const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
 const loginError = document.getElementById('login-error')!;
@@ -168,6 +173,36 @@ setupDnaBtn.addEventListener('click', () => {
   dnaSkipBtn.textContent = 'Skip for now';
   showView('dna-setup');
 });
+
+function handleGoogleAuth(errorEl: HTMLElement, btn: HTMLButtonElement): void {
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+
+  chrome.runtime.sendMessage({ type: 'GOOGLE_AUTH_EXTENSION' }, (resp) => {
+    btn.disabled = false;
+    btn.textContent = 'Continue with Google';
+    if (resp?.error) {
+      errorEl.textContent = resp.error;
+    } else if (resp?.success) {
+      const email = resp.tokens?.email || '';
+      chrome.runtime.sendMessage({ type: 'GET_DNA_STATUS' }, (dnaResp) => {
+        const profile = dnaResp?.dnaProfile;
+        const hasDna = profile !== null && profile !== undefined && profile.extraction_status !== undefined;
+        if (!hasDna) {
+          accountEmail.textContent = email;
+          avatarEl.textContent = email ? email[0].toUpperCase() : '?';
+          showView('dna-setup');
+        } else {
+          showLoggedIn(email, hasDna);
+        }
+      });
+    }
+  });
+}
+
+googleLoginBtn.addEventListener('click', () => handleGoogleAuth(googleLoginError, googleLoginBtn));
+googleRegisterBtn.addEventListener('click', () => handleGoogleAuth(googleRegisterError, googleRegisterBtn));
 
 // View switches
 document.getElementById('go-register')!.addEventListener('click', (e) => {

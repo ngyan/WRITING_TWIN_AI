@@ -27,3 +27,8 @@ class TokenPair(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class GoogleExchangeRequest(BaseModel):
+    code: str
+    redirect_uri: str

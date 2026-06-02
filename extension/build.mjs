@@ -4,6 +4,10 @@ import { copyFileSync, mkdirSync, statSync } from 'fs';
 const isProd = process.argv.includes('--prod');
 const outdir = 'dist';
 
+// GOOGLE_CLIENT_ID is public (appears in redirect URLs) — safe to embed in extension JS.
+// Set via env var or leave empty for local dev without Google OAuth.
+const googleClientId = process.env.GOOGLE_CLIENT_ID ?? '';
+
 mkdirSync(outdir, { recursive: true });
 mkdirSync(`${outdir}/content`, { recursive: true });
 mkdirSync(`${outdir}/popup`, { recursive: true });
@@ -11,9 +15,10 @@ mkdirSync(`${outdir}/icons`, { recursive: true });
 
 await esbuild.build({
   entryPoints: {
-    'background': 'src/background.ts',
-    'content/gmail': 'src/content/gmail.ts',
-    'popup/popup': 'src/popup/popup.ts',
+    'background':       'src/background.ts',
+    'content/gmail':    'src/content/gmail.ts',
+    'content/outlook':  'src/content/outlook.ts',
+    'popup/popup':      'src/popup/popup.ts',
   },
   bundle: true,
   outdir,
@@ -21,6 +26,9 @@ await esbuild.build({
   target: 'chrome120',
   minify: isProd,
   sourcemap: !isProd ? 'inline' : false,
+  define: {
+    '__GOOGLE_CLIENT_ID__': JSON.stringify(googleClientId),
+  },
 });
 
 copyFileSync('manifest.json', `${outdir}/manifest.json`);
@@ -34,6 +42,7 @@ for (const size of [16, 32, 48, 128]) {
 const files = [
   `${outdir}/background.js`,
   `${outdir}/content/gmail.js`,
+  `${outdir}/content/outlook.js`,
   `${outdir}/popup/popup.js`,
 ];
 let total = 0;

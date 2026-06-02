@@ -29,10 +29,43 @@ export interface DnaProfileResponse {
   sample_count: number;
 }
 
+export type VoiceOutputType =
+  | 'email'
+  | 'reply'
+  | 'customer_update'
+  | 'jira_ticket'
+  | 'technical_report'
+  | 'linkedin_comment'
+  | 'reddit_reply';
+
+export interface VoiceDraftResponse {
+  id: string;
+  transcript: string | null;
+  draft: string;
+  output_type: string;
+  provider: string;
+  model: string;
+  latency_ms: number;
+  cost_usd: number;
+}
+
 async function rawFetch(path: string, options: RequestInit, token?: string): Promise<Response> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return fetch(`${API_BASE}${path}`, { ...options, headers });
+}
+
+async function rawFetchMultipart(
+  path: string,
+  body: FormData,
+  token: string,
+): Promise<Response> {
+  // Do NOT set Content-Type — browser sets it with the correct multipart boundary
+  return fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  });
 }
 
 async function tryRefresh(): Promise<string | null> {
@@ -119,4 +152,52 @@ export async function submitFeedback(
     method: 'POST',
     body: JSON.stringify({ action }),
   }, token);
+}
+
+export async function voiceDraft(
+  audioBlob: Blob,
+  outputType: VoiceOutputType,
+  token: string,
+): Promise<VoiceDraftResponse> {
+  const form = new FormData();
+  form.append('audio', audioBlob, 'recording.webm');
+  form.append('output_type', outputType);
+
+  let res = await rawFetchMultipart('/voice/draft', form, token);
+
+  if (res.status === 401) {
+    const newToken = await tryRefresh();
+    if (newToken) {
+      const form2 = new FormData();
+      form2.append('audio', audioBlob, 'recording.webm');
+      form2.append('output_type', outputType);
+      res = await rawFetchMultipart('/voice/draft', form2, newToken);
+    }
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` })) as { detail: string };
+    if (res.status === 429) throw new Error(`LIMIT_REACHED:${err.detail}`);
+    throw new Error(err.detail);
+  }
+  return res.json() as Promise<VoiceDraftResponse>;
+}
+
+export async function submitVoiceFeedback(
+  sessionId: string,
+  accepted: boolean,
+  editedDraft: string | null,
+  token: string,
+): Promise<void> {
+  await request<void>(`/voice/draft/${sessionId}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ accepted, edited_draft: editedDraft }),
+  }, token);
+}
+
+export async function googleExchange(code: string, redirectUri: string): Promise<LoginResponse> {
+  return request<LoginResponse>('/auth/google/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ code, redirect_uri: redirectUri }),
+  });
 }

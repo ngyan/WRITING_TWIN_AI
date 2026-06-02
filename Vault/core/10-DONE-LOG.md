@@ -4,6 +4,66 @@
 
 ---
 
+## [2026-06-02] Sprint 12 — Outlook Extension
+
+- Files created:
+  - `extension/src/content/outlook.ts` — full content script for Outlook Web App
+- Files modified:
+  - `extension/manifest.json` — added host_permissions + content_scripts for outlook.live.com, outlook.office.com, outlook.office365.com
+  - `extension/build.mjs` — added content/outlook entry point + size reporting
+  - `extension/writing-twin-ai-extension.zip` — rebuilt (21 KB, now includes outlook.js)
+- No backend changes — same /v1/humanize and /v1/voice/draft endpoints
+- Quality: tsc ✅  build ✅ (34.6 KB prod total)
+- Key decisions:
+  - Detect compose body via `role="textbox" + aria-multiline="true"` (locale-safe, not aria-label text)
+  - Walk UP 30 levels from compose body to find ancestor containing Send button (handles Outlook's React tree structure where toolbar is in sibling subtree)
+  - Inject into `closest('[role="toolbar"]') || closest('[role="group"]') || sendBtn.parentElement`
+  - MutationObserver + 1 s polling fallback — Outlook's React re-renders are aggressive
+  - `data-wt-ol-injected` attribute guards against double-injection
+  - office365.com added to host_permissions (same OWA, different domain for some orgs)
+- Branch: `sprint-12-outlook-extension`
+- Commit: `1e8407f`
+- PR: #12 → base `2.0` — https://github.com/ngyan/WRITING_TWIN_AI/pull/12
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
+## [2026-06-02] Sprint 11 — Voice Twin MVP
+
+- Files created:
+  - `backend/alembic/versions/0006_voice_sessions.py` — migration: `voice_sessions` table
+  - `backend/app/models/voice_session.py` — VoiceSession ORM model
+  - `backend/app/prompts/voice/__init__.py` + `draft_v1.py` — voice prompt with 7 output type formats
+  - `backend/app/repositories/voice_repo.py` — create / get_by_id / update_feedback
+  - `backend/app/routers/voice.py` — `POST /v1/voice/draft` + `POST /v1/voice/draft/{id}/feedback`
+  - `backend/app/schemas/voice.py` — VoiceDraftResponse + VoiceFeedbackRequest
+  - `backend/app/services/voice_service.py` — Whisper transcription → DNA-aware humanize → persist
+- Files modified:
+  - `backend/app/core/config.py` — added `FEATURE_VOICE_TWIN: bool = False`
+  - `backend/app/main.py` — registered voice_session model + voice router
+  - `backend/pyproject.toml` — added `openai>=1.14` (for Whisper API)
+  - `extension/src/lib/api.ts` — added VoiceOutputType, VoiceDraftResponse types; voiceDraft() (FormData multipart); submitVoiceFeedback(); rawFetchMultipart() helper
+  - `extension/src/background.ts` — VOICE_DRAFT + VOICE_FEEDBACK message types and handlers
+  - `extension/src/content/gmail.ts` — mic button shadow DOM host in Gmail toolbar: MediaRecorder capture, 60s auto-stop, base64 encode, output type selector, Keep/Undo feedback; Cmd+Shift+V shortcut
+- Packages added: `openai>=1.14` (backend)
+- Migration: `0006_voice_sessions`
+- Quality: ruff ✅  tsc ✅  extension build ✅ (21.5 KB prod, 16 KB ZIP)
+- Key decisions:
+  - Audio sent as base64 in JSON via chrome.runtime.sendMessage (MV3 doesn't allow Blob transfer between content script and SW)
+  - Voice drafts count against monthly rewrite quota (same `require_rewrite_quota` dep)
+  - `FEATURE_VOICE_TWIN=False` by default — flip on VPS once tested
+  - openai SDK used directly for Whisper (not LiteLLM — Whisper is transcription, not completion)
+- Deploy steps:
+  1. `uv sync` on VPS (installs openai)
+  2. `alembic upgrade head` (migration 0006)
+  3. Add `FEATURE_VOICE_TWIN=True` + `OPENAI_API_KEY=...` to VPS `.env`
+- Branch: `sprint-11-voice-twin`
+- Commit: `9304e21`
+- PR: #11 → base `2.0` — https://github.com/ngyan/WRITING_TWIN_AI/pull/11
+- Status: ✅ Code Complete | 🔵 PR open against `2.0`
+
+---
+
 ## Format
 
 ```
