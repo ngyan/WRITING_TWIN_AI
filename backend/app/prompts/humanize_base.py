@@ -33,8 +33,11 @@ Rewritten:\
 """
 
 
-def build_messages(tone: str, text: str) -> list[dict]:
+def build_messages(tone: str, text: str, context_guidance: str | None = None) -> list[dict]:
+    user_content = USER_TEMPLATE.format(tone=tone, text=text)
+    if context_guidance:
+        user_content = f"Context guidance: {context_guidance}\n\n{user_content}"
     return [
         {"role": "system", "content": SYSTEM},
-        {"role": "user", "content": USER_TEMPLATE.format(tone=tone, text=text)},
+        {"role": "user", "content": user_content},
     ]

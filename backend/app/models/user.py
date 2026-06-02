@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,6 +26,9 @@ class User(Base):
     google_id: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
     locale: Mapped[str] = mapped_column(String(20), default="en-US", nullable=False)
+    customer_domains: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=False, default=list
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=func.now()
