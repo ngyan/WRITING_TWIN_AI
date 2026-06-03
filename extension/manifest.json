@@ -2,18 +2,11 @@
   "manifest_version": 3,
   "name": "Writing Twin AI",
   "version": "1.0.0",
-  "description": "AI that rewrites text to sound exactly like you — works in Gmail, Outlook, LinkedIn, and HiWorks.",
+  "description": "AI that rewrites your emails to sound exactly like you — powered by your Writing DNA. Works inside Gmail.",
   "homepage_url": "https://writingtwinai.com",
   "permissions": ["storage", "identity"],
   "host_permissions": [
     "https://mail.google.com/*",
-    "https://outlook.live.com/*",
-    "https://outlook.office.com/*",
-    "https://outlook.office365.com/*",
-    "https://www.linkedin.com/*",
-    "https://www.reddit.com/*",
-    "https://old.reddit.com/*",
-    "https://office.hiworks.com/*",
     "https://api.writingtwinai.com/*"
   ],
   "icons": {
@@ -29,30 +22,6 @@
     {
       "matches": ["https://mail.google.com/*"],
       "js": ["content/gmail.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://outlook.live.com/*",
-        "https://outlook.office.com/*",
-        "https://outlook.office365.com/*"
-      ],
-      "js": ["content/outlook.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://www.linkedin.com/*"],
-      "js": ["content/linkedin.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
-      "js": ["content/reddit.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://office.hiworks.com/*"],
-      "js": ["content/hiworks.js"],
       "run_at": "document_idle"
     }
   ],
