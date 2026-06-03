@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import litellm
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +44,12 @@ async def create_draft(
         raise HTTPException(
             status_code=422, detail="Provide either audio file or transcript text"
         )
-    return await voice_service.create_draft(db, user, audio, transcript, output_type)
+    try:
+        return await voice_service.create_draft(db, user, audio, transcript, output_type)
+    except litellm.RateLimitError:
+        raise HTTPException(status_code=503, detail="Transcription service is busy — please try again in a moment.")
+    except litellm.exceptions.NotFoundError:
+        raise HTTPException(status_code=503, detail="Transcription model unavailable — please try again shortly.")
 
 
 @router.post("/draft/{session_id}/feedback", status_code=204)

@@ -22,7 +22,7 @@ from app.services import personalization_service, router_service
 log = structlog.get_logger()
 
 MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB
-_TRANSCRIBE_MODEL = "gemini/gemini-2.0-flash"
+_TRANSCRIBE_MODEL = "gemini/gemini-2.0-flash-lite"
 
 
 async def create_draft(
