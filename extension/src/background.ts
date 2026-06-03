@@ -16,7 +16,7 @@ type Message =
   | { type: 'FEEDBACK'; payload: { rewriteId: string; action: 'accepted' | 'rejected' } }
   | { type: 'SUBMIT_DNA'; payload: { samples: string[] } }
   | { type: 'GET_DNA_STATUS' }
-  | { type: 'VOICE_DRAFT'; payload: { audioData: string; mimeType: string; outputType: VoiceOutputType } }
+  | { type: 'VOICE_DRAFT'; payload: { transcript: string; outputType: VoiceOutputType } }
   | { type: 'VOICE_FEEDBACK'; payload: { sessionId: string; accepted: boolean; editedDraft: string | null } }
   | { type: 'GOOGLE_AUTH_EXTENSION' };
 
@@ -105,13 +105,8 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
     case 'VOICE_DRAFT': {
       const tokens = await getTokens();
       if (!tokens) throw new Error('Not logged in. Please log in via the extension popup.');
-      // Reconstruct Blob from base64 data URL passed from content script
-      const { audioData, mimeType, outputType } = msg.payload;
-      const binary = atob(audioData);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: mimeType });
-      const result = await voiceDraft(blob, outputType, tokens.access_token);
+      const { transcript, outputType } = msg.payload;
+      const result = await voiceDraft(transcript, outputType, tokens.access_token);
       return { success: true, result };
     }
 

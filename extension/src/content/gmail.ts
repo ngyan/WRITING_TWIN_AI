@@ -211,9 +211,9 @@ function injectMicButton(toolbar: Element, composeBody: Element): void {
 
   let panelOpen = false;
   let selectedType: VoiceOutputType = 'reply';
-  let recorder: MediaRecorder | null = null;
+  let recognition: InstanceType<typeof webkitSpeechRecognition> | null = null;
   let recording = false;
-  let chunks: BlobPart[] = [];
+  let transcript = '';
   let lastSessionId: string | null = null;
   let originalText = '';
 
@@ -254,63 +254,85 @@ function injectMicButton(toolbar: Element, composeBody: Element): void {
   });
 
   async function startRecording(): Promise<void> {
+    const SpeechRecognition = (window as unknown as { webkitSpeechRecognition?: typeof webkitSpeechRecognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceStatus('Speech recognition not supported in this browser.', 'error');
+      return;
+    }
+
+    transcript = '';
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          transcript += e.results[i][0].transcript + ' ';
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      setVoiceStatus(`🎙 ${(transcript + interim).trim() || 'Listening…'}`);
+    };
+
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+      if (e.error !== 'aborted') setVoiceStatus(`Mic error: ${e.error}`, 'error');
+    };
+
+    recognition.onend = () => {
+      if (recording) {
+        // browser cut off — restart to keep listening
+        recognition?.start();
+      }
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      chunks = [];
-      recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        await submitVoice(blob);
-      };
-
-      recorder.start();
+      recognition.start();
       recording = true;
       micBtn.classList.add('recording');
       recordBtn.classList.add('recording');
       recordBtn.textContent = '⏹ Stop recording';
-      setVoiceStatus('Recording…');
       actionsEl.classList.remove('visible');
 
       // Auto-stop at 60 seconds
-      setTimeout(() => {
-        if (recording) stopRecording();
-      }, 60_000);
+      setTimeout(() => { if (recording) stopRecording(); }, 60_000);
     } catch {
       setVoiceStatus('Microphone access denied.', 'error');
     }
   }
 
   function stopRecording(): void {
-    if (recorder && recording) {
-      recorder.stop();
+    if (recognition && recording) {
       recording = false;
+      recognition.onend = null;
+      recognition.stop();
+      recognition = null;
       micBtn.classList.remove('recording');
       recordBtn.classList.remove('recording');
       recordBtn.textContent = '🎙 Start recording';
       recordBtn.disabled = true;
       setVoiceStatus('Drafting…');
+      void submitTranscript();
     }
   }
 
-  async function submitVoice(blob: Blob): Promise<void> {
+  async function submitTranscript(): Promise<void> {
     try {
-      const arrayBuf = await blob.arrayBuffer();
-      const uint8 = new Uint8Array(arrayBuf);
-      let binary = '';
-      for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
-      const audioData = btoa(binary);
+      const text = transcript.trim();
+      if (!text) {
+        setVoiceStatus('Nothing recorded — try again.', 'error');
+        recordBtn.disabled = false;
+        return;
+      }
 
       originalText = (composeBody as HTMLElement).innerText.trim();
 
       const resp = await sendToBackground<{ result: VoiceDraftResponse } | { error: string }>({
         type: 'VOICE_DRAFT',
-        payload: { audioData, mimeType: 'audio/webm', outputType: selectedType },
+        payload: { transcript: text, outputType: selectedType },
       });
 
       if ('error' in resp) throw new Error(String(resp.error));

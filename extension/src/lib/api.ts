@@ -155,12 +155,12 @@ export async function submitFeedback(
 }
 
 export async function voiceDraft(
-  audioBlob: Blob,
+  transcriptText: string,
   outputType: VoiceOutputType,
   token: string,
 ): Promise<VoiceDraftResponse> {
   const form = new FormData();
-  form.append('audio', audioBlob, 'recording.webm');
+  form.append('transcript', transcriptText);
   form.append('output_type', outputType);
 
   let res = await rawFetchMultipart('/voice/draft', form, token);
@@ -169,7 +169,7 @@ export async function voiceDraft(
     const newToken = await tryRefresh();
     if (newToken) {
       const form2 = new FormData();
-      form2.append('audio', audioBlob, 'recording.webm');
+      form2.append('transcript', transcriptText);
       form2.append('output_type', outputType);
       res = await rawFetchMultipart('/voice/draft', form2, newToken);
     }
