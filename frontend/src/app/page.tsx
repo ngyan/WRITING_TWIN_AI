@@ -167,7 +167,7 @@ export default function LandingPage() {
           <p>© {new Date().getFullYear()} Writing Twin AI. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/pricing" className="hover:text-neutral-600 transition-colors">Pricing</Link>
-            <a href="mailto:support@writingtwinai.com" className="hover:text-neutral-600 transition-colors">Support</a>
+            <Link href="/support" className="hover:text-neutral-600 transition-colors">Support</Link>
             <Link href="/privacy" className="hover:text-neutral-600 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-neutral-600 transition-colors">Terms</Link>
           </div>
