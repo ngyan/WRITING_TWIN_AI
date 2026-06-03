@@ -563,8 +563,19 @@ function setComposeText(el: HTMLElement, text: string): void {
 }
 
 function sendToBackground<T>(message: object): Promise<T> {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage(message, resolve);
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error('Extension restarted — please reload Gmail and try again.'));
+        } else {
+          resolve(response);
+        }
+      });
+    } catch {
+      // "Extension context invalidated" — service worker was killed mid-session.
+      reject(new Error('Extension restarted — please reload Gmail and try again.'));
+    }
   });
 }
 
