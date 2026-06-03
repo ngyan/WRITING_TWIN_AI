@@ -1,6 +1,6 @@
 """VoiceService — transcribe audio + generate DNA-aware draft via voice pipeline.
 
-Transcription: Gemini 1.5 Flash (multimodal audio inline via LiteLLM).
+Transcription: Gemini 2.0 Flash (multimodal audio inline via LiteLLM).
 Draft generation: LiteLLM router (Gemini Flash → Claude Haiku → Claude Sonnet by plan).
 No OpenAI dependency.
 """
@@ -22,7 +22,7 @@ from app.services import personalization_service, router_service
 log = structlog.get_logger()
 
 MAX_AUDIO_BYTES = 24 * 1024 * 1024  # 24 MB
-_TRANSCRIBE_MODEL = "gemini/gemini-1.5-flash"
+_TRANSCRIBE_MODEL = "gemini/gemini-2.0-flash"
 
 
 async def create_draft(
@@ -116,7 +116,7 @@ async def record_feedback(
 
 
 async def _transcribe(audio_bytes: bytes, mime: str) -> str:
-    """Transcribe audio via Gemini 1.5 Flash multimodal.
+    """Transcribe audio via Gemini 2.0 Flash multimodal.
 
     Sends audio as base64 inline data. LiteLLM maps data URIs to Gemini's
     inlineData format using the mime type to distinguish audio from images.
