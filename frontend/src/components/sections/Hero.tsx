@@ -1,4 +1,7 @@
 import { InstallButton } from "@/components/InstallButton";
+import { WaitlistCounter } from "@/components/ui/WaitlistCounter";
+import { TrustPills } from "@/components/ui/TrustPills";
+import { AnimatedDemo } from "@/components/sections/AnimatedDemo";
 
 export function Hero() {
   return (
@@ -20,18 +23,17 @@ export function Hero() {
         LinkedIn, and Slack.
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-3">
         <InstallButton location="hero" size="lg" />
         <a href="#how-it-works" className="btn-secondary text-base px-7 h-12">
           See how it works
         </a>
       </div>
-      <p className="text-xs text-neutral-400">Free: 20 rewrites/month · No credit card required</p>
 
-      {/* Demo GIF — drop your screen recording here */}
-      <div className="mt-12 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-card bg-neutral-50 dark:bg-neutral-800 aspect-video max-w-3xl mx-auto flex items-center justify-center">
-        <p className="text-sm text-neutral-400">[Demo GIF — place your screen recording here]</p>
-      </div>
+      <WaitlistCounter className="mb-2" />
+      <TrustPills />
+
+      <AnimatedDemo />
     </section>
   );
 }
