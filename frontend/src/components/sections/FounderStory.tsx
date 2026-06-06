@@ -23,7 +23,6 @@ export function FounderStory() {
               Writing Twin is the only tool that starts with your voice — not a generic
               template of what professional English is supposed to sound like.
             </p>
-            <p className="text-sm font-semibold text-ink dark:text-white">[Founder Name]</p>
             <p className="text-xs text-neutral-400">Founder, Writing Twin AI</p>
           </div>
         </div>
