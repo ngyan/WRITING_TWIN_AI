@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { clearSession, getToken } from "@/lib/api";
+import { InstallButton } from "./InstallButton";
 
 export function Nav() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -44,9 +45,7 @@ export function Nav() {
               <Link href="/login" className="btn-ghost">
                 Sign in
               </Link>
-              <Link href="/register" className="btn-primary">
-                Get started free
-              </Link>
+              <InstallButton location="nav" size="sm" />
             </>
           )}
         </div>

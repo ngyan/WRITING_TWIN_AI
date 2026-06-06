@@ -15,11 +15,51 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://writingtwinai.com"),
-  title: "Writing Twin AI — Write Like Yourself. Not Like AI.",
+const BASE = "https://writingtwinai.com";
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Writing Twin AI",
+  url: BASE,
+  logo: `${BASE}/icons/icon-black-512.png`,
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "support@writingtwinai.com",
+    contactType: "customer support",
+  },
+};
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Writing Twin AI",
+  operatingSystem: "Chrome",
+  applicationCategory: "BusinessApplication",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
   description:
-    "AI writing assistant that learns your voice and rewrites text to sound exactly like you. Works in Gmail, LinkedIn, Slack, and Outlook.",
+    "Chrome extension that learns your writing voice and rewrites AI-sounding text to sound exactly like you — in Gmail, Outlook, LinkedIn, and Slack.",
+  url: BASE,
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(BASE),
+  title: "Writing Twin AI — AI Email & Message Writer in Your Own Voice",
+  description:
+    "Writing Twin learns how you write and rewrites stiff, AI-sounding drafts to sound exactly like you — inside Gmail, Outlook, LinkedIn, and Slack. Free Chrome extension.",
+  keywords: [
+    "AI writing assistant",
+    "writing voice",
+    "Chrome extension",
+    "Gmail AI",
+    "non-native English professional",
+    "email rewriter",
+    "personal writing style",
+  ],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -28,17 +68,19 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "Writing Twin AI",
-    description: "Write Like Yourself. Not Like AI.",
-    url: "https://writingtwinai.com",
+    title: "Writing Twin AI — AI Email & Message Writer in Your Own Voice",
+    description:
+      "Chrome extension that rewrites AI text to sound exactly like you. Works in Gmail, Outlook, LinkedIn, Slack.",
+    url: BASE,
     siteName: "Writing Twin AI",
     images: [{ url: "/icons/icon-black-512.png", width: 512, height: 512 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Writing Twin AI",
-    description: "Write Like Yourself. Not Like AI.",
+    title: "Writing Twin AI — AI Email & Message Writer in Your Own Voice",
+    description:
+      "Chrome extension that rewrites AI text to sound exactly like you.",
     images: ["/icons/icon-black-512.png"],
   },
 };
@@ -46,6 +88,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+        />
+      </head>
       <body>
         <PostHogProvider>{children}</PostHogProvider>
       </body>

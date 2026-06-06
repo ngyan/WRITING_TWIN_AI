@@ -55,4 +55,8 @@
            transition-shadow duration-150
            dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-100;
   }
+
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
 }
