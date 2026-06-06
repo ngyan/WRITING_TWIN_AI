@@ -1,30 +1,32 @@
 import { NextResponse } from "next/server";
+import { getSupabase } from "@/lib/supabase";
 
-// Forwards waitlist signups to the FastAPI backend.
-// Backend endpoint POST /v1/waitlist must be created (see Vault/active/2026-06-06-website-cro-sprint.md).
-// Graceful fallback: returns success even if backend is unavailable so no signup is silently lost.
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({})) as { email?: string };
-  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const body = await req.json().catch(() => ({})) as { email?: unknown };
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
-  if (!email || !email.includes("@")) {
-    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  if (!email || !EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
   }
 
-  try {
-    const res = await fetch(`${API_URL}/v1/waitlist`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) throw new Error(`backend_${res.status}`);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    // Log server-side; still return success to the user
-    console.error("[waitlist] backend unavailable:", err, "email:", email);
-    return NextResponse.json({ ok: true });
+  const { error } = await getSupabase()
+    .from("waitlist")
+    .insert({ email });
+
+  if (error) {
+    // 23505 = unique_violation — email already on the list
+    if (error.code === "23505") {
+      return NextResponse.json({ success: true, already: true });
+    }
+    console.error("[waitlist] insert error:", error.message);
+    return NextResponse.json(
+      { error: "Could not save your email. Please try again." },
+      { status: 500 },
+    );
   }
+
+  return NextResponse.json({ success: true });
 }
