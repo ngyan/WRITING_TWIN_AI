@@ -42,7 +42,18 @@ export async function POST(req: Request) {
         subject: `New waitlist signup: ${email}`,
         text: `New waitlist signup\n\nEmail: ${email}\nTime: ${new Date().toISOString()}`,
       }),
-    }).catch((err) => console.error("[waitlist] notify email failed:", err));
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.text();
+          console.error(`[waitlist] Resend ${res.status}:`, body);
+        } else {
+          console.log("[waitlist] notify sent for:", email);
+        }
+      })
+      .catch((err) => console.error("[waitlist] notify email failed:", err));
+  } else {
+    console.warn("[waitlist] RESEND_API_KEY not set — skipping notify");
   }
 
   return NextResponse.json({ success: true });
