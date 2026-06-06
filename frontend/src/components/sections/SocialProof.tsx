@@ -9,9 +9,14 @@ const STAT_CARDS = [
 export function SocialProof() {
   return (
     <section className="py-24 max-w-5xl mx-auto px-4 sm:px-6">
-      <h2 className="text-2xl font-bold text-center text-ink dark:text-white mb-8">
-        Trusted by early users
+      <h2 className="text-2xl font-bold text-center text-ink dark:text-white mb-3">
+        Be one of the first.
       </h2>
+      <p className="text-neutral-500 text-center max-w-xl mx-auto leading-relaxed mb-8">
+        Writing Twin is in early access. The people who join now get founding-member
+        pricing locked forever, direct access to the founder, and the chance to shape
+        what gets built next.
+      </p>
 
       {/* Row 1 — live waitlist count */}
       <div className="mb-10">
@@ -43,6 +48,9 @@ export function SocialProof() {
           Early access member · Product Manager
         </p>
       </div>
+      <p className="text-xs text-neutral-400 text-center mt-4">
+        First reviews coming soon — we ship this week.
+      </p>
     </section>
   );
 }
