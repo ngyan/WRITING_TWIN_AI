@@ -6,7 +6,7 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "Is my data private?",
-    a: "[PLACEHOLDER: e.g. 'Your messages are processed for rewriting and never stored. Your Writing DNA profile is encrypted and only you can access or delete it. We never sell or share your data.']",
+    a: "Your text is processed to rewrite it and is not stored after the request completes. We do not sell, share, or build datasets from your messages. You can request permanent deletion of your voice profile at any time by emailing support@writingtwinai.com.",
   },
   {
     q: "Will it actually sound like me?",
