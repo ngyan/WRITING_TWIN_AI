@@ -1,19 +1,18 @@
-// Fill in the PLACEHOLDER text with actual data-handling policy before launch
 const TRUST_BULLETS = [
   {
     icon: "🔒",
     title: "Your data is never sold",
-    body: "[PLACEHOLDER: e.g. 'We never sell, share, or use your messages to train shared AI models. Your writing stays yours.']",
+    body: "We do not sell, rent, or share your writing with advertisers or third parties. Your words are yours.",
   },
   {
     icon: "✂️",
     title: "Messages processed, not stored",
-    body: "[PLACEHOLDER: e.g. 'Your messages are sent to our API for rewriting and immediately discarded. Only your Writing DNA profile is stored — and only you can access it.']",
+    body: "Your text is sent to our AI to rewrite it and is not stored after the request completes. We do not build datasets from your messages.",
   },
   {
     icon: "🛡️",
     title: "Delete your data anytime",
-    body: "[PLACEHOLDER: e.g. 'Delete your Writing DNA from the dashboard at any time. Instant, permanent, no questions asked.']",
+    body: "Email support@writingtwinai.com and we will permanently delete your voice profile and all stored data within 48 hours.",
   },
 ];
 
