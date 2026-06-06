@@ -140,6 +140,35 @@
 
 ---
 
+## [2026-06-06] Website CRO — Single InstallButton CTA + Waitlist Mode
+
+**Decision:** All CTAs on the marketing site go through one component: `InstallButton.tsx`. The Chrome Web Store URL lives in exactly one env var (`NEXT_PUBLIC_CHROME_STORE_URL`). CTA mode (`waitlist` | `install`) is controlled by `NEXT_PUBLIC_CTA_MODE`.
+**Reason:**
+- Extension under Chrome Web Store review — can't link to a live store page yet
+- Previous homepage had 4 hardcoded CTAs pointing to different destinations, creating maintenance risk
+- "waitlist" mode opens an email-capture modal; switching to "install" mode is a 1-env-var deploy
+- Single source of truth means a broken/changed URL can never slip through unnoticed
+**Alternatives Considered:**
+- Feature flag in backend: adds round-trip latency for a pure-UI concern
+- Multiple hardcoded CTAs: proven to drift and break silently (previous homepage had this)
+**Impact:** `frontend/src/components/InstallButton.tsx` — every CTA links through here. Change the env var on VPS, redeploy frontend, done.
+
+---
+
+## [2026-06-06] Homepage ICP Repositioning — Non-Native English Professionals
+
+**Decision:** Primary ICP message on homepage changed from "Write Like Yourself. Not Like AI." (generic) to "Sound like yourself in English — not like AI." (non-native English professional).
+**Reason:**
+- Non-native English professionals are the highest-intent segment: they have a concrete problem (stiffness/formality when writing in English), daily frequency, and willingness to pay
+- Previous positioning competed with every AI writing tool; new positioning has clear differentiation and empathy
+- Validated by Vault/product/USER_PERSONAS.md and Vault/core/11-FOUNDING-CONSTITUTION.md
+**Alternatives Considered:**
+- Keep generic positioning: lower conversion, commoditized framing
+- Position for developers: smaller market, extension doesn't add unique value vs IDE tools
+**Impact:** Homepage headline, ICPSection, /for/non-native-english landing page, social copy.
+
+---
+
 ## [2026-05-30] Audit Log + Feature Flags + Usage Events from Sprint 1
 
 **Decision:** Three cross-cutting tables wired in Sprint 1: `audit_log`, `usage_events`, `feature_flags`.
