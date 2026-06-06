@@ -28,5 +28,22 @@ export async function POST(req: Request) {
     );
   }
 
+  // Notify support@writingtwinai.com — fire-and-forget, never blocks the user response
+  if (process.env.RESEND_API_KEY) {
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "Writing Twin AI <noreply@writingtwinai.com>",
+        to: ["support@writingtwinai.com"],
+        subject: `New waitlist signup: ${email}`,
+        text: `New waitlist signup\n\nEmail: ${email}\nTime: ${new Date().toISOString()}`,
+      }),
+    }).catch((err) => console.error("[waitlist] notify email failed:", err));
+  }
+
   return NextResponse.json({ success: true });
 }
