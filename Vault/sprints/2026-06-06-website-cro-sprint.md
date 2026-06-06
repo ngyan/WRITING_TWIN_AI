@@ -52,10 +52,9 @@ Added interim waitlist mode while the extension is under Chrome Web Store review
 - Fill Chrome Web Store rating badge in SocialProof
 
 ## Prediction (fill before launch)
-- Current visit→install rate: ____%
-- Predicted 7-day rate after changes: ____%
-- Confidence: ____%
-
+- Current visit→install rate: 0% (no baseline — CTA was broken)
+- Predicted 7-day rate after changes: 4%
+- Confidence: 35%
 ## Outcome (fill 7 days post-launch)
 
 ## Lessons (fill after review)
