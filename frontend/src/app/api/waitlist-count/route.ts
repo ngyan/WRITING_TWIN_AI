@@ -5,6 +5,11 @@ import { getSupabase } from "@/lib/supabase";
 export const revalidate = 60;
 
 export async function GET() {
+  // Return 0 at build time when env vars are absent (prerender produces a stub)
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ count: 0 });
+  }
+
   const { count, error } = await getSupabase()
     .from("waitlist")
     .select("*", { count: "exact", head: true });
