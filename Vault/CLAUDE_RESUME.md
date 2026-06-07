@@ -1,7 +1,7 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-06-01
+> **Last Updated:** 2026-06-07
 
 ---
 
@@ -17,18 +17,28 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Last Sprint** | Sprint 10 — Chrome Web Store Packaging |
-| **Branch** | `sprint-10-webstore` (PR #10 open — merge it) |
+| **Last Sprint** | CRO Homepage Redesign (2026-06-06) — deployed to production |
+| **Branch** | `main` (cro-homepage-redesign merged) |
 | **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt (SSL exp 2026-08-28) |
 | **Backend API** | ✅ Live — `https://api.writingtwinai.com/v1/health` |
-| **Frontend Dashboard** | ✅ Live — `https://writingtwinai.com` (Next.js 14 on VPS) |
+| **Frontend** | ✅ Live — `https://writingtwinai.com` · Next.js 14 · PM2 port 3002 · HTTP 200 |
+| **Homepage CRO** | ✅ 12-section redesign live — AnimatedDemo, WaitlistModal, WaitlistCounter, TrustPills, SocialProof, FounderStory, FAQ all filled and deployed |
+| **Waitlist backend** | ✅ `/api/waitlist` → Supabase `waitlist` table · `/api/waitlist-count` live · Supabase project: `ynzawxgthzhkrnrehvrk` |
+| **CTA mode** | ✅ `NEXT_PUBLIC_CTA_MODE=install` — "Add to Chrome — Free" CTA live |
 | **Extension ZIP** | ✅ Built — `extension/writing-twin-ai-extension.zip` (31 KB, 10 files) |
-| **Chrome Web Store** | 🔴 Not yet submitted — user action required |
+| **Chrome Web Store** | ✅ Published — ID `pjagoopeamgadpgmlnjmdbplhfejeecb` · [store listing](https://chromewebstore.google.com/detail/writing-twin-ai/pjagoopeamgadpgmlnjmdbplhfejeecb) |
 | **Billing** | ✅ Stripe Checkout + Customer Portal live |
 | **Writing DNA** | ✅ Training API live + extension popup onboarding |
 | **PostHog Analytics** | ✅ Live — pageview + funnel events tracking |
 | **Privacy / Terms** | ✅ `/privacy` + `/terms` pages live |
-| **SEO** | ✅ robots.txt + sitemap.xml live |
+| **SEO** | ✅ robots.txt + sitemap.xml + /vs-grammarly + /for/non-native-english live |
+
+### VPS Frontend Deploy State (2026-06-07)
+- **Deploy mode:** Docker Compose (switched from PM2) — frontend on port 3011, api on port 8010
+- **Nginx:** `/etc/nginx/sites-available/writingtwinai` — proxy_pass to containers, SSL live
+- **CTA vars:** `NEXT_PUBLIC_CTA_MODE=install` + `NEXT_PUBLIC_CHROME_STORE_URL` baked into Docker image via `docker-compose.prod.yml` (no `.env.local` needed)
+- **Extension ID:** `pjagoopeamgadpgmlnjmdbplhfejeecb` — hardcoded in CORS + docker-compose.prod.yml
+- **Supabase migration:** ⚠️ Confirm `supabase/migrations/20260606000001_create_waitlist_table.sql` has been run in Supabase SQL editor — waitlist signups will 500 until the table exists
 
 ---
 
@@ -74,14 +84,20 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 
 ## 🔜 What To Do Next Session
 
-### If continuing Web Store launch:
-1. Merge PR #10 on GitHub
-2. Create Chrome Web Store developer account ($5 fee)
-3. Upload `extension/writing-twin-ai-extension.zip`
-4. Fill listing from `extension/WEBSTORE_LISTING.md`
-5. Take 3 screenshots (1280×800) of the extension in Gmail
-6. Submit for review
-7. After approval: add `EXTENSION_ORIGIN=chrome-extension://ID` to VPS `backend/.env` + update CORS in `backend/app/main.py`
+### ✅ DONE — Extension Is Live (2026-06-07)
+
+- Extension ID: `pjagoopeamgadpgmlnjmdbplhfejeecb`
+- Store URL: `https://chromewebstore.google.com/detail/writing-twin-ai/pjagoopeamgadpgmlnjmdbplhfejeecb`
+- CTA flipped to `install` mode — "Add to Chrome — Free" live on homepage
+- Backend CORS locked to specific extension ID (no more wildcard)
+- Full deploy completed via `./Vault/deploy/deploy.sh full`
+
+---
+
+### ⚠️ PENDING — Confirm Before Anything Else
+- **Supabase migration:** Paste `supabase/migrations/20260606000001_create_waitlist_table.sql` into Supabase SQL editor for project `ynzawxgthzhkrnrehvrk`. Waitlist signups fail until the `waitlist` table exists.
+
+---
 
 ### If starting Phase 2 (Sprint 11+):
 - Read `Vault/core/12-PRODUCT-VISION-2.0.md` → voice-first, context-aware, Outlook-first vision

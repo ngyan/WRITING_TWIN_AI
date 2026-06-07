@@ -60,6 +60,7 @@ build_image() {
     log "Building frontend image on VPS..."
     # Read Stripe price IDs from backend/.env and expose as NEXT_PUBLIC_* build args.
     # NEXT_PUBLIC_* vars are baked into the Next.js bundle at build time.
+    # CTA_MODE and CHROME_STORE_URL are hardcoded in docker-compose.prod.yml (extension is live).
     ssh "$VPS" "
         cd $REMOTE_DIR
         _MONTHLY=\$(grep '^STRIPE_PRICE_PRO_MONTHLY=' backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo '')

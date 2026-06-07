@@ -70,6 +70,9 @@ services:
         NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
         NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY: ${NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY:-}
         NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY: ${NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY:-}
+        NEXT_PUBLIC_CTA_MODE: install
+        NEXT_PUBLIC_CHROME_STORE_URL: https://chromewebstore.google.com/detail/writing-twin-ai/pjagoopeamgadpgmlnjmdbplhfejeecb
+    env_file: ./frontend/.env.local
     container_name: writing_twin_frontend
     ports:
       - "127.0.0.1:3011:3000"

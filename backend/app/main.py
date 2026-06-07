@@ -40,9 +40,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
 
 
 _CORS_ORIGINS = [
-    # Chrome extension (wildcard — specific IDs added after Web Store publish)
-    "chrome-extension://*",
-    # Local development
+    "chrome-extension://pjagoopeamgadpgmlnjmdbplhfejeecb",
     "http://localhost:3000",
     "http://localhost:3001",
     "https://writingtwinai.com",
@@ -60,7 +58,7 @@ def create_app() -> FastAPI:
     )
     application.add_middleware(
         CORSMiddleware,
-        allow_origin_regex=r"chrome-extension://.*",
+        allow_origin_regex=r"chrome-extension://pjagoopeamgadpgmlnjmdbplhfejeecb",
         allow_origins=_CORS_ORIGINS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
