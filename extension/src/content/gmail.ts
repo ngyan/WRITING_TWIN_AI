@@ -594,9 +594,11 @@ function sendToBackground<T>(message: object, attempt = 0): Promise<T> {
         reject(new Error('Extension restarted — please reload Gmail and try again.'));
       }
     };
+    // chrome.runtime is undefined when the extension context is fully invalidated
+    if (!chrome?.runtime?.sendMessage) { retry(); return; }
     try {
       chrome.runtime.sendMessage(message, (response) => {
-        if (chrome.runtime.lastError) {
+        if (chrome.runtime?.lastError) {
           retry();
         } else {
           resolve(response);
