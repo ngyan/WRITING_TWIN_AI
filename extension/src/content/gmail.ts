@@ -6,6 +6,37 @@ const COMPOSE_BODY_SEL = '[g_editable="true"], div[contenteditable="true"][aria-
 const SEND_BUTTON_SEL = '[data-tooltip^="Send"], [aria-label^="Send"]';
 const HOST_ATTR = 'data-wt-injected';
 
+// ── Context detection ──────────────────────────────────────────────────────────
+
+const FREE_DOMAINS = new Set(['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','aol.com','live.com']);
+const FORMAL_SUBJECT_RE = /proposal|agreement|contract|invoice|report|presentation|strategy|executive|board|investor|client|partner/i;
+const CASUAL_SUBJECT_RE = /hey|hi|quick|catch up|fyi|heads up|question|help|idea/i;
+
+function detectContextTone(composeBody: Element): Tone {
+  // Find the nearest compose wrapper
+  const compose = composeBody.closest('[data-message-id], [data-thread-id]') ?? document;
+
+  // Subject
+  const subject = (compose.querySelector?.('input[name="subjectbox"]') as HTMLInputElement | null)?.value ?? '';
+
+  // To: recipients
+  const toTokens = Array.from(compose.querySelectorAll?.('[email]') ?? [])
+    .map(el => (el.getAttribute('email') ?? '').toLowerCase().split('@')[1] ?? '');
+  const hasExternalRecipient = toTokens.some(domain => domain && !FREE_DOMAINS.has(domain));
+  const hasPersonalEmail = toTokens.every(domain => FREE_DOMAINS.has(domain));
+
+  if (FORMAL_SUBJECT_RE.test(subject) || (hasExternalRecipient && toTokens.length > 0)) {
+    return 'professional';
+  }
+  if (/board|ceo|vp |cto |cfo |director|investor/i.test(subject)) {
+    return 'executive';
+  }
+  if (CASUAL_SUBJECT_RE.test(subject) || hasPersonalEmail) {
+    return 'friendly';
+  }
+  return 'professional'; // safe default
+}
+
 // ── Tone config ────────────────────────────────────────────────────────────────
 
 const TONES: { key: Tone; label: string; color: string }[] = [
@@ -458,11 +489,27 @@ function inject(composeBody: Element): void {
     });
   });
 
+  // Auto-select tone on first open based on context
+  function preselectTone(tone: Tone) {
+    const toneBtn = shadow.querySelector<HTMLButtonElement>(`.wt-tone[data-tone="${tone}"]`);
+    if (toneBtn && !selectedTone) {
+      shadow.querySelectorAll('.wt-tone').forEach(b => b.classList.remove('active'));
+      toneBtn.classList.add('active');
+      (toneBtn as HTMLElement).style.background = toneBtn.dataset.color ?? '#4F46E5';
+      (toneBtn as HTMLElement).style.borderColor = toneBtn.dataset.color ?? '#4F46E5';
+      selectedTone = tone;
+      rewriteBtn.disabled = false;
+    }
+  }
+
   // Toggle panel
   btn.addEventListener('click', () => {
     panelOpen = !panelOpen;
     panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel();
+    if (panelOpen) {
+      positionPanel();
+      if (!selectedTone) preselectTone(detectContextTone(composeBody));
+    }
   });
 
   // Close panel on outside click

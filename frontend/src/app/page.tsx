@@ -2,6 +2,7 @@ import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/sections/Hero";
 import { BeforeAfter } from "@/components/sections/BeforeAfter";
 import { HowItWorks } from "@/components/sections/HowItWorks";
+import { DnaSnapshot } from "@/components/sections/DnaSnapshot";
 import { TrustPrivacy } from "@/components/sections/TrustPrivacy";
 import { ICPSection } from "@/components/sections/ICPSection";
 import { Comparison } from "@/components/sections/Comparison";
@@ -39,6 +40,7 @@ export default function LandingPage() {
       <Hero />
       <BeforeAfter />
       <HowItWorks />
+      <DnaSnapshot />
       <TrustPrivacy />
       <ICPSection />
       <Comparison />

@@ -21,6 +21,30 @@ class DNASamplesResponse(BaseModel):
     extraction_status: str
 
 
+class SnapshotRequest(BaseModel):
+    text: str = Field(min_length=80, max_length=5_000)
+
+
+class SnapshotResponse(BaseModel):
+    # Quantitative (computed locally)
+    avg_sentence_length: float       # words per sentence
+    vocabulary_diversity: float      # TTR 0-1
+    avg_word_length: float           # chars per word
+
+    # Qualitative (LLM)
+    formality_score: int             # 1-10
+    writing_archetype: str           # e.g. "The Efficient Communicator"
+    signature_patterns: list[str]    # 3 bullets
+    famous_author_match: str         # e.g. "Hemingway"
+    famous_author_reason: str        # one sentence
+
+
+class ConsistencyResponse(BaseModel):
+    total_with_feedback: int
+    accepted: int
+    accuracy_pct: int | None  # None = no feedback yet
+
+
 class WritingProfileRead(BaseModel):
     model_config = {"from_attributes": True}
 

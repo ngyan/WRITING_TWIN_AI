@@ -117,11 +117,34 @@ export interface DnaProfile {
   extraction_status: string;
   version: number | null;
   sample_count: number;
+  // Quantitative dimensions (populated after extraction)
+  avg_sentence_length: number | null;
+  formality_score: number | null;
+  warmth_score: number | null;
+  directness_score: number | null;
+  // Qualitative (JSONB arrays)
+  common_phrases: string[] | null;
+  vocabulary_preferences: string[] | null;
+  punctuation_habits: string[] | null;
 }
 
 export async function getDnaProfile(): Promise<DnaProfile | null> {
   try {
     return await request<DnaProfile>("/v1/dna/profile");
+  } catch {
+    return null;
+  }
+}
+
+export interface ConsistencyScore {
+  total_with_feedback: number;
+  accepted: number;
+  accuracy_pct: number | null;
+}
+
+export async function getConsistencyScore(): Promise<ConsistencyScore | null> {
+  try {
+    return await request<ConsistencyScore>("/v1/dna/consistency");
   } catch {
     return null;
   }

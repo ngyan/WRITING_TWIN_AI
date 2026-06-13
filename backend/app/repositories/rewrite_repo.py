@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.rewrite import Rewrite
@@ -31,6 +31,25 @@ async def update_feedback(
     if edit_text is not None:
         rewrite.user_edit_text = edit_text
     await db.commit()
+
+
+async def get_acceptance_rate(db: AsyncSession, user_id: UUID) -> dict:
+    total_q = await db.execute(
+        select(func.count()).where(
+            Rewrite.user_id == user_id,
+            Rewrite.user_action.isnot(None),
+        )
+    )
+    total = total_q.scalar_one()
+    accepted_q = await db.execute(
+        select(func.count()).where(
+            Rewrite.user_id == user_id,
+            Rewrite.user_action == "accepted",
+        )
+    )
+    accepted = accepted_q.scalar_one()
+    accuracy_pct = round((accepted / total) * 100) if total > 0 else None
+    return {"total_with_feedback": total, "accepted": accepted, "accuracy_pct": accuracy_pct}
 
 
 async def update_quality_scores(

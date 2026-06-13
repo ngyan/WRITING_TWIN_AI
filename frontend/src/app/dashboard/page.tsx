@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
 import {
+  ConsistencyScore,
   DnaProfile,
   MeResponse,
   UsageResponse,
   createPortal,
+  getConsistencyScore,
   getDnaProfile,
   getMe,
   getToken,
@@ -90,11 +92,78 @@ function MonthlyUsageBar({ count, limit }: { count: number; limit: number | null
   );
 }
 
+const AUTHORS = [
+  { name: "Hemingway", emoji: "🗡️", trait: "Direct & spare — short sentences, zero fluff", formalityRange: [1, 5], directnessRange: [7, 10], warmthRange: [1, 5] },
+  { name: "Orwell",    emoji: "🔦", trait: "Clear & principled — plain language, strong opinions", formalityRange: [4, 7], directnessRange: [7, 10], warmthRange: [3, 6] },
+  { name: "Austen",    emoji: "🌹", trait: "Precise & warm — structured sentences, keen social eye", formalityRange: [6, 10], directnessRange: [4, 7], warmthRange: [6, 10] },
+  { name: "Woolf",     emoji: "🌊", trait: "Expressive & introspective — flowing rhythm, rich vocabulary", formalityRange: [6, 10], directnessRange: [1, 5], warmthRange: [5, 9] },
+  { name: "Twain",     emoji: "🎭", trait: "Witty & conversational — vivid metaphors, sharp humour", formalityRange: [1, 5], directnessRange: [5, 8], warmthRange: [6, 10] },
+  { name: "Obama",     emoji: "🎤", trait: "Visionary & measured — balanced cadence, inclusive framing", formalityRange: [6, 10], directnessRange: [4, 7], warmthRange: [6, 10] },
+];
+
+function inRange(v: number, [lo, hi]: number[]) { return v >= lo && v <= hi; }
+
+function matchAuthor(f: number, d: number | null, w: number | null) {
+  const scored = AUTHORS.map((a) => {
+    let score = inRange(f, a.formalityRange) ? 2 : 0;
+    if (d != null) score += inRange(d, a.directnessRange) ? 1.5 : 0;
+    if (w != null) score += inRange(w, a.warmthRange) ? 1.5 : 0;
+    return { ...a, score };
+  });
+  return scored.sort((a, b) => b.score - a.score)[0];
+}
+
+function AuthorMatchCard({ formality, directness, warmth }: { formality: number; directness: number | null; warmth: number | null }) {
+  const author = matchAuthor(formality, directness, warmth);
+  return (
+    <div className="mt-5 card p-6 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-primary-900/20 dark:to-indigo-900/20 border border-primary-100 dark:border-primary-800">
+      <div className="flex items-start gap-4">
+        <span className="text-4xl">{author.emoji}</span>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary-500 mb-0.5">Writing Style Match</p>
+          <h3 className="text-lg font-bold text-ink dark:text-white">You write like <span className="text-primary-600">{author.name}</span></h3>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{author.trait}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConsistencyCard({ score }: { score: ConsistencyScore | null }) {
+  if (!score || score.total_with_feedback < 3) {
+    return (
+      <div className="card p-6">
+        <h2 className="text-sm font-semibold text-ink dark:text-white mb-2">Writing Twin Accuracy</h2>
+        <p className="text-sm text-neutral-500 leading-relaxed">
+          Accept or reject rewrites in Gmail to train accuracy. Needs at least 3 feedbacks.
+        </p>
+      </div>
+    );
+  }
+  const pct = score.accuracy_pct ?? 0;
+  const color = pct >= 80 ? "text-green-600" : pct >= 60 ? "text-amber-600" : "text-red-500";
+  const barColor = pct >= 80 ? "bg-green-500" : pct >= 60 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className="card p-6">
+      <h2 className="text-sm font-semibold text-ink dark:text-white mb-4">Writing Twin Accuracy</h2>
+      <div className="flex items-end gap-2 mb-3">
+        <span className={`text-4xl font-bold tabular-nums ${color}`}>{pct}%</span>
+        <span className="text-sm text-neutral-500 mb-1">of rewrites accepted</span>
+      </div>
+      <div className="h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden mb-3">
+        <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-xs text-neutral-400">{score.accepted} accepted out of {score.total_with_feedback} rated rewrites</p>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [usage, setUsage] = useState<UsageResponse | null>(null);
   const [dna, setDna] = useState<DnaProfile | null>(null);
+  const [consistency, setConsistency] = useState<ConsistencyScore | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
@@ -102,10 +171,11 @@ export default function DashboardPage() {
       router.replace("/login?next=/dashboard");
       return;
     }
-    Promise.all([getMe(), getUsage(), getDnaProfile()]).then(([m, u, d]) => {
+    Promise.all([getMe(), getUsage(), getDnaProfile(), getConsistencyScore()]).then(([m, u, d, c]) => {
       setMe(m);
       setUsage(u);
       setDna(d);
+      setConsistency(c);
     });
   }, [router]);
 
@@ -181,8 +251,11 @@ export default function DashboardPage() {
             )}
           </div>
 
+          {/* Consistency / Accuracy */}
+          <ConsistencyCard score={consistency} />
+
           {/* Writing DNA */}
-          <div className="card p-6">
+          <div className={`card p-6 ${dnaTrained ? "sm:col-span-2" : ""}`}>
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-semibold text-ink dark:text-white">Writing DNA</h2>
               {dnaTrained ? (
@@ -199,14 +272,73 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-neutral-500 mb-4 leading-relaxed">
-              {dnaTrained
-                ? `Trained from ${dna?.sample_count ?? 0} writing samples. Your rewrites will sound like you.`
-                : "Paste a few of your emails or messages to train your writing voice."}
-            </p>
-            <Link href="/onboarding/dna" className={dnaTrained ? "btn-ghost text-sm px-0" : "btn-secondary text-sm"}>
-              {dnaTrained ? "Add more samples →" : "Train my writing voice"}
-            </Link>
+
+            {dnaTrained && dna ? (
+              <div>
+                <p className="text-sm text-neutral-500 mb-4">
+                  Trained from <span className="font-semibold text-ink dark:text-white">{dna.sample_count}</span> writing samples.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {/* Dimension bars */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">6 Writing Dimensions</p>
+                    {[
+                      { label: "Formality", value: dna.formality_score, max: 10 },
+                      { label: "Warmth", value: dna.warmth_score, max: 10 },
+                      { label: "Directness", value: dna.directness_score, max: 10 },
+                    ].map(({ label, value, max }) =>
+                      value != null ? (
+                        <div key={label} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-neutral-500">{label}</span>
+                            <span className="font-medium text-neutral-700 dark:text-neutral-300">{value.toFixed(1)}/{max}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700">
+                            <div className="h-1.5 rounded-full bg-primary-500 transition-all duration-700"
+                              style={{ width: `${(value / max) * 100}%` }} />
+                          </div>
+                        </div>
+                      ) : null
+                    )}
+                    {dna.avg_sentence_length != null && (
+                      <p className="text-xs text-neutral-500 pt-1">
+                        Avg sentence: <span className="font-medium text-neutral-700 dark:text-neutral-300">{dna.avg_sentence_length.toFixed(0)} words</span>
+                      </p>
+                    )}
+                  </div>
+                  {/* Signature patterns */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Signature Patterns</p>
+                    {dna.common_phrases?.slice(0, 3).map((p, i) => (
+                      <div key={i} className="flex gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="text-primary-500 font-bold shrink-0">→</span>{p}
+                      </div>
+                    ))}
+                    {dna.vocabulary_preferences?.slice(0, 2).map((p, i) => (
+                      <div key={i} className="flex gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="text-primary-500 font-bold shrink-0">→</span>{p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Link href="/onboarding/dna" className="btn-ghost text-sm px-0">Add more samples →</Link>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm text-neutral-500 mb-4 leading-relaxed">
+                  {dnaProcessing
+                    ? "Analysing your writing samples — this takes about a minute."
+                    : "Paste a few of your emails or messages to train your writing voice."}
+                </p>
+                {!dnaProcessing && (
+                  <Link href="/onboarding/dna" className="btn-secondary text-sm">
+                    Train my writing voice
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Chrome Extension */}
@@ -226,6 +358,11 @@ export default function DashboardPage() {
           </div>
 
         </div>
+
+        {/* Famous author match — shown once DNA is trained */}
+        {dnaTrained && dna && dna.formality_score != null && (
+          <AuthorMatchCard formality={dna.formality_score} directness={dna.directness_score} warmth={dna.warmth_score} />
+        )}
 
         {/* Empty state — first rewrite */}
         {usage && usage.monthly_count === 0 && (
