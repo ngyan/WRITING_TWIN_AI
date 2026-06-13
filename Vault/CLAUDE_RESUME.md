@@ -1,7 +1,7 @@
 # Writing Twin AI — Claude Code Resume
 
 > **Read this first, every session.** One-page context restore.
-> **Last Updated:** 2026-06-07
+> **Last Updated:** 2026-06-13
 
 ---
 
@@ -17,8 +17,8 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 
 | Item | Status |
 |---|---|
-| **Last Sprint** | CRO Homepage Redesign (2026-06-06) — deployed to production |
-| **Branch** | `main` (cro-homepage-redesign merged) |
+| **Last Sprint** | Competitor-parity features session (2026-06-13) — 6 features shipped |
+| **Branch** | `main` |
 | **VPS** | Hostinger `72.61.236.80` — Docker + NGINX + Let's Encrypt (SSL exp 2026-08-28) |
 | **Backend API** | ✅ Live — `https://api.writingtwinai.com/v1/health` |
 | **Frontend** | ✅ Live — `https://writingtwinai.com` · Next.js 14 · PM2 port 3002 · HTTP 200 |
@@ -29,6 +29,10 @@ AI communication assistant that learns how YOU write (Writing DNA) and rewrites 
 | **Chrome Web Store** | ✅ Published — ID `pjagoopeamgadpgmlnjmdbplhfejeecb` · [store listing](https://chromewebstore.google.com/detail/writing-twin-ai/pjagoopeamgadpgmlnjmdbplhfejeecb) |
 | **Billing** | ✅ Stripe Checkout + Customer Portal live |
 | **Writing DNA** | ✅ Training API live + extension popup onboarding |
+| **DNA Snapshot** | ✅ Public `/v1/dna/snapshot` + landing page section — no auth required |
+| **Author Match** | ✅ Dashboard shows "You write like Hemingway/Orwell/etc." based on DNA scores |
+| **Context Tone** | ✅ Gmail content script auto-detects recipient/subject → preselects tone |
+| **Consistency Score** | ✅ `/v1/dna/consistency` — tracks accept/reject rate; dashboard accuracy card |
 | **PostHog Analytics** | ✅ Live — pageview + funnel events tracking |
 | **Privacy / Terms** | ✅ `/privacy` + `/terms` pages live |
 | **SEO** | ✅ robots.txt + sitemap.xml + /vs-grammarly + /for/non-native-english live |
@@ -84,13 +88,30 @@ On 429: backend returns `{"detail": "LIMIT_REACHED:..."}` — extension shows am
 
 ## 🔜 What To Do Next Session
 
+### ✅ DONE — 6 Competitor-Parity Features (2026-06-13)
+
+All 6 features committed to `main` (commit `ee994e8`). **Not yet deployed to VPS** — run:
+```bash
+./Vault/deploy/deploy.sh full
+```
+
+1. **DNA Snapshot (landing page)** — `POST /v1/dna/snapshot` public endpoint + `DnaSnapshot.tsx` section on homepage between HowItWorks and TrustPrivacy. Analyzes pasted text: archetype, famous-author match, 4 dimension bars, signature patterns.
+2. **Famous Author Match (dashboard)** — `AuthorMatchCard` below DNA card when trained. Matches formality/warmth/directness to 6 authors (Hemingway, Orwell, Austen, Woolf, Twain, Obama).
+3. **HowItWorks upgrade** — copy now references "6-dimension engine"; visual dimension grid added.
+4. **Gmail Context Tone Detection** — `detectContextTone()` in `extension/src/content/gmail.ts` reads subject line + recipient domains → preselects professional/friendly/executive tone when panel opens.
+5. **Dashboard DNA card upgrade** — full-width when trained; shows dimension bars + avg sentence length + signature patterns.
+6. **Consistency Score** — `GET /v1/dna/consistency` returns accept/reject feedback ratio; dashboard `ConsistencyCard` shows "Writing Twin Accuracy: X%" with colour bar.
+
+**Extension v1.0.4 still needed** — context tone detection changes are in source but not rebuilt/uploaded yet.
+
+---
+
 ### ✅ DONE — Extension Is Live (2026-06-07)
 
 - Extension ID: `pjagoopeamgadpgmlnjmdbplhfejeecb`
 - Store URL: `https://chromewebstore.google.com/detail/writing-twin-ai/pjagoopeamgadpgmlnjmdbplhfejeecb`
 - CTA flipped to `install` mode — "Add to Chrome — Free" live on homepage
 - Backend CORS locked to specific extension ID (no more wildcard)
-- Full deploy completed via `./Vault/deploy/deploy.sh full`
 
 ---
 

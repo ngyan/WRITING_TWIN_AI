@@ -1,15 +1,15 @@
 # Writing Twin AI — Project Status Dashboard
 
 > **Update this file at the end of every sprint.**
-> **Last Updated:** 2026-06-07
+> **Last Updated:** 2026-06-13
 
 ---
 
 ## 🎯 Current Milestone
 
 **Phase:** Phase 2 — Voice Twin + Platform Expansion
-**Current Sprint:** CRO Homepage Redesign ✅ — deployed 2026-06-07
-**Next Sprint:** Post-extension-approval launch moment (see CLAUDE_RESUME.md → What To Do Next Session)
+**Current Sprint:** Competitor-parity features ✅ — committed 2026-06-13, deploy pending
+**Next Sprint:** Deploy features + rebuild extension v1.0.4 (context tone detection)
 **Branch strategy:** All Phase 2 work branches from `main`; cro-homepage-redesign merged to `main`
 
 ---
@@ -18,7 +18,7 @@
 
 | Dimension | % | Notes |
 |---|---|---|
-| **MVP Readiness** | 95% | All core features live — billing, DNA, extension, dashboard |
+| **MVP Readiness** | 98% | All core features live + 6 competitor-parity features committed |
 | **Production Readiness** | 85% | VPS fully live; extension awaiting Web Store approval |
 | **Test Coverage** | 30% | 48 tests passing (auth + humanize + dna + personalization + routing + billing) |
 | **Documentation** | 95% | Vault complete, WEBSTORE_LISTING.md ready |
@@ -46,10 +46,19 @@
 | **S17** | HiWorks Email + Compose Detection Engine | `sprint-17-hiworks` | — | 🟢 Done |
 | **S17a** | Google OAuth (web + extension) | `sprint-17a-google-oauth` | #18 ✅ Merged | 🟢 Done |
 | **CRO** | Homepage Redesign + Waitlist | `cro-homepage-redesign` | ✅ Merged | 🟢 Done + Deployed |
+| **S18** | 6 Competitor-Parity Features | `main` | `ee994e8` | 🟡 Committed, deploy pending |
 
 ---
 
 ## 🔜 Next Actions
+
+### 🟡 NEXT — Deploy 6 Features + Extension v1.0.4
+
+1. `./Vault/deploy/deploy.sh full` — deploys frontend (DnaSnapshot, dashboard DNA, author match, consistency card) + backend (snapshot endpoint, consistency endpoint)
+2. Rebuild extension: `cd extension && npm run build` → bump version to `1.0.4` in `manifest.json` → zip → upload to Chrome Web Store
+3. Extension v1.0.4 brings context tone auto-detection (reads subject line + recipient domains)
+
+---
 
 ### ✅ DONE — Extension Published + CTA Flipped (2026-06-07)
 
