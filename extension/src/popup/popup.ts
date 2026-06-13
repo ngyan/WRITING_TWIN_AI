@@ -64,7 +64,7 @@ dnaTextarea.addEventListener('input', () => {
 
 // Check auth state on popup open
 chrome.runtime.sendMessage({ type: 'GET_AUTH_STATE' }, (resp) => {
-  if (!resp?.authenticated || !resp.tokens?.email) {
+  if (!resp?.authenticated) {
     showView('login');
     return;
   }

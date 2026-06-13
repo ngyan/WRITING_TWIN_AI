@@ -201,3 +201,9 @@ export async function googleExchange(code: string, redirectUri: string): Promise
     body: JSON.stringify({ code, redirect_uri: redirectUri }),
   });
 }
+
+export interface MeResponse { id: string; email: string }
+
+export async function getMe(token: string): Promise<MeResponse> {
+  return request<MeResponse>('/auth/me', { method: 'GET' }, token);
+}

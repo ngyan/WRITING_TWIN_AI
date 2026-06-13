@@ -1,7 +1,7 @@
 import { getTokens, setTokens, clearTokens, type AuthTokens } from './lib/auth';
 import {
   login, register, humanize, submitFeedback, submitDnaSamples, getDnaProfile,
-  voiceDraft, submitVoiceFeedback, googleExchange,
+  voiceDraft, submitVoiceFeedback, googleExchange, getMe,
   type Tone, type VoiceOutputType,
 } from './lib/api';
 
@@ -140,10 +140,15 @@ async function handleMessage(msg: Message): Promise<MessageResponse> {
       const code = new URL(responseUrl).searchParams.get('code');
       if (!code) throw new Error('No auth code returned from Google');
       const tokenPair = await googleExchange(code, redirectUri);
+      let email = '';
+      try {
+        const me = await getMe(tokenPair.access_token);
+        email = me.email;
+      } catch { /* non-fatal — popup will show empty email */ }
       const authTokens: AuthTokens = {
         access_token: tokenPair.access_token,
         refresh_token: tokenPair.refresh_token,
-        email: '',
+        email,
       };
       await setTokens(authTokens);
       updateBadge(true);
