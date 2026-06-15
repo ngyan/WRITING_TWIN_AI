@@ -118,6 +118,19 @@ const BUTTON_CSS = `
   }
   #wt-limit a:hover { background: #D97706; }
 
+  #wt-voicematch {
+    display: none; align-items: center; gap: 6px;
+    margin-top: 10px; padding: 7px 10px; border-radius: 8px;
+    background: linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%);
+    border: 1px solid #DDD6FE;
+  }
+  #wt-voicematch.visible { display: flex; }
+  #wt-voicematch .wt-vm-spark { font-size: 13px; line-height: 1; }
+  #wt-voicematch .wt-vm-text { font-size: 11.5px; font-weight: 600; color: #5B21B6; }
+  #wt-voicematch .wt-vm-pct {
+    margin-left: auto; font-size: 11.5px; font-weight: 700; color: #4F46E5;
+  }
+
   #wt-actions {
     display: none; gap: 6px; margin-top: 8px;
   }
@@ -125,10 +138,15 @@ const BUTTON_CSS = `
   .wt-action {
     flex: 1; height: 28px; border-radius: 8px; border: 1.5px solid #E8EAED;
     background: #fff; font-size: 12px; font-weight: 500; color: #374151;
-    cursor: pointer;
+    cursor: pointer; transition: background 0.1s, border-color 0.1s;
   }
+  .wt-action:disabled { opacity: 0.5; cursor: default; }
   .wt-action.accept { border-color: #10B981; color: #10B981; }
+  .wt-action.accept:hover:not(:disabled) { background: #ECFDF5; }
+  .wt-action.regen { border-color: #C7D2FE; color: #4F46E5; }
+  .wt-action.regen:hover:not(:disabled) { background: #EEF2FF; }
   .wt-action.reject { border-color: #EF4444; color: #EF4444; }
+  .wt-action.reject:hover:not(:disabled) { background: #FEF2F2; }
 `;
 
 // ── Voice output types ─────────────────────────────────────────────────────────
@@ -457,8 +475,14 @@ function inject(composeBody: Element): void {
         <p>You've used all your free rewrites this month.</p>
         <a href="https://writingtwinai.com/pricing" target="_blank" rel="noopener">Upgrade to Pro — $5/mo</a>
       </div>
+      <div id="wt-voicematch">
+        <span class="wt-vm-spark">✨</span>
+        <span class="wt-vm-text">Sounds like you</span>
+        <span class="wt-vm-pct" id="wt-vm-pct"></span>
+      </div>
       <div id="wt-actions">
-        <button class="wt-action accept" id="wt-accept">✓ Keep it</button>
+        <button class="wt-action accept" id="wt-accept">✓ Keep</button>
+        <button class="wt-action regen" id="wt-regen">↻ Again</button>
         <button class="wt-action reject" id="wt-reject">✗ Undo</button>
       </div>
     </div>
@@ -470,7 +494,10 @@ function inject(composeBody: Element): void {
   const statusEl = shadow.getElementById('wt-status') as HTMLDivElement;
   const limitEl = shadow.getElementById('wt-limit') as HTMLDivElement;
   const actionsEl = shadow.getElementById('wt-actions') as HTMLDivElement;
+  const voicematchEl = shadow.getElementById('wt-voicematch') as HTMLDivElement;
+  const vmPctEl = shadow.getElementById('wt-vm-pct') as HTMLSpanElement;
   const acceptBtn = shadow.getElementById('wt-accept') as HTMLButtonElement;
+  const regenBtn = shadow.getElementById('wt-regen') as HTMLButtonElement;
   const rejectBtn = shadow.getElementById('wt-reject') as HTMLButtonElement;
 
   // Tone selection
@@ -486,6 +513,7 @@ function inject(composeBody: Element): void {
       statusEl.className = '';
       limitEl.classList.remove('visible');
       actionsEl.classList.remove('visible');
+      voicematchEl.classList.remove('visible');
     });
   });
 
@@ -528,21 +556,36 @@ function inject(composeBody: Element): void {
 
   let originalText = '';
 
-  // Rewrite
-  rewriteBtn.addEventListener('click', async () => {
+  // Show the "Sounds like you" affirmation. When the backend returns a
+  // quality_score, surface it honestly as a match %; otherwise just affirm.
+  function showVoiceMatch(score: number | null | undefined): void {
+    if (typeof score === 'number' && score > 0) {
+      const pct = Math.round(score <= 1 ? score * 100 : score);
+      vmPctEl.textContent = `${pct}% match`;
+    } else {
+      vmPctEl.textContent = '';
+    }
+    voicematchEl.classList.add('visible');
+  }
+
+  // Core rewrite. `regen` re-rewrites from the user's ORIGINAL text so
+  // repeated takes stay anchored to intent instead of drifting.
+  async function runRewrite(regen = false): Promise<void> {
     if (!selectedTone) return;
 
-    const text = (composeBody as HTMLElement).innerText.trim();
+    const text = regen ? originalText : (composeBody as HTMLElement).innerText.trim();
     if (!text) {
       setStatus('Write something first.', 'error');
       return;
     }
+    if (!regen) originalText = text;
 
-    originalText = text;
     btn.disabled = true;
     rewriteBtn.disabled = true;
-    setStatus('Rewriting…');
+    regenBtn.disabled = true;
+    setStatus(regen ? 'Trying another…' : 'Rewriting…');
     actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
 
     try {
       const resp = await sendToBackground<{ result: RewriteResponse }>({
@@ -554,7 +597,8 @@ function inject(composeBody: Element): void {
 
       lastRewriteId = resp.result.id;
       setComposeText(composeBody as HTMLElement, resp.result.output_text);
-      setStatus('Done ✓', 'success');
+      setStatus('');
+      showVoiceMatch(resp.result.quality_score);
       actionsEl.classList.add('visible');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed';
@@ -567,8 +611,15 @@ function inject(composeBody: Element): void {
     } finally {
       btn.disabled = false;
       rewriteBtn.disabled = selectedTone === null;
+      regenBtn.disabled = false;
     }
-  });
+  }
+
+  // Rewrite
+  rewriteBtn.addEventListener('click', () => { void runRewrite(false); });
+
+  // Try another — regenerate an alternative from the original text
+  regenBtn.addEventListener('click', () => { void runRewrite(true); });
 
   // Accept feedback
   acceptBtn.addEventListener('click', async () => {
@@ -576,6 +627,7 @@ function inject(composeBody: Element): void {
       sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'accepted' } });
     }
     actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
     panelOpen = false;
     panel.classList.remove('open');
     setStatus('');
@@ -588,6 +640,7 @@ function inject(composeBody: Element): void {
       sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'rejected' } });
     }
     actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
     setStatus('Reverted.', 'success');
     setTimeout(() => setStatus(''), 2000);
   });
