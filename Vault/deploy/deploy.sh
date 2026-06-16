@@ -134,6 +134,78 @@ deploy_full() {
 }
 
 # ─────────────────────────────────────────────────────────
+# package — build extension + produce upload-ready zip
+# ─────────────────────────────────────────────────────────
+EXT_DIR="$REPO_ROOT/extension"
+EXT_ZIP="$EXT_DIR/writing-twin-ai-extension.zip"
+
+package_extension() {
+    log "Building extension..."
+    ( cd "$EXT_DIR" && npm run build ) || error "Extension build failed"
+    rm -f "$EXT_ZIP"
+    # Zip the CONTENTS of dist/ at the archive root (manifest uses root-relative paths)
+    ( cd "$EXT_DIR/dist" && zip -r -q "$EXT_ZIP" . -x '*.map' -x '.DS_Store' -x '*/.DS_Store' ) \
+        || error "Zip failed"
+    VER=$(python3 -c "import json;print(json.load(open('$EXT_DIR/dist/manifest.json'))['version'])")
+    log "Packaged v$VER → $EXT_ZIP ✓"
+}
+
+# ─────────────────────────────────────────────────────────
+# publish — upload + publish extension via Chrome Web Store API
+#   Runs over HTTPS/CLI, so Chrome's "gallery cannot be scripted"
+#   restriction does NOT apply. Requires extension/.env.publish
+#   (see extension/PUBLISH_SETUP.md). Never commits credentials.
+# ─────────────────────────────────────────────────────────
+publish_extension() {
+    CREDS="$EXT_DIR/.env.publish"
+    [ -f "$CREDS" ] || error "Missing $CREDS — run setup in extension/PUBLISH_SETUP.md"
+    set -a; . "$CREDS"; set +a
+    : "${WEBSTORE_CLIENT_ID:?Set WEBSTORE_CLIENT_ID in .env.publish}"
+    : "${WEBSTORE_CLIENT_SECRET:?Set WEBSTORE_CLIENT_SECRET in .env.publish}"
+    : "${WEBSTORE_REFRESH_TOKEN:?Set WEBSTORE_REFRESH_TOKEN in .env.publish}"
+    : "${WEBSTORE_EXTENSION_ID:?Set WEBSTORE_EXTENSION_ID in .env.publish}"
+    [ -f "$EXT_ZIP" ] || error "Missing $EXT_ZIP — run: ./Vault/deploy/deploy.sh package"
+
+    log "Exchanging refresh token for access token..."
+    TOKEN=$(curl -s "https://oauth2.googleapis.com/token" \
+        -d "client_id=$WEBSTORE_CLIENT_ID" \
+        -d "client_secret=$WEBSTORE_CLIENT_SECRET" \
+        -d "refresh_token=$WEBSTORE_REFRESH_TOKEN" \
+        -d "grant_type=refresh_token" \
+        | python3 -c "import sys,json;print(json.load(sys.stdin).get('access_token',''))")
+    [ -n "$TOKEN" ] || error "Could not get access token — refresh token may be expired/revoked"
+
+    log "Uploading package to item $WEBSTORE_EXTENSION_ID..."
+    UP=$(curl -s -X PUT \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "x-goog-api-version: 2" \
+        -T "$EXT_ZIP" \
+        "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$WEBSTORE_EXTENSION_ID")
+    echo "$UP" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+st=d.get('uploadState')
+print('  upload state:', st)
+if st not in ('SUCCESS',):
+    print('  detail:', json.dumps(d.get('itemError', d), indent=2)); sys.exit(1)
+" || error "Upload failed — see detail above"
+
+    log "Publishing (submitting for review)..."
+    PUB=$(curl -s -X POST \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "x-goog-api-version: 2" \
+        -H "Content-Length: 0" \
+        "https://www.googleapis.com/chromewebstore/v1.1/items/$WEBSTORE_EXTENSION_ID/publish")
+    echo "$PUB" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print('  status:', d.get('status'))
+print('  detail:', d.get('statusDetail'))
+" || warn "Publish call returned unexpected output: $PUB"
+    log "Submitted to Chrome Web Store ✓ — Google review typically takes hours to a few days"
+}
+
+# ─────────────────────────────────────────────────────────
 # logs — tail container logs
 # ─────────────────────────────────────────────────────────
 show_logs() {
@@ -176,6 +248,9 @@ case "$1" in
     nginx)      update_nginx ;;
     health)     check_health ;;
     full)       deploy_full ;;
+    package)    package_extension ;;
+    publish)    package_extension; publish_extension ;;
+    publish-only) publish_extension ;;
     logs)       show_logs "$@" ;;
     status)     show_status ;;
     env-check)  check_env ;;
@@ -197,6 +272,11 @@ case "$1" in
         echo "  logs [svc]  Tail container logs (default: api)"
         echo "  status      docker compose ps"
         echo "  env-check   Verify backend/.env exists on VPS (shows keys, not values)"
+        echo ""
+        echo "Chrome extension (Web Store API — see extension/PUBLISH_SETUP.md):"
+        echo "  package      Build extension + produce upload-ready zip"
+        echo "  publish      package, then upload + submit to Chrome Web Store"
+        echo "  publish-only Upload existing zip + submit (skip rebuild)"
         echo ""
         exit 1
         ;;
