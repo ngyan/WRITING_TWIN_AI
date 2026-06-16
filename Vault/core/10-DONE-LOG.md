@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-06-16] Premium rewrite UX (v1.0.5) + DNA snapshot 500 fix
+
+- **DNA snapshot 500 fix (DEPLOYED LIVE):**
+  - `backend/app/services/dna_service.py` — public `/v1/dna/snapshot` was 500-ing on valid input (bespoke `litellm.acompletion` + unhandled `json.loads`). Now routes through `router_service.complete()` (proven prod path), hardened JSON extraction (`_parse_snapshot_json`), and a local-stylometric heuristic baseline (`_heuristic_qualitative`) so it never hard-fails. Verified live → 200. Commit `38c3eb8`.
+  - Deployed backend-only: `deploy.sh push` → `ssh build api` → `up -d api` → health 200. No migration.
+- **Premium Gmail rewrite UX (extension v1.0.5, NOT yet published):**
+  - `extension/src/content/gmail.ts` — "✨ Sounds like you" voice-match affirmation (surfaces existing `quality_score` as % match, degrades gracefully) + "↻ Again" regenerate alternative from the original text (WordTune-style).
+  - `extension/manifest.json` — 1.0.4 → 1.0.5; zip repackaged with correct root-relative layout.
+  - Web Store upload pending (manual — Chrome blocks dev-console automation).
+- PR #19 (`feat/premium-voice-match-rewrite`).
+
+---
+
 ## [2026-06-03] Sprint 17a — Google OAuth
 
 - Files created:

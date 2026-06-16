@@ -1,7 +1,7 @@
 # Writing Twin AI — Project Status Dashboard
 
 > **Update this file at the end of every sprint.**
-> **Last Updated:** 2026-06-13
+> **Last Updated:** 2026-06-16
 
 ---
 
@@ -52,11 +52,17 @@
 
 ## 🔜 Next Actions
 
-### 🟡 NEXT — Deploy 6 Features + Extension v1.0.4
+### 🟢 DONE (2026-06-16) — 6 features already live + snapshot fix deployed
+- The 6 competitor-parity features are **already deployed** to VPS (backend + frontend verified live). The old "deploy 6 features" action was stale.
+- **DNA snapshot 500 bug FIXED + DEPLOYED** — public `/v1/dna/snapshot` (homepage hero CTA) was 500-ing on valid input (unhandled `json.loads` on raw LLM output). Now routes through `router_service.complete()` + heuristic fallback so it never hard-fails. Verified live → 200. Commit `38c3eb8`, PR #19.
 
-1. `./Vault/deploy/deploy.sh full` — deploys frontend (DnaSnapshot, dashboard DNA, author match, consistency card) + backend (snapshot endpoint, consistency endpoint)
-2. Rebuild extension: `cd extension && npm run build` → bump version to `1.0.4` in `manifest.json` → zip → upload to Chrome Web Store
-3. Extension v1.0.4 brings context tone auto-detection (reads subject line + recipient domains)
+### 🟡 NEXT — Publish extension v1.0.5 (manual upload required)
+1. Package ready at `extension/writing-twin-ai-extension.zip` (v1.0.5, root-relative layout verified).
+2. Upload via Chrome Web Store dev dashboard (CANNOT be automated — Chrome blocks scripting on the dev console). 4 steps: select item → Package → Upload new package → Submit for review.
+3. v1.0.5 adds the premium "✨ Sounds like you" voice-match affirmation + "↻ Again" regenerate alternatives in the Gmail rewrite panel.
+
+### ⚠️ Optional backend follow-up
+- The voice-match `% match` only shows when the backend returns `quality_score` synchronously (quality-retry path). To always show a number, surface `voice_match` synchronously in `RewriteResponse`.
 
 ---
 
