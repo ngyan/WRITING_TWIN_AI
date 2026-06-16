@@ -27,6 +27,30 @@ const SEND_BUTTON_SEL = [
 
 const HOST_ATTR = 'data-wt-ol-injected';
 
+// ── Context detection ──────────────────────────────────────────────────────────
+
+const FREE_DOMAINS = new Set(['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com','protonmail.com','aol.com','live.com']);
+const FORMAL_SUBJECT_RE = /proposal|agreement|contract|invoice|report|presentation|strategy|executive|board|investor|client|partner/i;
+const CASUAL_SUBJECT_RE = /hey|hi|quick|catch up|fyi|heads up|question|help|idea/i;
+
+function detectContextTone(composeBody: Element): Tone {
+  const root = composeBody.closest('[role="dialog"], form') ?? document;
+  const subjectEl = root.querySelector('input[aria-label*="Subject" i], input[placeholder*="Subject" i]') as HTMLInputElement | null;
+  const subject = subjectEl?.value ?? '';
+
+  // Best-effort recipient domains from email-looking text in the To well
+  const toWell = root.querySelector('[aria-label*="To" i]') as HTMLElement | null;
+  const domains = Array.from((toWell?.innerText ?? '').matchAll(/@([\w.-]+)/g))
+    .map(m => m[1].toLowerCase());
+  const hasExternal = domains.some(d => d && !FREE_DOMAINS.has(d));
+  const allPersonal = domains.length > 0 && domains.every(d => FREE_DOMAINS.has(d));
+
+  if (/board|ceo|vp |cto |cfo |director|investor/i.test(subject)) return 'executive';
+  if (FORMAL_SUBJECT_RE.test(subject) || hasExternal) return 'professional';
+  if (CASUAL_SUBJECT_RE.test(subject) || allPersonal) return 'friendly';
+  return 'professional';
+}
+
 // ── Tones ──────────────────────────────────────────────────────────────────────
 
 const TONES: { key: Tone; label: string; color: string }[] = [
@@ -134,14 +158,31 @@ const BASE_CSS = `
     text-decoration: none;
   }
 
+  #wt-voicematch {
+    display: none; align-items: center; gap: 6px;
+    margin-top: 10px; padding: 7px 10px; border-radius: 8px;
+    background: linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%);
+    border: 1px solid #DDD6FE;
+  }
+  #wt-voicematch.visible { display: flex; }
+  #wt-voicematch .wt-vm-spark { font-size: 13px; line-height: 1; }
+  #wt-voicematch .wt-vm-text { font-size: 11.5px; font-weight: 600; color: #5B21B6; }
+  #wt-voicematch .wt-vm-pct { margin-left: auto; font-size: 11.5px; font-weight: 700; color: #4F46E5; }
+
   #wt-actions { display: none; gap: 6px; margin-top: 8px; }
   #wt-actions.visible { display: flex; }
   .wt-action {
     flex: 1; height: 28px; border-radius: 8px; border: 1.5px solid #EDEBE9;
     background: #fff; font-size: 12px; font-weight: 500; color: #323130; cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
   }
+  .wt-action:disabled { opacity: 0.5; cursor: default; }
   .wt-action.accept { border-color: #107C10; color: #107C10; }
+  .wt-action.accept:hover:not(:disabled) { background: #F3FBF3; }
+  .wt-action.regen { border-color: #C7D2FE; color: #4F46E5; }
+  .wt-action.regen:hover:not(:disabled) { background: #EEF2FF; }
   .wt-action.reject { border-color: #A4262C; color: #A4262C; }
+  .wt-action.reject:hover:not(:disabled) { background: #FDF3F4; }
 
   /* ── Voice panel ── */
   #wt-voice-panel { width: 280px; }
@@ -196,9 +237,9 @@ function inject(composeBody: Element): void {
   let panelOpen = false;
   let voicePanelOpen = false;
   let selectedOutputType: VoiceOutputType = 'reply';
-  let recorder: MediaRecorder | null = null;
+  let recognition: InstanceType<typeof webkitSpeechRecognition> | null = null;
   let recording = false;
-  let audioChunks: BlobPart[] = [];
+  let transcript = '';
   let lastVoiceSessionId: string | null = null;
   let originalText = '';
   let originalVoiceText = '';
@@ -220,8 +261,14 @@ function inject(composeBody: Element): void {
         <p>You've used all your free rewrites this month.</p>
         <a href="https://writingtwinai.com/pricing" target="_blank" rel="noopener">Upgrade to Pro — $5/mo</a>
       </div>
+      <div id="wt-voicematch">
+        <span class="wt-vm-spark">✨</span>
+        <span class="wt-vm-text">Sounds like you</span>
+        <span class="wt-vm-pct" id="wt-vm-pct"></span>
+      </div>
       <div id="wt-actions">
-        <button class="wt-action accept" id="wt-accept">✓ Keep it</button>
+        <button class="wt-action accept" id="wt-accept">✓ Keep</button>
+        <button class="wt-action regen" id="wt-regen">↻ Again</button>
         <button class="wt-action reject" id="wt-reject">✗ Undo</button>
       </div>
     </div>
@@ -252,7 +299,10 @@ function inject(composeBody: Element): void {
   const statusEl   = shadow.getElementById('wt-status')     as HTMLDivElement;
   const limitEl    = shadow.getElementById('wt-limit')      as HTMLDivElement;
   const actionsEl  = shadow.getElementById('wt-actions')    as HTMLDivElement;
+  const voicematchEl = shadow.getElementById('wt-voicematch') as HTMLDivElement;
+  const vmPctEl    = shadow.getElementById('wt-vm-pct')     as HTMLSpanElement;
   const acceptBtn  = shadow.getElementById('wt-accept')     as HTMLButtonElement;
+  const regenBtn   = shadow.getElementById('wt-regen')      as HTMLButtonElement;
   const rejectBtn  = shadow.getElementById('wt-reject')     as HTMLButtonElement;
   const recordBtn  = shadow.getElementById('wt-record-btn') as HTMLButtonElement;
   const vStatusEl  = shadow.getElementById('wt-voice-status') as HTMLDivElement;
@@ -271,8 +321,22 @@ function inject(composeBody: Element): void {
       rewriteBtn.disabled = false;
       setStatus(''); limitEl.classList.remove('visible');
       actionsEl.classList.remove('visible');
+      voicematchEl.classList.remove('visible');
     });
   });
+
+  // Auto-select tone from context the first time the panel opens
+  function preselectTone(tone: Tone): void {
+    if (selectedTone) return;
+    const tb = shadow.querySelector<HTMLButtonElement>(`.wt-tone[data-tone="${tone}"]`);
+    if (!tb) return;
+    shadow.querySelectorAll('.wt-tone').forEach(b => b.classList.remove('active'));
+    tb.classList.add('active');
+    tb.style.background = tb.dataset.color ?? '#4F46E5';
+    tb.style.borderColor = tb.dataset.color ?? '#4F46E5';
+    selectedTone = tone;
+    rewriteBtn.disabled = false;
+  }
 
   // ── Voice output type selector ──────────────────────────────────────────────
   shadow.querySelectorAll<HTMLButtonElement>('.wt-otype').forEach(ob => {
@@ -288,7 +352,10 @@ function inject(composeBody: Element): void {
     panelOpen = !panelOpen;
     if (panelOpen) { voicePanelOpen = false; voicePanel.classList.remove('open'); }
     panel.classList.toggle('open', panelOpen);
-    if (panelOpen) positionPanel(btn, panel);
+    if (panelOpen) {
+      positionPanel(btn, panel);
+      if (!selectedTone) preselectTone(detectContextTone(composeBody));
+    }
   });
 
   micBtn.addEventListener('click', () => {
@@ -313,14 +380,28 @@ function inject(composeBody: Element): void {
   }
 
   // ── Rewrite ─────────────────────────────────────────────────────────────────
-  rewriteBtn.addEventListener('click', async () => {
-    if (!selectedTone) return;
-    const text = readCompose(composeBody);
-    if (!text) { setStatus('Write something first.', 'error'); return; }
+  function showVoiceMatch(score: number | null | undefined): void {
+    if (typeof score === 'number' && score > 0) {
+      const pct = Math.round(score <= 1 ? score * 100 : score);
+      vmPctEl.textContent = `${pct}% match`;
+    } else {
+      vmPctEl.textContent = '';
+    }
+    voicematchEl.classList.add('visible');
+  }
 
-    originalText = text;
-    btn.disabled = true; rewriteBtn.disabled = true;
-    setStatus('Rewriting…'); actionsEl.classList.remove('visible');
+  // `regen` re-rewrites from the user's ORIGINAL text so repeated takes stay
+  // anchored to intent instead of drifting.
+  async function runRewrite(regen = false): Promise<void> {
+    if (!selectedTone) return;
+    const text = regen ? originalText : readCompose(composeBody);
+    if (!text) { setStatus('Write something first.', 'error'); return; }
+    if (!regen) originalText = text;
+
+    btn.disabled = true; rewriteBtn.disabled = true; regenBtn.disabled = true;
+    setStatus(regen ? 'Trying another…' : 'Rewriting…');
+    actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
 
     try {
       const resp = await sendToBackground<{ result: RewriteResponse } | { error: string }>({
@@ -330,7 +411,8 @@ function inject(composeBody: Element): void {
       if ('error' in resp) throw new Error(String(resp.error));
       lastRewriteId = resp.result.id;
       writeCompose(composeBody as HTMLElement, resp.result.output_text);
-      setStatus('Done ✓', 'success');
+      setStatus('');
+      showVoiceMatch(resp.result.quality_score);
       actionsEl.classList.add('visible');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed';
@@ -342,12 +424,17 @@ function inject(composeBody: Element): void {
     } finally {
       btn.disabled = false;
       rewriteBtn.disabled = selectedTone === null;
+      regenBtn.disabled = false;
     }
-  });
+  }
+
+  rewriteBtn.addEventListener('click', () => { void runRewrite(false); });
+  regenBtn.addEventListener('click', () => { void runRewrite(true); });
 
   acceptBtn.addEventListener('click', () => {
     if (lastRewriteId) sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'accepted' } });
     actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
     panelOpen = false; panel.classList.remove('open');
     setStatus('');
   });
@@ -356,6 +443,7 @@ function inject(composeBody: Element): void {
     if (originalText) writeCompose(composeBody as HTMLElement, originalText);
     if (lastRewriteId) sendToBackground({ type: 'FEEDBACK', payload: { rewriteId: lastRewriteId, action: 'rejected' } });
     actionsEl.classList.remove('visible');
+    voicematchEl.classList.remove('visible');
     setStatus('Reverted.', 'success');
     setTimeout(() => setStatus(''), 2000);
   });
@@ -364,27 +452,47 @@ function inject(composeBody: Element): void {
     statusEl.textContent = msg; statusEl.className = cls;
   }
 
-  // ── Recording ───────────────────────────────────────────────────────────────
+  // ── Voice (browser speech recognition → transcript) ───────────────────────────
   recordBtn.addEventListener('click', async () => {
     if (!recording) await startRecording(); else stopRecording();
   });
 
   async function startRecording(): Promise<void> {
+    const SpeechRecognition = (window as unknown as { webkitSpeechRecognition?: typeof webkitSpeechRecognition }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceStatus('Speech recognition not supported in this browser.', 'error');
+      return;
+    }
+
+    transcript = '';
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' ';
+        else interim += e.results[i][0].transcript;
+      }
+      setVoiceStatus(`🎙 ${(transcript + interim).trim() || 'Listening…'}`);
+    };
+
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+      if (e.error !== 'aborted') setVoiceStatus(`Mic error: ${e.error}`, 'error');
+    };
+
+    recognition.onend = () => {
+      if (recording) recognition?.start(); // browser cut off — keep listening
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunks = [];
-      recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        await submitVoice(new Blob(audioChunks, { type: 'audio/webm' }));
-      };
-      recorder.start();
+      recognition.start();
       recording = true;
       micBtn.classList.add('recording');
       recordBtn.classList.add('recording');
       recordBtn.textContent = '⏹ Stop recording';
-      setVoiceStatus('Recording…');
       vActionsEl.classList.remove('visible');
       setTimeout(() => { if (recording) stopRecording(); }, 60_000);
     } catch {
@@ -393,30 +501,33 @@ function inject(composeBody: Element): void {
   }
 
   function stopRecording(): void {
-    if (recorder && recording) {
-      recorder.stop();
+    if (recognition && recording) {
       recording = false;
+      recognition.onend = null;
+      recognition.stop();
+      recognition = null;
       micBtn.classList.remove('recording');
       recordBtn.classList.remove('recording');
       recordBtn.textContent = '🎙 Start recording';
       recordBtn.disabled = true;
       setVoiceStatus('Drafting…');
+      void submitTranscript();
     }
   }
 
-  async function submitVoice(blob: Blob): Promise<void> {
+  async function submitTranscript(): Promise<void> {
     try {
-      const ab = await blob.arrayBuffer();
-      const u8 = new Uint8Array(ab);
-      let bin = '';
-      for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
-      const audioData = btoa(bin);
-
+      const text = transcript.trim();
+      if (!text) {
+        setVoiceStatus('Nothing recorded — try again.', 'error');
+        recordBtn.disabled = false;
+        return;
+      }
       originalVoiceText = readCompose(composeBody);
 
       const resp = await sendToBackground<{ result: VoiceDraftResponse } | { error: string }>({
         type: 'VOICE_DRAFT',
-        payload: { audioData, mimeType: 'audio/webm', outputType: selectedOutputType },
+        payload: { transcript: text, outputType: selectedOutputType },
       });
       if ('error' in resp) throw new Error(String(resp.error));
 
@@ -488,9 +599,28 @@ function writeCompose(el: HTMLElement, text: string): void {
   }
 }
 
-function sendToBackground<T>(message: object): Promise<T> {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage(message, resolve);
+function sendToBackground<T>(message: object, attempt = 0): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const retry = () => {
+      // Service worker waking up — give it 900ms then try once more
+      if (attempt === 0) {
+        setTimeout(() => sendToBackground<T>(message, 1).then(resolve).catch(reject), 900);
+      } else {
+        reject(new Error('Extension restarted — please reload Outlook and try again.'));
+      }
+    };
+    if (!chrome?.runtime?.sendMessage) { retry(); return; }
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime?.lastError) {
+          retry();
+        } else {
+          resolve(response);
+        }
+      });
+    } catch {
+      retry();
+    }
   });
 }
 

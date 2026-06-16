@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Writing Twin AI",
-  "version": "1.0.5",
-  "description": "AI that rewrites your emails to sound exactly like you — powered by your Writing DNA. Works inside Gmail.",
+  "version": "1.0.6",
+  "description": "AI that rewrites your emails to sound exactly like you — powered by your Writing DNA. Works inside Gmail and Outlook.",
   "homepage_url": "https://writingtwinai.com",
   "permissions": ["storage", "identity"],
   "host_permissions": [
     "https://mail.google.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.office365.com/*",
+    "https://outlook.live.com/*",
     "https://api.writingtwinai.com/*"
   ],
   "icons": {
@@ -22,6 +25,15 @@
     {
       "matches": ["https://mail.google.com/*"],
       "js": ["content/gmail.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*",
+        "https://outlook.live.com/*"
+      ],
+      "js": ["content/outlook.js"],
       "run_at": "document_idle"
     }
   ],
