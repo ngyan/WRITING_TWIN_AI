@@ -251,6 +251,7 @@ case "$1" in
     package)    package_extension ;;
     publish)    package_extension; publish_extension ;;
     publish-only) publish_extension ;;
+    webstore-token) python3 "$REPO_ROOT/extension/scripts/get-refresh-token.py" ;;
     logs)       show_logs "$@" ;;
     status)     show_status ;;
     env-check)  check_env ;;
@@ -274,9 +275,10 @@ case "$1" in
         echo "  env-check   Verify backend/.env exists on VPS (shows keys, not values)"
         echo ""
         echo "Chrome extension (Web Store API — see extension/PUBLISH_SETUP.md):"
-        echo "  package      Build extension + produce upload-ready zip"
-        echo "  publish      package, then upload + submit to Chrome Web Store"
-        echo "  publish-only Upload existing zip + submit (skip rebuild)"
+        echo "  webstore-token  One-time: mint refresh token into extension/.env.publish"
+        echo "  package         Build extension + produce upload-ready zip"
+        echo "  publish         package, then upload + submit to Chrome Web Store"
+        echo "  publish-only    Upload existing zip + submit (skip rebuild)"
         echo ""
         exit 1
         ;;

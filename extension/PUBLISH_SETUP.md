@@ -37,35 +37,26 @@ long-lived and the CLI handles every future publish unattended.
    - Application type: **Desktop app**.
    - Copy the **Client ID** and **Client secret**.
 
-## Step 3 — Get a refresh token
+## Step 3 — Get a refresh token (one command)
 
-Easiest path — the maintained helper walks the browser flow and prints all three values:
-
-```bash
-npx -y chrome-webstore-upload-keys
-```
-
-It will ask for the Client ID + Client secret from Step 2, open a Google consent page,
-and after you approve, print your **refresh token**.
-
-> If you prefer not to use the helper: do the OAuth "loopback" flow manually with scope
-> `https://www.googleapis.com/auth/chromewebstore`, `access_type=offline`,
-> `prompt=consent`, then exchange the returned code at `https://oauth2.googleapis.com/token`
-> for a `refresh_token`. (Google deprecated the old `oob` flow, so a localhost redirect
-> is required — the helper above just does this for you.)
-
-## Step 4 — Save the credentials locally
+With `extension/.env.publish` already holding the client ID + secret, run:
 
 ```bash
-cp extension/.env.publish.example extension/.env.publish
-# then edit extension/.env.publish and paste:
-#   WEBSTORE_CLIENT_ID, WEBSTORE_CLIENT_SECRET, WEBSTORE_REFRESH_TOKEN
-# (WEBSTORE_EXTENSION_ID is already filled in)
+./Vault/deploy/deploy.sh webstore-token
 ```
+
+This opens your browser to a Google consent page. Sign in as the **test user**
+(`ngyan.prakash@gmail.com`), click **Allow**, and the refresh token is written straight
+into `extension/.env.publish`. You'll see "Google hasn't verified this app" — that's
+expected for a Testing-mode app you own; click **Continue / Advanced → Go to … (unsafe)**
+to proceed (it's your own app).
+
+> Fallback if you'd rather use the community tool: `npx -y chrome-webstore-upload-keys`
+> (asks for the client ID + secret, does the same browser flow, prints the token).
 
 `extension/.env.publish` is gitignored — it never gets committed.
 
-## Step 5 — Publish
+## Step 4 — Publish
 
 ```bash
 # Build a fresh zip from source, then upload + submit for review:
