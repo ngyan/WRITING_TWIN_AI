@@ -4,15 +4,20 @@ import json
 import re
 from uuid import UUID
 
-import litellm
 import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.user import User
 from app.repositories import dna_repo, qdrant_repo
-from app.schemas.dna import DNASamplesRequest, DNASamplesResponse, SnapshotRequest, SnapshotResponse, WritingProfileRead
+from app.schemas.dna import (
+    DNASamplesRequest,
+    DNASamplesResponse,
+    SnapshotRequest,
+    SnapshotResponse,
+    WritingProfileRead,
+)
+from app.services import router_service
 from app.tasks.extract_dna_task import run_extraction
 
 log = structlog.get_logger()
@@ -111,7 +116,9 @@ Sample:
 Return exactly this JSON shape:
 {{
   "formality_score": <integer 1-10, where 1=very casual, 10=very formal>,
-  "writing_archetype": <one of: "The Efficient Communicator" | "The Warm Connector" | "The Precise Analyst" | "The Visionary Storyteller" | "The Diplomatic Navigator" | "The Bold Challenger">,
+  "writing_archetype": <one of: "The Efficient Communicator" | "The Warm Connector" |
+    "The Precise Analyst" | "The Visionary Storyteller" | "The Diplomatic Navigator" |
+    "The Bold Challenger">,
   "signature_patterns": [<string>, <string>, <string>],
   "famous_author_match": <one of: "Hemingway" | "Orwell" | "Austen" | "Woolf" | "Twain" | "Obama">,
   "famous_author_reason": <one concise sentence explaining the match>
@@ -119,29 +126,102 @@ Return exactly this JSON shape:
 """
 
 
+def _heuristic_qualitative(text: str, local: dict) -> dict:
+    """Derive a believable qualitative profile from local metrics alone.
+
+    Used as a graceful fallback when the LLM is unavailable or returns
+    unparseable output — this is a public, no-auth funnel feature and must
+    never hard-fail.
+    """
+    avg_sl = local["avg_sentence_length"]
+    avg_wl = local["avg_word_length"]
+    div = local["vocabulary_diversity"]
+    lower = text.lower()
+    contractions = len(re.findall(r"\b\w+'\w+\b", text))
+    warm = sum(lower.count(w) for w in (
+        "thank", "hope", "great", "appreciate", "support",
+        "please", "glad", "happy", "love", "wonderful",
+    ))
+
+    formality = 5 + (2 if avg_wl >= 5 else 0) + (1 if avg_sl >= 18 else 0)
+    formality -= 2 if contractions >= 2 else 0
+    formality -= 1 if avg_sl <= 10 else 0
+    formality = max(1, min(10, formality))
+
+    if warm >= 2:
+        archetype, author = "The Warm Connector", "Austen"
+        reason = "Warm, personable phrasing that builds rapport before getting to the point."
+    elif avg_sl <= 12 and avg_wl <= 4.6:
+        archetype, author = "The Efficient Communicator", "Hemingway"
+        reason = "Short, direct sentences that get straight to the point."
+    elif div >= 0.7 and avg_sl >= 16:
+        archetype, author = "The Precise Analyst", "Orwell"
+        reason = "Clear, varied vocabulary arranged in carefully structured sentences."
+    elif avg_sl >= 20:
+        archetype, author = "The Visionary Storyteller", "Woolf"
+        reason = "Flowing, expansive sentences that carry a narrative rhythm."
+    else:
+        archetype, author = "The Efficient Communicator", "Twain"
+        reason = "Plain-spoken and approachable with an easy conversational flow."
+
+    patterns: list[str] = []
+    if contractions:
+        patterns.append("Uses contractions for a conversational tone")
+    patterns.append(f"Averages {avg_sl} words per sentence")
+    patterns.append("Opens with warmth before the ask" if warm else "Leads with the main point")
+    patterns.append(f"Vocabulary diversity around {int(div * 100)}%")
+
+    return {
+        "formality_score": formality,
+        "writing_archetype": archetype,
+        "signature_patterns": patterns[:3],
+        "famous_author_match": author,
+        "famous_author_reason": reason,
+    }
+
+
+def _parse_snapshot_json(raw: str) -> dict | None:
+    """Extract the first JSON object from raw LLM output, tolerant of fences/prose."""
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group())
+    except json.JSONDecodeError:
+        return None
+
+
 async def snapshot(req: SnapshotRequest) -> SnapshotResponse:
     local = _compute_local_metrics(req.text)
+    qualitative = _heuristic_qualitative(req.text, local)
 
-    prompt = _SNAPSHOT_PROMPT.format(text=req.text[:2000])
-    resp = await litellm.acompletion(
-        model="gemini/gemini-2.0-flash",
-        api_key=settings.GEMINI_API_KEY,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-        max_tokens=300,
-    )
-    raw = resp.choices[0].message.content or "{}"
-    # Strip any accidental markdown fences
-    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip(), flags=re.MULTILINE)
-    data = json.loads(raw)
+    # Best-effort LLM enrichment over the heuristic baseline. Any failure
+    # (auth, transient, timeout, bad JSON) leaves the heuristic in place.
+    try:
+        prompt = _SNAPSHOT_PROMPT.format(text=req.text[:2000])
+        raw, _, _ = await router_service.complete(
+            router_service.MODELS["gemini-flash"],
+            [{"role": "user", "content": prompt}],
+            max_tokens=300,
+        )
+        data = _parse_snapshot_json(raw)
+        if data:
+            # Override the heuristic only where the LLM gave a usable value.
+            for key in qualitative:
+                value = data.get(key)
+                if value not in (None, "", []):
+                    qualitative[key] = value
+            qualitative["formality_score"] = int(qualitative["formality_score"])
+    except Exception as exc:  # noqa: BLE001 — funnel feature must always return
+        log.warning("dna.snapshot_llm_failed", error=str(exc))
 
     return SnapshotResponse(
         avg_sentence_length=local["avg_sentence_length"],
         vocabulary_diversity=local["vocabulary_diversity"],
         avg_word_length=local["avg_word_length"],
-        formality_score=int(data.get("formality_score", 5)),
-        writing_archetype=data.get("writing_archetype", "The Efficient Communicator"),
-        signature_patterns=data.get("signature_patterns", []),
-        famous_author_match=data.get("famous_author_match", "Hemingway"),
-        famous_author_reason=data.get("famous_author_reason", ""),
+        formality_score=qualitative["formality_score"],
+        writing_archetype=qualitative["writing_archetype"],
+        signature_patterns=qualitative["signature_patterns"],
+        famous_author_match=qualitative["famous_author_match"],
+        famous_author_reason=qualitative["famous_author_reason"],
     )
