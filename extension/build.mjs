@@ -18,6 +18,7 @@ await esbuild.build({
     'background':       'src/background.ts',
     'content/gmail':    'src/content/gmail.ts',
     'content/outlook':  'src/content/outlook.ts',
+    'content/hiworks':  'src/content/hiworks.ts',
     'popup/popup':      'src/popup/popup.ts',
   },
   bundle: true,
@@ -43,6 +44,7 @@ const files = [
   `${outdir}/background.js`,
   `${outdir}/content/gmail.js`,
   `${outdir}/content/outlook.js`,
+  `${outdir}/content/hiworks.js`,
   `${outdir}/popup/popup.js`,
 ];
 let total = 0;
