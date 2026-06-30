@@ -97,6 +97,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
+        {/* Omnioria umbrella analytics (self-hosted Umami) */}
+        <script
+          defer
+          src="https://analytics.omnioria.com/script.js"
+          data-website-id="9b7b373c-8b65-48bb-819a-513e64799a4c"
+        />
       </head>
       <body>
         <PostHogProvider>{children}</PostHogProvider>
